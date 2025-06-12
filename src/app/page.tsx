@@ -1,9 +1,9 @@
-import PixelArtMaker from "@/components/PixelArtMaker";
+import JournalWriter from "@/components/JournalWriter";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-between p-24">
-      <PixelArtMaker />
+    <div className="flex min-h-screen flex-col items-center justify-between">
+      <JournalWriter />
     </div>
   );
 }
