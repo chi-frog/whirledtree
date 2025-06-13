@@ -1,42 +1,59 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 
-function Element({x, y} : {x:number, y:number}) {
-  const [content, setContent] = useState<string>("hi");
+type keyValuePair = {
+  key: string,
+  value: unknown,
+}
+
+type element = {
+  x:number,
+  y:number,
+  content?:string,
+  props?:keyValuePair[],
+}
+
+function Element({x, y, content, props} : element) {
+  if (!content)
+    content = "";
 
   return (
     <text x={x} y={y}>
-      HI
+      {content}
     </text>
   );
+}
+
+type pEnum = {
+  text:string,
+}
+
+const INPUT_STATE = {
+  FREE: {text: 'free'},
+  WRITING: {text: 'writing'},
+}
+
+type input = {
+  state:pEnum,
+  current:string,
+  index: number|null,
 }
 
 export default function JournalWriter() {
   const [mouseDownX, setMouseDownX] = useState<number|null>(null);
   const [mouseDownY, setMouseDownY] = useState<number|null>(null);
-  const [elements, setElements] = useState<any[]>([]);
-
-  const INPUT_STATE = {
-    FREE: {text: 'free'},
-    WRITING: {text: 'writing'},
-  }
-  const [inputState, setInputState] = useState(INPUT_STATE.FREE);
-  const [currentInput, setCurrentInput] = useState<string>("hi");
-  const [focusedElementIndex, setFocusedElementIndex] = useState<number|null>(null);
+  const [elements, setElements] = useState<element[]>([]);
+  const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, current:"", index:null});
 
   const printState = () => {
-    console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + inputState.text + " numElements:" + elements.length);
+    console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + input.state.text + " numElements:" + elements.length);
   }
 
   const handleMouseDown = (x:number, y:number, e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    console.log('handleMouseDown at (' + x + ',' + y + ') with button ' + e.button);
-    printState();
-
-    if (e.button !== 0) {
+    if (e.button !== 0)
       return;
-    }
 
-    const target = e.target as Element
+    const target = e.target as Element;
 
     if (target && target.nodeName !== "TEXT") {
       setMouseDownX(x);
@@ -45,14 +62,9 @@ export default function JournalWriter() {
   }
 
   const handleMouseUp = (x:number, y:number) => {
-    console.log('handleMouseUp at (' + x + ',' + y + ')');
-    printState();
-
     if ((mouseDownX === null) ||
-        (mouseDownY === null)) {
-      console.log('mouseDownX or mouseDownY was null');
+        (mouseDownY === null))
       return;
-    }
 
     let distance = Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2));
 
@@ -64,11 +76,13 @@ export default function JournalWriter() {
       const left = x - DEFAULT_OFFSET_X;
       const index = elements.length;
 
-      const element = <Element x={left} y={top} key={index}/>
+      const element = {x:left, y:top, contents:""};
 
       setElements(elements.concat(element));
-      setInputState(INPUT_STATE.WRITING);
-      setFocusedElementIndex(index);
+
+      const newInput = {...input, state:INPUT_STATE.WRITING, index:index};
+
+      setInput(newInput);
     }
 
     setMouseDownX(null);
@@ -83,6 +97,13 @@ export default function JournalWriter() {
   const handleKeyUp = (e:React.KeyboardEvent<SVGSVGElement>) => {
     console.log('handleKeyUp');
     console.log('e', e);
+
+    if (e.key === "Shift")
+      return;
+
+    const newInput = {...input, current:input.current + e.key};
+
+    setInput(newInput);
   }
 
   const autoFocus = (element:any) => {
@@ -100,7 +121,12 @@ export default function JournalWriter() {
          onMouseUp={(e) => handleMouseUp(e.clientX, e.clientY)}
          onKeyDown={(e) => handleKeyDown(e)}
          onKeyUp={(e) => handleKeyUp(e)}>
-      {...elements}
+      {elements.map((element, index) => {
+        if (index != input.index)
+          return <Element x={element.x} y={element.y} content={element.content} key={index}/>
+        else
+          return <Element x={element.x} y={element.y} content={input.current} key={index}/>
+      })}
     </svg>
   );
 }
