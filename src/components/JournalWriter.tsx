@@ -1,60 +1,13 @@
 'use client';
-import React from 'react';
-import { useState, useEffect, useRef, } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const EditableElement = (props:any) => {
-  const { onChange } = props;
-  const element = useRef<HTMLInputElement>(null);
-
-  if (props.children.length > 1) {
-    throw Error("Can't have more than one child");
-  } else if (!onChange) {
-    throw Error("Need onChange");
-  }
-
-  const onMouseUp = () => {
-    const value = element.current?.value || element.current?.innerText;
-    onChange(value);
-  };
-
-  useEffect(() => {
-    const value = element.current?.value || element.current?.innerText;
-    onChange(value);
-  }, []);
-
-  let elements = React.cloneElement(React.Children.toArray(props.children)[0] as React.ReactElement<any>, {
-    contentEditable: true,
-    suppressContentEditableWarning: true,
-    ref: element,
-    onKeyUp: onMouseUp
-  });
-
-  return elements;
-};
-
-function Element({x, y, i} : {x:number, y:number, i:number}) {
+function Element({x, y} : {x:number, y:number}) {
   const [content, setContent] = useState<string>("hi");
 
-  const handleChange = (content:string) => {
-    console.log('handleChange ' + content);
-    setContent(content);
-  };
-
   return (
-    <EditableElement onChange={handleChange}>
-    <svg
-      style={{
-        width: 5,
-        height:10,
-        left: x,
-        top: y,
-        position: 'absolute',
-      }}>
-      <text x={0} y={0}>
-        {content}
-      </text>
-    </svg>
-    </EditableElement>
+    <text x={x} y={y}>
+      HI
+    </text>
   );
 }
 
@@ -67,18 +20,25 @@ export default function JournalWriter() {
     FREE: {text: 'free'},
     WRITING: {text: 'writing'},
   }
-  const [inputState, setInputState] = useState(INPUT_STATE.FREE)
+  const [inputState, setInputState] = useState(INPUT_STATE.FREE);
+  const [currentInput, setCurrentInput] = useState<string>("hi");
+  const [focusedElementIndex, setFocusedElementIndex] = useState<number|null>(null);
 
   const printState = () => {
-    console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + inputState);
+    console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + inputState.text + " numElements:" + elements.length);
   }
 
-  const handleMouseDown = (x:number, y:number, target:Element|null) => {
-    console.log('handleMouseDown at (' + x + ',' + y + ')');
+  const handleMouseDown = (x:number, y:number, e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    console.log('handleMouseDown at (' + x + ',' + y + ') with button ' + e.button);
     printState();
 
-    
-    if (target && target.nodeName !== "TEXTAREA") {
+    if (e.button !== 0) {
+      return;
+    }
+
+    const target = e.target as Element
+
+    if (target && target.nodeName !== "TEXT") {
       setMouseDownX(x);
       setMouseDownY(y);
     }
@@ -97,24 +57,50 @@ export default function JournalWriter() {
     let distance = Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2));
 
     if (distance <= 5) {
-      const DEFAULT_OFFSET_X = 10;
-      const DEFAULT_OFFSET_Y = 15;
+      const DEFAULT_OFFSET_X = 0;
+      const DEFAULT_OFFSET_Y = 0;
 
       const top = y - DEFAULT_OFFSET_Y;
       const left = x - DEFAULT_OFFSET_X;
+      const index = elements.length;
 
-      setElements(elements.concat(<Element x={top} y={left} key={elements.length}/>));
+      const element = <Element x={left} y={top} key={index}/>
+
+      setElements(elements.concat(element));
+      setInputState(INPUT_STATE.WRITING);
+      setFocusedElementIndex(index);
     }
 
     setMouseDownX(null);
     setMouseDownY(null);
   }
 
+  const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
+    console.log('handleKeyDown');
+    console.log('e', e);
+  }
+
+  const handleKeyUp = (e:React.KeyboardEvent<SVGSVGElement>) => {
+    console.log('handleKeyUp');
+    console.log('e', e);
+  }
+
+  const autoFocus = (element:any) => {
+    console.log('autoFocus');
+    element?.focus();
+
+    return () => {
+      console.log('Clean up', element);
+    }
+  }
+
   return (
-    <div className="bg-rose-50 w-screen h-screen cursor-default"
-         onMouseDown={(e) => handleMouseDown(e.clientX, e.clientY, e.target as Element)}
-         onMouseUp={(e) => handleMouseUp(e.clientX, e.clientY)}>
+    <svg className="bg-rose-50 w-screen h-screen cursor-default" ref={autoFocus} tabIndex={-1}
+         onMouseDown={(e) => handleMouseDown(e.clientX, e.clientY, e)}
+         onMouseUp={(e) => handleMouseUp(e.clientX, e.clientY)}
+         onKeyDown={(e) => handleKeyDown(e)}
+         onKeyUp={(e) => handleKeyUp(e)}>
       {...elements}
-    </div>
+    </svg>
   );
 }
