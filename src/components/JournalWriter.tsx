@@ -98,16 +98,19 @@ export default function JournalWriter() {
     console.log('handleKeyUp');
     console.log('e', e);
 
-    if (e.key === "Shift")
+    if ((e.key === "Shift"))
       return;
 
     const newInput = {...input, current:input.current + e.key};
+
+    if (e.key === "Backspace")
+      newInput.current = newInput.current.slice(0, newInput.current.length - e.key.length - 1);
 
     setInput(newInput);
   }
 
   const autoFocus = (element:any) => {
-    console.log('autoFocus');
+    console.log('autoFocus', element);
     element?.focus();
 
     return () => {
