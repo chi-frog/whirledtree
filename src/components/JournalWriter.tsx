@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef, KeyboardEventHandler } from 'react';
+import React, { useState, useEffect, useRef, KeyboardEventHandler, FocusEventHandler } from 'react';
 
 type exPair = {
   key: string,
@@ -11,17 +11,19 @@ type element = {
   y:number,
   content:string,
   ref?:any,
+  handleOnBlur?:FocusEventHandler<SVGTextElement>,
   handleKeyDown?:KeyboardEventHandler<SVGTextElement>,
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
-  ex?:exPair[],
+  ex:exPair[],
 }
 
-function Element({x, y, content, ref, handleKeyDown, handleKeyUp, ex} : element) {
+function Element({x, y, content, ref, handleOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
   if (!content)
     content = "";
 
   return (
     <text x={x} y={y} tabIndex={0} ref={ref}
+      onBlur={handleOnBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}>
       {content}
@@ -52,6 +54,15 @@ export default function JournalWriter() {
 
   const printState = () => {
     console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + input.state.text + " numElements:" + elements.length);
+  }
+
+  const copyElements = () => {
+    return elements.map((element) => {
+      const newEx = element.ex.map((pair:exPair) => {
+        return {...pair}});
+
+      return {...element, ex:newEx};
+    });
   }
 
   function getMap() {
@@ -86,7 +97,7 @@ export default function JournalWriter() {
       const DEFAULT_OFFSET_X = 0;
       const DEFAULT_OFFSET_Y = 0;
 
-      const newElement = {x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:""};
+      const newElement = {x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:"", ex:[]};
       const newInput = {state:INPUT_STATE.WRITING, index:newElements.length};
 
       setElements(newElements.concat(newElement));
@@ -106,13 +117,23 @@ export default function JournalWriter() {
     element.focus();
   }, [input]);
 
+  const handleOnBlur = (content:string, index:number, e:any) => {
+    if (content === "") {
+      const newElements = copyElements();
+
+      newElements.splice(index, 1);
+
+      setElements(newElements);
+    }
+  }
+
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
   }
 
   const handleKeyUp = (e:React.KeyboardEvent<SVGTextElement>) => {
-
-    console.log('up', e);
-    if ((e.key === "Shift"))
+    if ((e.key === "Shift") ||
+        (e.key === "Alt") ||
+        (e.key === "Control"))
       return;
 
     if ((input.state === INPUT_STATE.WRITING) && (input.index >= 0)) {
@@ -120,10 +141,16 @@ export default function JournalWriter() {
         return {...element}});
       const newContent = newElements[input.index].content;
 
-      if (e.key === "Backspace")
-        newElements[input.index].content = newContent.slice(0, newContent.length-1);
-      else
+      switch (e.key) {
+      case "Backspace":
+        newElements[input.index].content = newContent.slice(0, newContent.length-1); break;
+      case "Enter":
+        console.log('lol'); break;
+      case "Tab":
+        console.log('tab'); break;
+      default:
         newElements[input.index].content = newContent + e.key;
+      }
 
       setElements(newElements);
     }
@@ -146,6 +173,8 @@ export default function JournalWriter() {
          onMouseUp={(e) => handleMouseUp(e.clientX, e.clientY)}>
       {elements.map((element, index) =>
         <Element x={element.x} y={element.y} content={element.content} key={index}
+          ex={element.ex}
+          handleOnBlur={handleOnBlur.bind(null, element.content, index)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
           ref={ref.bind(null, index)}/>
