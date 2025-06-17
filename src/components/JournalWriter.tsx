@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, KeyboardEventHandler } from 'react';
 
 type exPair = {
   key: string,
@@ -10,15 +10,20 @@ type element = {
   x:number,
   y:number,
   content:string,
+  ref?:any,
+  handleKeyDown?:KeyboardEventHandler<SVGTextElement>,
+  handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
   ex?:exPair[],
 }
 
-function Element({x, y, content, ex} : element) {
+function Element({x, y, content, ref, handleKeyDown, handleKeyUp, ex} : element) {
   if (!content)
     content = "";
 
   return (
-    <text x={x} y={y}>
+    <text x={x} y={y} tabIndex={0} ref={ref}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}>
       {content}
     </text>
   );
@@ -35,17 +40,26 @@ const INPUT_STATE = {
 
 type input = {
   state:pEnum,
-  index: number|null,
+  index: number,
 }
 
 export default function JournalWriter() {
-  const [mouseDownX, setMouseDownX] = useState<number|null>(null);
-  const [mouseDownY, setMouseDownY] = useState<number|null>(null);
+  const [mouseDownX, setMouseDownX] = useState<number>(-1);
+  const [mouseDownY, setMouseDownY] = useState<number>(-1);
   const [elements, setElements] = useState<element[]>([]);
-  const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, index:null});
+  const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, index:-1});
+  const elementsRef = useRef<Map<any, any>|null>(null);
 
   const printState = () => {
     console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + input.state.text + " numElements:" + elements.length);
+  }
+
+  function getMap() {
+    if (!elementsRef.current) {
+      // Initialize the Map on first usage.
+      elementsRef.current = new Map();
+    }
+    return elementsRef.current;
   }
 
   const handleMouseDown = (x:number, y:number, e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -53,8 +67,6 @@ export default function JournalWriter() {
       return;
 
     const target = e.target as Element;
-
-    console.log('e mousedown', e);
 
     if (target && target.nodeName !== "TEXT") {
       setMouseDownX(x);
@@ -67,73 +79,76 @@ export default function JournalWriter() {
         (mouseDownY === null))
       return;
 
-    let distance = Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2));
-
-    if (distance <= 5) {
+    if (Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2)) <= 5) {
       const newElements = elements.map((element) => {
         return {...element}});
 
       const DEFAULT_OFFSET_X = 0;
       const DEFAULT_OFFSET_Y = 0;
 
-      const top = y - DEFAULT_OFFSET_Y;
-      const left = x - DEFAULT_OFFSET_X;
-      const index = newElements.length;
-
-      const newElement = {x:left, y:top, content:""};
-      const newInput = {state:INPUT_STATE.WRITING, index:index};
+      const newElement = {x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:""};
+      const newInput = {state:INPUT_STATE.WRITING, index:newElements.length};
 
       setElements(newElements.concat(newElement));
       setInput(newInput);
-      
-      console.log('new element created');
     }
 
-    setMouseDownX(null);
-    setMouseDownY(null);
+    setMouseDownX(-1);
+    setMouseDownY(-1);
   }
 
-  const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
+  useEffect(() => {
+    if (input.state !== INPUT_STATE.WRITING)
+      return;
+
+    const map = getMap();
+    const element = map.get(input.index);
+    element.focus();
+  }, [input]);
+
+  const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
   }
 
-  const handleKeyUp = (e:React.KeyboardEvent<SVGSVGElement>) => {
+  const handleKeyUp = (e:React.KeyboardEvent<SVGTextElement>) => {
+
+    console.log('up', e);
     if ((e.key === "Shift"))
       return;
 
-    if ((input.state === INPUT_STATE.WRITING) && (input.index)) {
+    if ((input.state === INPUT_STATE.WRITING) && (input.index >= 0)) {
       const newElements = elements.map((element) => {
         return {...element}});
       const newContent = newElements[input.index].content;
 
       if (e.key === "Backspace")
         newElements[input.index].content = newContent.slice(0, newContent.length-1);
+      else
+        newElements[input.index].content = newContent + e.key;
 
       setElements(newElements);
     }
   }
 
-  const handleBlur = () => {
-  }
+  const ref = (index:number, node:any) => {
+    if (!node) return () => {};
 
-  const autoFocus = (element:any) => {
-    element?.focus();
+    const map = getMap();
+    map.set(index, node);
 
     return () => {
-      // Clean up
-    }
-  }
+      map.delete(index);
+    };
+  };
 
   return (
-    <svg className="bg-rose-50 w-screen h-screen cursor-default" ref={autoFocus} tabIndex={-1}
-         onBlur={(e) => handleBlur()}
+    <svg className="bg-rose-50 w-screen h-screen cursor-default"
          onMouseDown={(e) => handleMouseDown(e.clientX, e.clientY, e)}
-         onMouseUp={(e) => handleMouseUp(e.clientX, e.clientY)}
-         onKeyDown={(e) => handleKeyDown(e)}
-         onKeyUp={(e) => handleKeyUp(e)}>
+         onMouseUp={(e) => handleMouseUp(e.clientX, e.clientY)}>
       {elements.map((element, index) =>
-        (index != input.index) ?
-          <Element x={element.x} y={element.y} content={element.content} key={index}/> :
-          <Element x={element.x} y={element.y} content={input.current} key={index}/>
+        <Element x={element.x} y={element.y} content={element.content} key={index}
+          handleKeyDown={handleKeyDown}
+          handleKeyUp={handleKeyUp}
+          ref={ref.bind(null, index)}/>
       )}
     </svg>
   );
