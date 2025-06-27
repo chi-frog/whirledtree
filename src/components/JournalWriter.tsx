@@ -48,6 +48,7 @@ function Element({id, x, y, content, ref, handleMouseDown, handleMouseUp, parent
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       style={{
+        whiteSpace: "break-spaces",
         outline: hasFocus ? "3px solid black":"none"
       }}>
       {content}
@@ -195,6 +196,11 @@ export default function JournalWriter() {
         setInput({state:INPUT_STATE.FREE, id:-1});
         setElements(newElements.filter((element) => element.id !== input.id));
         return;
+      case " ":
+        updatedElement.content = updatedElement.content + " ";
+        console.log('here');
+        console.log(updatedElement.content + "END");
+        break;
       default:
         updatedElement.content += e.key;
       }
