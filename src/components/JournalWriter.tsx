@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect, useRef, KeyboardEventHandler, FocusEventHandler, MouseEventHandler } from 'react';
 
-type exPair = {
+type pair = {
   key: string,
-  value: number[],
+  value: number,
 }
 
 type element = {
@@ -13,23 +13,39 @@ type element = {
   ref?:any,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
-  handleOnBlur?:FocusEventHandler<SVGTextElement>,
+  parentOnBlur?:Function,
   handleKeyDown?:KeyboardEventHandler<SVGTextElement>,
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
-  ex:exPair[],
+  ex:pair[],
 }
 
-function Element({x, y, content, ref, handleMouseDown, handleMouseUp, handleOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
+function Element({x, y, content, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
+  const [hasFocus, setFocus] = useState(false);
+
   if (!content)
     content = "";
+
+  const handleOnFocus = () => {
+    setFocus(true);
+  };
+
+  const handleOnBlur = () => {
+    setFocus(false);
+    if (parentOnBlur)
+      parentOnBlur();
+  };
 
   return (
     <text x={x} y={y} tabIndex={0} ref={ref}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onFocus={handleOnFocus}
       onBlur={handleOnBlur}
       onKeyDown={handleKeyDown}
-      onKeyUp={handleKeyUp}>
+      onKeyUp={handleKeyUp}
+      style={{
+        outline: hasFocus ? "3px solid black":"none"
+      }}>
       {content}
     </text>
   );
@@ -60,20 +76,17 @@ export default function JournalWriter() {
     console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + input.state.text + " numElements:" + elements.length);
   }
 
-  const copyElements = () => {
-    return elements.map((element) => {
-      const newEx = element.ex.map((pair:exPair) => {
-        return {...pair}});
-
-      return {...element, ex:newEx};
+  const copyElements = () =>
+    elements.map((element) => {
+      return {...element,
+              ex:element.ex.map((pair:pair) => {
+                return {...pair}})};
     });
-  }
 
   function getMap() {
-    if (!elementsRef.current) {
-      // Initialize the Map on first usage.
+    if (!elementsRef.current)
       elementsRef.current = new Map();
-    }
+
     return elementsRef.current;
   }
 
@@ -129,9 +142,7 @@ export default function JournalWriter() {
       const DEFAULT_OFFSET_X = 0;
       const DEFAULT_OFFSET_Y = 0;
 
-      const newElement = {x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:"", ex:[]};
-
-      setElements(newElements.concat(newElement));
+      setElements(newElements.concat({x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:"", ex:[]}));
       setInput({state:INPUT_STATE.WRITING, index:newElements.length});
     }
 
@@ -148,14 +159,13 @@ export default function JournalWriter() {
     element.focus();
   }, [input]);
 
-  const handleOnBlur = (content:string, index:number, e:any) => {
+  const handleOnBlur = (content:string, index:number) => {
     if (content === "") {
       const newElements = copyElements();
-
       newElements.splice(index, 1);
-
       setElements(newElements);
     }
+    console.log('blurred', content);
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -185,6 +195,8 @@ export default function JournalWriter() {
 
       setElements(newElements);
     }
+
+    e.stopPropagation();
   }
 
   const ref = (index:number, node:any) => {
@@ -207,7 +219,7 @@ export default function JournalWriter() {
           ex={element.ex}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e.clientX, e.clientY, e)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e.clientX, e.clientY, index, e)}
-          handleOnBlur={handleOnBlur.bind(null, element.content, index)}
+          parentOnBlur={handleOnBlur.bind(null, element.content, index)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
           ref={ref.bind(null, index)}/>
