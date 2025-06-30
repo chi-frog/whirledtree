@@ -71,15 +71,12 @@ type input = {
 }
 
 export default function JournalWriter() {
-  const [mouseDownX, setMouseDownX] = useState<number>(-1);
-  const [mouseDownY, setMouseDownY] = useState<number>(-1);
+  const [mouseX, setMouseX] = useState<number>(-1);
+  const [mouseY, setMouseY] = useState<number>(-1);
+  const [isDragging, setDragging] = useState(false);
   const [elements, setElements] = useState<element[]>([]);
   const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, id:-1});
   const elementsRef = useRef<Map<any, any>|null>(null);
-
-  const printState = () => {
-    console.log('mouseDownX:' + mouseDownX + ' mouseDownY:' + mouseDownY + ' inputState:' + input.state.text + " numElements:" + elements.length);
-  }
 
   const copyElements = () =>
     elements.map((element) => {
@@ -95,51 +92,55 @@ export default function JournalWriter() {
     return elementsRef.current;
   }
 
-  const handleMouseDownElement = (x:number, y:number, e:React.MouseEvent<SVGTextElement, MouseEvent>) => {
+  const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>) => {
     if (e.button !== 0)
       return;
 
-    setMouseDownX(x);
-    setMouseDownY(y);
+    setMouseX(e.clientX);
+    setMouseY(e.clientY);
     e.stopPropagation();
   }
 
-  const handleMouseUpElement = (x:number, y:number, id:number, e:React.MouseEvent<SVGTextElement, MouseEvent>) => {
-    if ((mouseDownX === null) ||
-        (mouseDownY === null) ||
+  const handleMouseUpElement = (id:number, e:React.MouseEvent<SVGTextElement, MouseEvent>) => {
+    if ((!mouseX) ||
+        (!mouseY) ||
         (!e.target))
       return;
 
     // See if you're still on the text element
-    const map = getMap();
-    const element = map.get(id);
+    const element = getMap().get(id);
     const rect = element.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
 
     if (((x>=rect.x) && (x<=rect.x+rect.width) &&
          (y>= rect.y) && (y<= rect.y+rect.height)) &&
          (input.id !== id))
       setInput({state:INPUT_STATE.WRITING, id:id})
 
-    setMouseDownX(-1);
-    setMouseDownY(-1);
+    setMouseX(-1);
+    setMouseY(-1);
     e.stopPropagation();
   }
 
-  const handleMouseDown = (x:number, y:number, e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+  const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     if (e.button !== 0)
       return;
 
-    setMouseDownX(x);
-    setMouseDownY(y);
+    setMouseX(e.clientX);
+    setMouseY(e.clientY);
   }
 
-  const handleMouseUp = (x:number, y:number, e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if ((mouseDownX === null) ||
-        (mouseDownY === null) ||
+  const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    if ((mouseX === null) ||
+        (mouseY === null) ||
         (!e.target))
       return;
 
-    if (Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2)) <= 5) {
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (Math.sqrt(Math.pow(y-mouseY, 2) + Math.pow(x-mouseX, 2)) <= 5) {
       const newElements = elements.map((element) => {
         return {...element}});
 
@@ -151,8 +152,12 @@ export default function JournalWriter() {
       setInput({state:INPUT_STATE.WRITING, id:id});
     }
 
-    setMouseDownX(-1);
-    setMouseDownY(-1);
+    setMouseX(-1);
+    setMouseY(-1);
+  }
+
+  const handleMouseMove = (e:React.MouseEvent<SVGSVGElement>) => {
+    console.log('moved to (' + e.clientX + "," + e.clientY);
   }
 
   useEffect(() => {
@@ -178,6 +183,8 @@ export default function JournalWriter() {
         (e.key === "Control") ||
         (e.key === "CapsLock"))
       return;
+
+    e.preventDefault();
 
     if ((input.state === INPUT_STATE.WRITING) && (input.id >= 0)) {
       const newElements = copyElements();
@@ -222,12 +229,13 @@ export default function JournalWriter() {
 
   return (
     <svg className="bg-rose-50 w-screen h-screen cursor-default"
-         onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e.clientX, e.clientY, e)}
-         onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e.clientX, e.clientY, e)}>
+         onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e)}
+         onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e)}
+         onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}>
       {elements.map((element) =>
         <Element id={element.id} x={element.x} y={element.y} content={element.content} key={element.id} ex={element.ex}
-          handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e.clientX, e.clientY, e)}
-          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e.clientX, e.clientY, element.id, e)}
+          handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e)}
+          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(element.id, e)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
