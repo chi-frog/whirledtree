@@ -49,7 +49,8 @@ function Element({id, x, y, content, ref, handleMouseDown, handleMouseUp, parent
       onKeyUp={handleKeyUp}
       style={{
         whiteSpace: "break-spaces",
-        outline: hasFocus ? "3px solid black":"none"
+        outline: hasFocus ? "3px solid black":"none",
+        userSelect: "none",
       }}>
       {content}
     </text>
@@ -70,10 +71,19 @@ type input = {
   id: number,
 }
 
+type drag = {
+  active: boolean,
+  id: number,
+}
+const dragDefault = {
+  active:false,
+  id:-1,
+}
+
 export default function JournalWriter() {
   const [mouseX, setMouseX] = useState<number>(-1);
   const [mouseY, setMouseY] = useState<number>(-1);
-  const [isDragging, setDragging] = useState(false);
+  const [drag, setDrag] = useState<drag>(dragDefault);
   const [elements, setElements] = useState<element[]>([]);
   const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, id:-1});
   const elementsRef = useRef<Map<any, any>|null>(null);
@@ -92,18 +102,24 @@ export default function JournalWriter() {
     return elementsRef.current;
   }
 
-  const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>) => {
+  const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, id:number) => {
+    e.stopPropagation();
+
     if (e.button !== 0)
       return;
 
     setMouseX(e.clientX);
     setMouseY(e.clientY);
-    e.stopPropagation();
+    setDrag({active:true, id:id});
   }
 
-  const handleMouseUpElement = (id:number, e:React.MouseEvent<SVGTextElement, MouseEvent>) => {
+  const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, id:number) => {
+    e.stopPropagation();
+
     if ((!mouseX) ||
         (!mouseY) ||
+        (drag.id !== id) ||
+        (input.id === id) ||
         (!e.target))
       return;
 
@@ -114,13 +130,12 @@ export default function JournalWriter() {
     const y = e.clientY;
 
     if (((x>=rect.x) && (x<=rect.x+rect.width) &&
-         (y>= rect.y) && (y<= rect.y+rect.height)) &&
-         (input.id !== id))
-      setInput({state:INPUT_STATE.WRITING, id:id})
+         (y>= rect.y) && (y<= rect.y+rect.height)))
+      setInput({state:INPUT_STATE.WRITING, id:id});
 
     setMouseX(-1);
     setMouseY(-1);
-    e.stopPropagation();
+    setDrag(dragDefault);
   }
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -157,7 +172,7 @@ export default function JournalWriter() {
   }
 
   const handleMouseMove = (e:React.MouseEvent<SVGSVGElement>) => {
-    console.log('moved to (' + e.clientX + "," + e.clientY);
+    //console.log('moved to (' + e.clientX + "," + e.clientY);
   }
 
   useEffect(() => {
@@ -181,6 +196,8 @@ export default function JournalWriter() {
     if ((e.key === "Shift") ||
         (e.key === "Alt") ||
         (e.key === "Control") ||
+        (e.key === "ArrowRight") ||
+        (e.key === "ArrowLeft") ||
         (e.key === "CapsLock"))
       return;
 
@@ -203,11 +220,6 @@ export default function JournalWriter() {
         setInput({state:INPUT_STATE.FREE, id:-1});
         setElements(newElements.filter((element) => element.id !== input.id));
         return;
-      case " ":
-        updatedElement.content = updatedElement.content + " ";
-        console.log('here');
-        console.log(updatedElement.content + "END");
-        break;
       default:
         updatedElement.content += e.key;
       }
@@ -234,8 +246,8 @@ export default function JournalWriter() {
          onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}>
       {elements.map((element) =>
         <Element id={element.id} x={element.x} y={element.y} content={element.content} key={element.id} ex={element.ex}
-          handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e)}
-          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(element.id, e)}
+          handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element.id)}
+          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element.id)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
