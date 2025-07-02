@@ -46,6 +46,7 @@ type element = {
   x:number,
   y:number,
   content:string,
+  mouseoverRegion?:pEnum,
   ref?:any,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
@@ -55,7 +56,7 @@ type element = {
   ex:pair[],
 }
 
-function Element({id, x, y, content, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
+function Element({id, x, y, content, mouseoverRegion, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
   const [hasFocus, setFocus] = useState(false);
 
   if (!content)
@@ -79,8 +80,16 @@ function Element({id, x, y, content, ref, handleMouseDown, handleMouseUp, parent
       onKeyUp={handleKeyUp}
       style={{
         whiteSpace: "break-spaces",
+        padding: '3px',
         outline: hasFocus ? "3px solid black":"none",
         userSelect: "none",
+        cursor: (hasFocus) ? "text" :
+                (mouseoverRegion === REGION.NONE) ? "default" :
+                ((mouseoverRegion === REGION.LEFT_SIDE) || mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
+                ((mouseoverRegion === REGION.TOP_SIDE) || mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
+                ((mouseoverRegion === REGION.TOP_RIGHT_CORNER) || (mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
+                ((mouseoverRegion === REGION.TOP_LEFT_CORNER) || (mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
+                (mouseoverRegion === REGION.BODY) ? "all-scroll" : "default"
       }}>
       {content}
     </text>
@@ -277,7 +286,19 @@ export default function JournalWriter() {
       if (domElement === value)
         id = key;
     });
-    setHover({id:id, region:getRegion(x, y, domElement.getBoundingClientRect())});
+
+    if (id <= 0) return;
+
+    const region = getRegion(x, y, domElement.getBoundingClientRect());
+    setHover({id:id, region:region});
+
+    const newElements = copyElements();
+    const updatedElement = newElements.find((element) => element.id === id);
+
+    if (!updatedElement) return;
+
+    updatedElement.mouseoverRegion = region;
+    setElements(newElements);
   }
 
   useEffect(() => {
@@ -348,13 +369,10 @@ export default function JournalWriter() {
     <svg className="bg-rose-50 w-screen h-screen"
          onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e)}
          onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e)}
-         onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}
-         style={{
-          cursor: (hover.region === REGION.NONE) ? "default" :
-                  (hover.region === REGION.BODY) ? "text" : "crosshair"
-         }}>
+         onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}>
       {elements.map((element) =>
-        <Element id={element.id} x={element.x} y={element.y} content={element.content} key={element.id} ex={element.ex}
+        <Element id={element.id} x={element.x} y={element.y} content={element.content} mouseoverRegion={element.mouseoverRegion}
+          key={element.id} ex={element.ex}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element.id)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element.id)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
