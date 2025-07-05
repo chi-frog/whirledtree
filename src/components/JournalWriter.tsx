@@ -164,13 +164,16 @@ export default function JournalWriter() {
               ex:element.ex.map((pair:pair) => {
                 return {...pair}})}});
 
-  const targetCopyElements = (func:Function) : [element[], element] => {
+  const targetCopyElements = (...funcs:Function[]) : [element[], element] => {
     const newElements = copyElements();
-    const targetElement = newElements.find((element) => func(element));
+    const ret:any = [newElements];
 
-    assertIsDefined(targetElement);
+    funcs.forEach ((func) => {
+      const targetElement = newElements.find((element) => func(element));
+      ret.push(targetElement);
+    });
 
-    return [newElements, targetElement];
+    return ret;
   }
 
   function getMap() {
@@ -185,9 +188,11 @@ export default function JournalWriter() {
       (!newDrag.active) ? (element:element) => element.isDragged :
                           (element:element) => element.id === newDrag.id);
 
-    targetElement.isDragged = !targetElement.isDragged;
-
-    setElements(newElements);
+    if (targetElement) {
+      targetElement.isDragged = !targetElement.isDragged;
+      setElements(newElements);
+    }
+    
     setDrag(newDrag);
   }
 
