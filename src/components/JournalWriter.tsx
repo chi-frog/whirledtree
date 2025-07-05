@@ -158,6 +158,7 @@ export default function JournalWriter() {
   const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, id:-1});
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
+  const savedUpperCaseLetter = useRef<string>(null);
 
   const copyElements = () => elements.map((element) => {
       return {...element,
@@ -361,18 +362,25 @@ export default function JournalWriter() {
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
+    if ((/^[A-Z]*$/.test(e.key)))
+      savedUpperCaseLetter.current = e.key;
   }
 
   const handleKeyUp = (e:React.KeyboardEvent<SVGTextElement>) => {
-    if ((e.key === "Shift") ||
-        (e.key === "Alt") ||
-        (e.key === "Control") ||
-        (e.key === "ArrowRight") ||
-        (e.key === "ArrowLeft") ||
-        (e.key === "ArrowUp") ||
-        (e.key === "ArrowDown") ||
-        (e.key === "CapsLock"))
-      return;
+    // NOTE: Might want to reverse the order of keys one day - I think the normal keys
+    //       are probably pressed more, but in this configuration, they're found last.
+    switch(e.key) {
+      case "Shift":
+      case "Alt" :
+      case "Control" :
+      case "ArrowRight" :
+      case "ArrowLeft" :
+      case "ArrowUp" :
+      case "ArrowDown" :
+      case "CapsLock" :
+        return;
+      default:
+    }
 
     e.preventDefault();
 
@@ -394,7 +402,14 @@ export default function JournalWriter() {
         setElements(newElements.filter((element) => element.id !== input.id));
         return;
       default:
-        updatedElement.content += e.key;
+        //NOTE: This is also somewhat annoying - calling this comparison every time.  It would be better
+        //      if pressing Shift 'primed' the next letter - or even keyUp on Shift, since that's when this
+        //      becomes a problem.  Would have to weigh how often you have Shift pressed and released before typing a letter
+        if (savedUpperCaseLetter.current) {
+          updatedElement.content += savedUpperCaseLetter.current;
+          savedUpperCaseLetter.current = null;
+        } else
+          updatedElement.content += e.key;
       }
 
       setElements(newElements);
