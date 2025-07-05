@@ -47,6 +47,7 @@ type element = {
   y:number,
   content:string,
   mouseoverRegion:pEnum,
+  isDragged:boolean,
   hasFocus:boolean,
   ref?:any,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
@@ -57,16 +58,18 @@ type element = {
   ex:pair[],
 }
 
-function Element({id, x, y, content, mouseoverRegion, hasFocus, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
+function Element({id, x, y, content, mouseoverRegion, isDragged, hasFocus, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
 
   if (!content)
     content = "";
 
   const handleOnBlur = () => {
-    console.log('blurring');
     if (parentOnBlur)
       parentOnBlur();
   };
+  
+      //console.log("LENGTH:" + getMap().get(updatedElement.id).getComputedTextLength());
+      //console.log('with bbxo',getMap().get(updatedElement.id).getBBox());
 
   return (
     <text x={x} y={y} tabIndex={0} ref={ref}
@@ -77,16 +80,18 @@ function Element({id, x, y, content, mouseoverRegion, hasFocus, ref, handleMouse
       onKeyUp={handleKeyUp}
       style={{
         whiteSpace: "break-spaces",
-        padding: '3px',
-        outline: hasFocus ? "3px solid black":"none",
+        padding: '15px',
+        outline: hasFocus ? "1px solid gold" : "none",
+        filter: hasFocus ? "drop-shadow(0 0 0.75rem gold)" : "none",
         userSelect: "none",
         cursor: (hasFocus) ? "text" :
+                (isDragged) ? "grabbing" :
                 (mouseoverRegion === REGION.NONE) ? "default" :
                 ((mouseoverRegion === REGION.LEFT_SIDE) || mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
                 ((mouseoverRegion === REGION.TOP_SIDE) || mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
                 ((mouseoverRegion === REGION.TOP_RIGHT_CORNER) || (mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
                 ((mouseoverRegion === REGION.TOP_LEFT_CORNER) || (mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
-                (mouseoverRegion === REGION.BODY) ? "all-scroll" : "default"
+                (mouseoverRegion === REGION.BODY) ? "grab" : "default"
       }}>
       {content}
     </text>
@@ -172,8 +177,16 @@ export default function JournalWriter() {
     setMouseDownY(e.clientY);
 
     if (input.id !== element.id) {
+      const newElements = copyElements();
+      const updatedElement = newElements.find((newElement) => newElement.id === element.id);
+      
+      if (!updatedElement) return;
+
+      updatedElement.isDragged = true;
+
       setDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
       setInput(inputDefault);
+      setElements(newElements);
     }
   }
 
@@ -191,6 +204,15 @@ export default function JournalWriter() {
     setMouseDownX(-1);
     setMouseDownY(-1);
     setDrag(dragDefault);
+
+    const newElements = copyElements();
+    const updatedElement = newElements.find((newElement) => newElement.isDragged);
+      
+    if (!updatedElement) return;
+
+    updatedElement.isDragged = false;
+    
+    setElements(newElements);
   }
 
   const within = (left:number, right:number, value:number) => ((value>=left) && (value<=right))
@@ -240,6 +262,14 @@ export default function JournalWriter() {
 
     if (drag.active) {
       setDrag(dragDefault);
+      const newElements = copyElements();
+      const updatedElement = newElements.find((newElement) => newElement.isDragged);
+      
+      if (!updatedElement) return;
+
+      updatedElement.isDragged = false;
+    
+      setElements(newElements);
       return;
     }
 
@@ -252,7 +282,7 @@ export default function JournalWriter() {
       const DEFAULT_OFFSET_Y = 0;
       const id = getNextId();
 
-      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:"", mouseoverRegion:REGION.NONE, hasFocus:true, ex:[]}));
+      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:"", mouseoverRegion:REGION.NONE, isDragged: false, hasFocus:true, ex:[]}));
       setInput({state:INPUT_STATE.WRITING, id:id});
     }
 
@@ -306,7 +336,7 @@ export default function JournalWriter() {
   }
 
   useEffect(() => {
-    if (input.state === INPUT_STATE.WRITING)
+    if ((input.state === INPUT_STATE.WRITING) && (input.id > 0))
       getMap().get(input.id).focus();
 
     const newElements = copyElements();
@@ -321,12 +351,8 @@ export default function JournalWriter() {
   }, [input]);
 
   const handleOnBlur = (content:string, id:number) => {
-    if (content === "") {
-      console.log('removing', id);
+    if (content === "")
       setElements(copyElements().filter((element) => element.id !== id));
-    } else {
-      console.log('no removal');
-    }
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -345,7 +371,7 @@ export default function JournalWriter() {
 
     e.preventDefault();
 
-    if ((input.state === INPUT_STATE.WRITING) && (input.id >= 0)) {
+    if ((input.state === INPUT_STATE.WRITING) && (input.id > 0)) {
       const newElements = copyElements();
       const updatedElement = newElements.find((element) => element.id === input.id);
 
@@ -385,9 +411,13 @@ export default function JournalWriter() {
     <svg className="bg-rose-50 w-screen h-screen"
          onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e)}
          onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e)}
-         onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}>
+         onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}
+         style={{
+          ...drag.active ? { cursor:"grabbing" } : {}
+         }}>
       {elements.map((element) =>
-        <Element id={element.id} x={element.x} y={element.y} content={element.content} mouseoverRegion={element.mouseoverRegion} hasFocus={element.hasFocus}
+        <Element id={element.id} x={element.x} y={element.y} content={element.content} mouseoverRegion={element.mouseoverRegion}
+          isDragged={element.isDragged} hasFocus={element.hasFocus}
           key={element.id} ex={element.ex}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element.id)}
