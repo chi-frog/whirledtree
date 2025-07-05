@@ -1,6 +1,12 @@
 'use client';
 import React, { useState, useEffect, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
 
+function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
+  if (value === undefined || value === null) {
+    throw new Error(`${value} is not defined`)
+  }
+}
+
 //
 // returns a list of all elements under the cursor
 //
@@ -153,18 +159,36 @@ export default function JournalWriter() {
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
 
-  const copyElements = () =>
-    elements.map((element) => {
+  const copyElements = () => elements.map((element) => {
       return {...element,
               ex:element.ex.map((pair:pair) => {
-                return {...pair}})};
-    });
+                return {...pair}})}});
+
+  const targetCopyElements = (func:Function) : [element[], element] => {
+    const newElements = copyElements();
+    const targetElement = newElements.find((element) => func(element));
+
+    assertIsDefined(targetElement);
+
+    return [newElements, targetElement];
+  }
 
   function getMap() {
     if (!elementsRef.current)
       elementsRef.current = new Map();
 
     return elementsRef.current;
+  }
+
+  const changeDrag = (newDrag:drag) => {
+    const [newElements, targetElement] = targetCopyElements(
+      (!newDrag.active) ? (element:element) => element.isDragged :
+                          (element:element) => element.id === newDrag.id);
+
+    targetElement.isDragged = !targetElement.isDragged;
+
+    setElements(newElements);
+    setDrag(newDrag);
   }
 
   const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
@@ -177,16 +201,8 @@ export default function JournalWriter() {
     setMouseDownY(e.clientY);
 
     if (input.id !== element.id) {
-      const newElements = copyElements();
-      const updatedElement = newElements.find((newElement) => newElement.id === element.id);
-      
-      if (!updatedElement) return;
-
-      updatedElement.isDragged = true;
-
-      setDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
       setInput(inputDefault);
-      setElements(newElements);
+      changeDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
     }
   }
 
@@ -203,16 +219,7 @@ export default function JournalWriter() {
 
     setMouseDownX(-1);
     setMouseDownY(-1);
-    setDrag(dragDefault);
-
-    const newElements = copyElements();
-    const updatedElement = newElements.find((newElement) => newElement.isDragged);
-      
-    if (!updatedElement) return;
-
-    updatedElement.isDragged = false;
-    
-    setElements(newElements);
+    changeDrag(dragDefault);
   }
 
   const within = (left:number, right:number, value:number) => ((value>=left) && (value<=right))
@@ -261,15 +268,7 @@ export default function JournalWriter() {
       return;
 
     if (drag.active) {
-      setDrag(dragDefault);
-      const newElements = copyElements();
-      const updatedElement = newElements.find((newElement) => newElement.isDragged);
-      
-      if (!updatedElement) return;
-
-      updatedElement.isDragged = false;
-    
-      setElements(newElements);
+      changeDrag(dragDefault);
       return;
     }
 
@@ -295,6 +294,7 @@ export default function JournalWriter() {
     const updatedElement = newElements.find((element) => element.id === drag.id);
 
     if (!updatedElement) return;
+
 
     updatedElement.x = e.clientX-drag.offsetX;
     updatedElement.y = e.clientY-drag.offsetY;
@@ -402,9 +402,7 @@ export default function JournalWriter() {
     const map = getMap();
     map.set(id, node);
 
-    return () => {
-      map.delete(id);
-    };
+    return () => map.delete(id);
   };
 
   return (
