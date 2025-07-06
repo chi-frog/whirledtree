@@ -165,14 +165,11 @@ export default function JournalWriter() {
               ex:element.ex.map((pair:pair) => {
                 return {...pair}})}});
 
-  const targetCopyElements = (...funcs:Function[]) : [element[], element] => {
+  const targetCopyElements = (...funcs:Function[]) : [element[], element] | [element[], element, element] => {
     const newElements = copyElements();
     const ret:any = [newElements];
 
-    funcs.forEach ((func) => {
-      const targetElement = newElements.find((element) => func(element));
-      ret.push(targetElement);
-    });
+    funcs.forEach ((func) => ret.push(newElements.find((element) => func(element))));
 
     return ret;
   }
@@ -296,23 +293,17 @@ export default function JournalWriter() {
   }
 
   const handleMouseDrag = (e:React.MouseEvent<SVGSVGElement>) => {
-    const newElements = copyElements();
-    const updatedElement = newElements.find((element) => element.id === drag.id);
+    const [newElements, targetElement] = targetCopyElements((element:element) => element.id === drag.id);
 
-    if (!updatedElement) return;
-
-
-    updatedElement.x = e.clientX-drag.offsetX;
-    updatedElement.y = e.clientY-drag.offsetY;
+    targetElement.x = e.clientX-drag.offsetX;
+    targetElement.y = e.clientY-drag.offsetY;
 
     setElements(newElements);
   }
 
   const handleMouseMove = (e:React.MouseEvent<SVGSVGElement>) => {
-    if (drag.active) {
-      handleMouseDrag(e);
-      return;
-    }
+    if (drag.active)
+      return handleMouseDrag(e);
 
     const x = e.clientX;
     const y = e.clientY;
@@ -332,12 +323,9 @@ export default function JournalWriter() {
     if (id <= 0) return;
 
     const region = getRegion(x, y, domElement.getBoundingClientRect());
-    const newElements = copyElements();
-    const updatedElement = newElements.find((element) => element.id === id);
+    const [newElements, targetElement] = targetCopyElements((element:element) => element.id === id);
 
-    if (!updatedElement) return;
-
-    updatedElement.mouseoverRegion = region;
+    targetElement.mouseoverRegion = region;
     setElements(newElements);
   }
 
@@ -345,9 +333,9 @@ export default function JournalWriter() {
     if ((input.state === INPUT_STATE.WRITING) && (input.id > 0))
       getMap().get(input.id).focus();
 
-    const newElements = copyElements();
-    const oldFocusedElement = newElements.find((element) => element.hasFocus);
-    const newFocusedElement = newElements.find((element) => input.id === element.id);
+    const [newElements, oldFocusedElement, newFocusedElement] = targetCopyElements(
+      (element:element) => element.hasFocus,
+      (element:element) => (element.id === input.id));
 
     if (oldFocusedElement) oldFocusedElement.hasFocus = false;
     if (newFocusedElement) newFocusedElement.hasFocus = true;
@@ -385,10 +373,7 @@ export default function JournalWriter() {
     e.preventDefault();
 
     if ((input.state === INPUT_STATE.WRITING) && (input.id > 0)) {
-      const newElements = copyElements();
-      const updatedElement = newElements.find((element) => element.id === input.id);
-
-      if (!updatedElement) return;
+      const [newElements, updatedElement] = targetCopyElements((element:element) => element.id === input.id);
 
       switch (e.key) {
       case "Backspace":
