@@ -37,7 +37,7 @@ function elementsFromPoint(x:number,y:number,stop:string) {
 	return elements;
 }
 
-var nextId = 1;
+var nextId = Date.now();
 function getNextId() {
   return nextId++;
 }
@@ -51,6 +51,7 @@ type element = {
   id:number,
   x:number,
   y:number,
+  fontSize:number,
   content:string,
   mouseoverRegion:pEnum,
   isDragged:boolean,
@@ -61,6 +62,7 @@ type element = {
 type elementProps = {
   element:element,
   ref?:any,
+  self?:any,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
   parentOnBlur?:Function,
@@ -68,16 +70,24 @@ type elementProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-function Element({element, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
+function Element({element, ref, self, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
+  const optionsOffsetY = useRef(self ? self.getBBox().height : element.fontSize);
+
   const handleOnBlur = () => {
     if (parentOnBlur)
       parentOnBlur();
   };
-  
-      //console.log("LENGTH:" + getMap().get(updatedElement.id).getComputedTextLength());
-      //console.log('with bbxo',getMap().get(updatedElement.id).getBBox());
+
+  const handleMouseEnter = (e:React.MouseEvent<SVGCircleElement>) => {
+console.log('handleMouseEnter', e);
+  };
+
+  const handleMouseLeave = (e:React.MouseEvent<SVGCircleElement>) => {
+console.log('handleMouseLeave', e);
+  };
 
   return (
+    <>   
     <text x={element.x} y={element.y} tabIndex={0} ref={ref}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -86,9 +96,8 @@ function Element({element, ref, handleMouseDown, handleMouseUp, parentOnBlur, ha
       onKeyUp={handleKeyUp}
       style={{
         whiteSpace: "break-spaces",
-        padding: '15px',
+        fontSize: element.fontSize,
         outline: element.hasFocus ? "1px solid gold" : "none",
-        filter: element.hasFocus ? "drop-shadow(0 0 0.75rem gold)" : "none",
         userSelect: "none",
         cursor: (element.hasFocus) ? "text" :
                 (element.isDragged) ? "grabbing" :
@@ -101,6 +110,14 @@ function Element({element, ref, handleMouseDown, handleMouseUp, parentOnBlur, ha
       }}>
       {element.content}
     </text>
+    {element.hasFocus &&
+    <circle cx={element.x-7} cy={element.y-optionsOffsetY.current} r={5} fill="lightblue" fillOpacity="0.7" stroke="blue" strokeWidth="2"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        pointerEvents: "none",
+      }}/>}
+    </>
   );
 }
 
@@ -203,22 +220,19 @@ export default function JournalWriter() {
     setMouseDownX(e.clientX);
     setMouseDownY(e.clientY);
 
-    if (input.id !== element.id) {
-      setInput(inputDefault);
-      changeDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
-    }
+    if (input.id === element.id) return;
+
+    setInput(inputDefault);
+    changeDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
   }
 
   const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
     e.stopPropagation();
 
-    if ((mouseDownX === -1) ||
-        (mouseDownY === -1) ||
-        (!e.target))
-      return;
-
-    if ((mouseDownX === e.clientX) && (mouseDownY === e.clientY))
-      setInput({state:INPUT_STATE.WRITING, id:element.id});
+    if ((mouseDownX === e.clientX) &&
+        (mouseDownY === e.clientY))
+      (e.detail !== 2) ? setInput({state:INPUT_STATE.WRITING, id:element.id}) :
+                       setInput({state:INPUT_STATE.FREE, id:-1});
 
     setMouseDownX(-1);
     setMouseDownY(-1);
@@ -284,7 +298,7 @@ export default function JournalWriter() {
       const DEFAULT_OFFSET_Y = 0;
       const id = getNextId();
 
-      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), content:"", mouseoverRegion:REGION.NONE, isDragged: false, hasFocus:true, ex:[]}));
+      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), fontSize:16, content:"", mouseoverRegion:REGION.NONE, isDragged: false, hasFocus:true, ex:[]}));
       setInput({state:INPUT_STATE.WRITING, id:id});
     }
 
@@ -294,9 +308,26 @@ export default function JournalWriter() {
 
   const handleMouseDrag = (e:React.MouseEvent<SVGSVGElement>) => {
     const [newElements, targetElement] = targetCopyElements((element:element) => element.id === drag.id);
+    const x = e.clientX;
+    const y = e.clientY;
 
-    targetElement.x = e.clientX-drag.offsetX;
-    targetElement.y = e.clientY-drag.offsetY;
+    switch(drag.region) {
+      case REGION.BODY:
+        targetElement.x = x-drag.offsetX;
+        targetElement.y = y-drag.offsetY;
+        break;
+      case REGION.TOP_SIDE:
+        console.log('top');
+        console.log('hmm', getMap().get(targetElement.id).getBBox());
+        if (y > targetElement.y) {
+          console.log('going down');
+        } else {
+          console.log('going up');
+        }
+        break;
+      case REGION.NONE:
+      default:
+    }
 
     setElements(newElements);
   }
@@ -350,7 +381,7 @@ export default function JournalWriter() {
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
-    if ((/^[A-Z]*$/.test(e.key)))
+    if (e.shiftKey && e.key !== "Shift")
       savedUpperCaseLetter.current = e.key;
   }
 
@@ -427,6 +458,7 @@ export default function JournalWriter() {
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
+          self={getMap().get(element.id)}
           ref={ref.bind(null, element.id)}/>
       )}
     </svg>
