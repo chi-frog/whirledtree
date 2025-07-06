@@ -55,20 +55,20 @@ type element = {
   mouseoverRegion:pEnum,
   isDragged:boolean,
   hasFocus:boolean,
+  ex:pair[],
+}
+
+type elementProps = {
+  element:element,
   ref?:any,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
   parentOnBlur?:Function,
   handleKeyDown?:KeyboardEventHandler<SVGTextElement>,
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
-  ex:pair[],
 }
 
-function Element({id, x, y, content, mouseoverRegion, isDragged, hasFocus, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp, ex} : element) {
-
-  if (!content)
-    content = "";
-
+function Element({element, ref, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
   const handleOnBlur = () => {
     if (parentOnBlur)
       parentOnBlur();
@@ -78,7 +78,7 @@ function Element({id, x, y, content, mouseoverRegion, isDragged, hasFocus, ref, 
       //console.log('with bbxo',getMap().get(updatedElement.id).getBBox());
 
   return (
-    <text x={x} y={y} tabIndex={0} ref={ref}
+    <text x={element.x} y={element.y} tabIndex={0} ref={ref}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onBlur={handleOnBlur}
@@ -87,19 +87,19 @@ function Element({id, x, y, content, mouseoverRegion, isDragged, hasFocus, ref, 
       style={{
         whiteSpace: "break-spaces",
         padding: '15px',
-        outline: hasFocus ? "1px solid gold" : "none",
-        filter: hasFocus ? "drop-shadow(0 0 0.75rem gold)" : "none",
+        outline: element.hasFocus ? "1px solid gold" : "none",
+        filter: element.hasFocus ? "drop-shadow(0 0 0.75rem gold)" : "none",
         userSelect: "none",
-        cursor: (hasFocus) ? "text" :
-                (isDragged) ? "grabbing" :
-                (mouseoverRegion === REGION.NONE) ? "default" :
-                ((mouseoverRegion === REGION.LEFT_SIDE) || mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
-                ((mouseoverRegion === REGION.TOP_SIDE) || mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
-                ((mouseoverRegion === REGION.TOP_RIGHT_CORNER) || (mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
-                ((mouseoverRegion === REGION.TOP_LEFT_CORNER) || (mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
-                (mouseoverRegion === REGION.BODY) ? "grab" : "default"
+        cursor: (element.hasFocus) ? "text" :
+                (element.isDragged) ? "grabbing" :
+                (element.mouseoverRegion === REGION.NONE) ? "default" :
+                ((element.mouseoverRegion === REGION.LEFT_SIDE) || element.mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
+                ((element.mouseoverRegion === REGION.TOP_SIDE) || element.mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
+                ((element.mouseoverRegion === REGION.TOP_RIGHT_CORNER) || (element.mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
+                ((element.mouseoverRegion === REGION.TOP_LEFT_CORNER) || (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
+                (element.mouseoverRegion === REGION.BODY) ? "grab" : "default"
       }}>
-      {content}
+      {element.content}
     </text>
   );
 }
@@ -209,7 +209,7 @@ export default function JournalWriter() {
     }
   }
 
-  const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, id:number) => {
+  const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
     e.stopPropagation();
 
     if ((mouseDownX === -1) ||
@@ -218,7 +218,7 @@ export default function JournalWriter() {
       return;
 
     if ((mouseDownX === e.clientX) && (mouseDownY === e.clientY))
-      setInput({state:INPUT_STATE.WRITING, id:id});
+      setInput({state:INPUT_STATE.WRITING, id:element.id});
 
     setMouseDownX(-1);
     setMouseDownY(-1);
@@ -419,11 +419,11 @@ export default function JournalWriter() {
           ...drag.active ? { cursor:"grabbing" } : {}
          }}>
       {elements.map((element) =>
-        <Element id={element.id} x={element.x} y={element.y} content={element.content} mouseoverRegion={element.mouseoverRegion}
-          isDragged={element.isDragged} hasFocus={element.hasFocus}
-          key={element.id} ex={element.ex}
+        <Element
+          element={element}
+          key={element.id}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
-          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element.id)}
+          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
