@@ -175,7 +175,7 @@ export default function JournalWriter() {
   const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, id:-1});
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
-  const savedUpperCaseLetter = useRef<string>(null);
+  const savedUpperCaseLetters = useRef<string[]>([]);
 
   const copyElements = () => elements.map((element) => {
       return {...element,
@@ -381,13 +381,6 @@ export default function JournalWriter() {
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
-    if (e.shiftKey && e.key !== "Shift")
-      savedUpperCaseLetter.current = e.key;
-  }
-
-  const handleKeyUp = (e:React.KeyboardEvent<SVGTextElement>) => {
-    // NOTE: Might want to reverse the order of keys one day - I think the normal keys
-    //       are probably pressed more, but in this configuration, they're found last.
     switch(e.key) {
       case "Shift":
       case "Alt" :
@@ -421,15 +414,18 @@ export default function JournalWriter() {
         //NOTE: This is also somewhat annoying - calling this comparison every time.  It would be better
         //      if pressing Shift 'primed' the next letter - or even keyUp on Shift, since that's when this
         //      becomes a problem.  Would have to weigh how often you have Shift pressed and released before typing a letter
-        if (savedUpperCaseLetter.current) {
-          updatedElement.content += savedUpperCaseLetter.current;
-          savedUpperCaseLetter.current = null;
+        if (savedUpperCaseLetters.current.length>0) {
+          updatedElement.content += savedUpperCaseLetters.current[0];
+          savedUpperCaseLetters.current.shift();
         } else
           updatedElement.content += e.key;
       }
 
       setElements(newElements);
     }
+  }
+
+  const handleKeyUp = (e:React.KeyboardEvent<SVGTextElement>) => {
   }
 
   const ref = (id:number, node:any) => {
