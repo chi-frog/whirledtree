@@ -31,7 +31,7 @@ export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, h
     const initialMoveX = moveX;
     const initialMoveY = moveY;
     const initialCornerRadius = cornerRadius;
-    const duration = 200;
+    const duration = 100;
 
     function animate(time:number) {
       if (!start) start = time;
@@ -54,6 +54,7 @@ export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, h
   }, [optionsExpanded]);
 
   return (
+    <g>
     <rect
       x={x - size - moveX}
       y={y - optionsOffsetY.current - moveY}
@@ -67,5 +68,6 @@ export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, h
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     />
+    </g>
   );
 }
