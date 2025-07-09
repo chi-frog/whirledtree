@@ -5,28 +5,45 @@ type animatedCircleProps = {
   y:number,
   optionsOffsetY:RefObject<number>,
   optionsExpanded:boolean,
-  handleMouseEnter:MouseEventHandler<SVGCircleElement>,
-  handleMouseLeave:MouseEventHandler<SVGCircleElement>,
+  handleMouseEnter:MouseEventHandler<SVGRectElement>,
+  handleMouseLeave:MouseEventHandler<SVGRectElement>,
 }
 
 export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, handleMouseEnter, handleMouseLeave} : animatedCircleProps) {
-  const [radius, setRadius] = useState(optionsExpanded ? 20 : 5);
-  const targetRadius = optionsExpanded ? 20 : 5;
+  const [size, setSize] = useState(optionsExpanded ? 40 : 10);
+  const [opacity, setOpacity] = useState(optionsExpanded ? 1 : 0.7);
+  const [moveX, setMoveX] = useState(optionsExpanded ? 20 : 0);
+  const [moveY, setMoveY] = useState(optionsExpanded ? 20 : 0);
+  const [cornerRadius, setCornerRadius] = useState(optionsExpanded ? size : 5);
+  const targetSize = optionsExpanded ? 40 : 10;
+  const targetOpacity = optionsExpanded ? 1 : 0.7;
+  const targetMoveX = optionsExpanded ? 0 : 0;
+  const targetMoveY = optionsExpanded ? 20 : 0;
+  const targetCornerRadius = optionsExpanded ? 0.1 : 0.5;
   const animationRef = useRef(0);
 
   useEffect(() => {
     cancelAnimationFrame(animationRef.current);
 
     let start:number;
-    const initial = radius;
+    const initialSize = size;
+    const initialOpacity = opacity;
+    const initialMoveX = moveX;
+    const initialMoveY = moveY;
+    const initialCornerRadius = cornerRadius;
     const duration = 200;
 
     function animate(time:number) {
       if (!start) start = time;
 
       const progress = Math.min((time-start) / duration, 1);
-      const newRadius = initial + (targetRadius - initial) * progress;
-      setRadius(newRadius);
+
+      setSize(initialSize + (targetSize-initialSize)*progress);
+      setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
+      setMoveX(initialMoveX + (targetMoveX-initialMoveX)*progress);
+      setMoveY(initialMoveY + (targetMoveY-initialMoveY)*progress);
+      setCornerRadius(initialCornerRadius + (targetCornerRadius-initialCornerRadius)*progress);
+
       if (progress < 1)
         animationRef.current = requestAnimationFrame(animate);
     }
@@ -37,12 +54,14 @@ export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, h
   }, [optionsExpanded]);
 
   return (
-    <circle
-      cx={x - 7}
-      cy={y - optionsOffsetY.current}
-      r={radius}
+    <rect
+      x={x - size - moveX}
+      y={y - optionsOffsetY.current - moveY}
+      width={size}
+      height={size}
+      rx={cornerRadius*size}
       fill="lightblue"
-      fillOpacity="0.7"
+      fillOpacity={opacity}
       stroke="blue"
       strokeWidth="2"
       onMouseEnter={handleMouseEnter}

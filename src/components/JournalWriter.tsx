@@ -64,7 +64,7 @@ type element = {
 type elementProps = {
   element:element,
   ref?:any,
-  self?:any,
+  map?:any,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
   parentOnBlur?:Function,
@@ -72,8 +72,8 @@ type elementProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-function Element({element, ref, self, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
-  const optionsOffsetY = useRef(self ? self.getBBox().height : element.fontSize);
+function Element({element, ref, map, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
+  const optionsOffsetY = useRef(element.fontSize*1.5);
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
 
   const handleOnBlur = () => {
@@ -81,12 +81,12 @@ function Element({element, ref, self, handleMouseDown, handleMouseUp, parentOnBl
       parentOnBlur();
   };
 
-  const handleMouseEnter = (e:React.MouseEvent<SVGCircleElement>) => {
+  const handleMouseEnter = (e:React.MouseEvent<SVGRectElement>) => {
     console.log('handleMouseEnter', e);
     setOptionsExpanded(true);
   };
 
-  const handleMouseLeave = (e:React.MouseEvent<SVGCircleElement>) => {
+  const handleMouseLeave = (e:React.MouseEvent<SVGRectElement>) => {
     console.log('handleMouseLeave', e);
     setOptionsExpanded(false);
   };
@@ -465,7 +465,7 @@ export default function JournalWriter() {
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
-          self={getMap().get(element.id)}
+          map={getMap()}
           ref={ref.bind(null, element.id)}/>
       )}
     </svg>
