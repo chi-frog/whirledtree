@@ -1,5 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
+import '../app/journalWriter.css';
+import AnimatedCircle from '@/components/AnimatedCircle';
 
 function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
   if (value === undefined || value === null) {
@@ -8,7 +10,7 @@ function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
 }
 
 //
-// returns a list of all elements under the cursor
+// Returns a list of all elements under the cursor
 //
 function elementsFromPoint(x:number,y:number,stop:string) {
 	var elements = [], previousPointerEvents = [], current, i, d;
@@ -72,6 +74,7 @@ type elementProps = {
 
 function Element({element, ref, self, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
   const optionsOffsetY = useRef(self ? self.getBBox().height : element.fontSize);
+  const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
 
   const handleOnBlur = () => {
     if (parentOnBlur)
@@ -79,15 +82,17 @@ function Element({element, ref, self, handleMouseDown, handleMouseUp, parentOnBl
   };
 
   const handleMouseEnter = (e:React.MouseEvent<SVGCircleElement>) => {
-console.log('handleMouseEnter', e);
+    console.log('handleMouseEnter', e);
+    setOptionsExpanded(true);
   };
 
   const handleMouseLeave = (e:React.MouseEvent<SVGCircleElement>) => {
-console.log('handleMouseLeave', e);
+    console.log('handleMouseLeave', e);
+    setOptionsExpanded(false);
   };
 
   return (
-    <>   
+    <g>   
     <text x={element.x} y={element.y} tabIndex={0} ref={ref}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -111,13 +116,27 @@ console.log('handleMouseLeave', e);
       {element.content}
     </text>
     {element.hasFocus &&
-    <circle cx={element.x-7} cy={element.y-optionsOffsetY.current} r={5} fill="lightblue" fillOpacity="0.7" stroke="blue" strokeWidth="2"
+    <AnimatedCircle
+      x={element.x}
+      y={element.y}
+      optionsOffsetY={optionsOffsetY}
+      optionsExpanded={optionsExpanded}
+      handleMouseEnter={handleMouseEnter}
+      handleMouseLeave={handleMouseLeave}
+      />
+    /*<circle
+      className="stroke-2 transition-transform duration-300 ease-in-out"
+      cx={element.x-7} cy={element.y-optionsOffsetY.current} r={5}
+      fill="lightblue" fillOpacity="0.7" stroke="blue"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      transform={`scale(${optionsExpanded ? 4 : 1})`}
       style={{
-        pointerEvents: "none",
-      }}/>}
-    </>
+        transformOrigin: `${element.x - 7}px ${element.y - optionsOffsetY.current}px`,
+        willChange: "transform",
+      }}/>*/
+    }
+    </g>
   );
 }
 
@@ -175,7 +194,6 @@ export default function JournalWriter() {
   const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, id:-1});
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
-  const savedUpperCaseLetters = useRef<string[]>([]);
 
   const copyElements = () => elements.map((element) => {
       return {...element,
@@ -411,14 +429,7 @@ export default function JournalWriter() {
         setElements(newElements.filter((element) => element.id !== input.id));
         return;
       default:
-        //NOTE: This is also somewhat annoying - calling this comparison every time.  It would be better
-        //      if pressing Shift 'primed' the next letter - or even keyUp on Shift, since that's when this
-        //      becomes a problem.  Would have to weigh how often you have Shift pressed and released before typing a letter
-        if (savedUpperCaseLetters.current.length>0) {
-          updatedElement.content += savedUpperCaseLetters.current[0];
-          savedUpperCaseLetters.current.shift();
-        } else
-          updatedElement.content += e.key;
+        updatedElement.content += e.key;
       }
 
       setElements(newElements);
