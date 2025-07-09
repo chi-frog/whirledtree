@@ -17,8 +17,8 @@ export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, h
   const [cornerRadius, setCornerRadius] = useState(optionsExpanded ? size : 5);
   const targetSize = optionsExpanded ? 40 : 10;
   const targetOpacity = optionsExpanded ? 1 : 0.7;
-  const targetMoveX = optionsExpanded ? 0 : 0;
-  const targetMoveY = optionsExpanded ? 20 : 0;
+  const targetMoveX = optionsExpanded ? -2 : 0;
+  const targetMoveY = optionsExpanded ? 28 : 0;
   const targetCornerRadius = optionsExpanded ? 0.1 : 0.5;
   const animationRef = useRef(0);
 
@@ -60,10 +60,10 @@ export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, h
       width={size}
       height={size}
       rx={cornerRadius*size}
-      fill="lightblue"
+      fill="#F4F3FF"
       fillOpacity={opacity}
       stroke="blue"
-      strokeWidth="2"
+      strokeWidth="1.5"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     />
