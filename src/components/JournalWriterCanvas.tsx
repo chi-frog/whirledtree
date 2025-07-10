@@ -41,7 +41,6 @@ function elementsFromPoint(x:number,y:number,stop:string) {
 
 var nextId = Date.now();
 function getNextId() {
-  console.log('next id');
   return nextId++;
 }
 
@@ -78,7 +77,8 @@ function Element({element, ref, map, handleMouseDown, handleMouseUp, parentOnBlu
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
 
   const handleOnBlur = () => {
-    console.log('element blur');
+    setOptionsExpanded(false);
+
     if (parentOnBlur)
       parentOnBlur();
   };
@@ -368,8 +368,6 @@ export default function JournalWriter() {
   }
 
   useEffect(() => {
-    console.log('input changed', input);
-
     if ((input.state === INPUT_STATE.WRITING) && (input.id > 0))
       getMap().get(input.id).focus();
 
@@ -377,6 +375,7 @@ export default function JournalWriter() {
       (element:element) => element.hasFocus,
       (element:element) => (element.id === input.id));
 
+      console.log('oldFocusedElement', oldFocusedElement);
     if (oldFocusedElement) oldFocusedElement.hasFocus = false;
     if (newFocusedElement) newFocusedElement.hasFocus = true;
 
@@ -385,8 +384,6 @@ export default function JournalWriter() {
   }, [input]);
 
   const handleOnBlur = (content:string, id:number) => {
-    console.log('id', id);
-    console.log('input.id', input.id);
     if (content === "")
       setElements(copyElements().filter((element) => element.id !== id));
     setInput(defaultInput);

@@ -61,9 +61,9 @@ export default function AnimatedCircle({x, y, optionsOffsetY, optionsExpanded, h
       width={size}
       height={size}
       rx={cornerRadius*size}
-      fill="#F4F3FF"
+      fill="blue"
       fillOpacity={opacity}
-      stroke="blue"
+      stroke="#F4F3FF"
       strokeWidth="1.5"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
