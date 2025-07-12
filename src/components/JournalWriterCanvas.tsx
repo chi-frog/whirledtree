@@ -39,10 +39,6 @@ function elementsFromPoint(x:number,y:number,stop:string) {
 	return elements;
 }
 
-var nextId = Date.now();
-function getNextId() {
-  return nextId++;
-}
 
 type pair = {
   key: string,
@@ -121,8 +117,9 @@ function Element({element, ref, map, handleMouseDown, handleMouseUp, parentOnBlu
     <ElementOptions
       x={element.x}
       y={element.y}
-      optionsOffsetY={optionsOffsetY}
-      optionsExpanded={optionsExpanded}
+      offsetY={optionsOffsetY}
+      expanded={optionsExpanded}
+      fontSize={element.fontSize}
       handleMouseEnter={handleMouseEnter}
       handleMouseLeave={handleMouseLeave}
       />
@@ -185,6 +182,11 @@ export default function JournalWriter() {
   const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, id:-1});
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
+
+  var nextId = Date.now();
+function getNextId() {
+  return nextId++;
+}
 
   const copyElements = () => elements.map((element) => {
       return {...element,
@@ -375,9 +377,13 @@ export default function JournalWriter() {
       (element:element) => element.hasFocus,
       (element:element) => (element.id === input.id));
 
-      console.log('oldFocusedElement', oldFocusedElement);
     if (oldFocusedElement) oldFocusedElement.hasFocus = false;
-    if (newFocusedElement) newFocusedElement.hasFocus = true;
+    if (newFocusedElement) {
+      newFocusedElement.hasFocus = true;
+      // Move it to the end of the list, so it's drawn last and is the top layer
+      newElements.splice(newElements.findIndex((element) => element === newFocusedElement), 1);
+      newElements.push(newFocusedElement);
+    }
 
     setElements(newElements);
 
