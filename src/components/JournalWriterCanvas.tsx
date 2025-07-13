@@ -16,11 +16,12 @@ function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
 function elementsFromPoint(x:number,y:number,stop:string) {
 	var elements = [], previousPointerEvents = [], current, i, d;
 
+  console.log('elementsFromPoint');
+
   // get all elements via elementFromPoint, and remove them from hit-testing in order
 	while ((current = document.elementFromPoint(x,y) as HTMLElement) && elements.indexOf(current)===-1 && current != null) {
     // check if we are done searching
-    if(current.nodeName === stop)
-      break;
+    if(current.nodeName === stop) break;
 
     // push the element and its current style
 		elements.push(current);
@@ -120,7 +121,11 @@ function Element({element, ref, notifyParentFocused, notifyChangeFontSize,
                  (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
                 (element.mouseoverRegion === REGION.BODY) ? "grab" : "default"
       }}>
-      {element.content}
+      <tspan
+        style={{
+        }}>
+        {element.content}
+      </tspan>
     </text>
     {element.selected &&
     <ElementOptions
@@ -365,7 +370,7 @@ export default function JournalWriter() {
     const map = getMap();
     var id = -1;
     Array.from(map, ([key, value]) => {
-      if (domElement === value)
+      if (value.contains(domElement))
         id = key;
     }); //NOTE: I dont like that this calls on every element regardless
 
