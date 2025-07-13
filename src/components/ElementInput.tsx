@@ -85,6 +85,7 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
     <rect
       x={x + 10}
       y={y}
+      rx={5}
       width={parentHeight - 10}
       height={parentHeight - 10}
       fill="white">
