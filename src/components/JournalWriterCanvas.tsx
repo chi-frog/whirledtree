@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
 import '../app/journalWriter.css';
 import ElementOptions from '@/components/ElementOptions';
+import usePageVisibility from '@/hooks/usePageVisibility';
 
 function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
   if (value === undefined || value === null) {
@@ -53,75 +54,84 @@ type element = {
   content:string,
   mouseoverRegion:pEnum,
   isDragged:boolean,
-  hasFocus:boolean,
+  selected:boolean,
+  focused:boolean,
+  optionsFocused:boolean,
   ex:pair[],
 }
 
 type elementProps = {
   element:element,
   ref?:any,
-  map?:any,
+  notifyParentFocused?:Function,
+  notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
+  parentOnFocus?:Function,
   parentOnBlur?:Function,
   handleKeyDown?:KeyboardEventHandler<SVGTextElement>,
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-function Element({element, ref, map, handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
-  const optionsOffsetY = useRef(element.fontSize*1.5);
+function Element({element, ref, notifyParentFocused, notifyChangeFontSize, handleMouseDown, handleMouseUp, parentOnFocus, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
+  const optionsOffsetY = useRef<number>(element.fontSize*1.5);
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
 
-  const handleOnBlur = () => {
-    setOptionsExpanded(false);
+  const handleOnFocus = () => {
+    if (parentOnFocus)
+      parentOnFocus();
+  }
 
+  const handleOnBlur = () => {
     if (parentOnBlur)
       parentOnBlur();
   };
 
-  const handleMouseEnter = (e:React.MouseEvent<SVGRectElement>) => {
-    console.log('handleMouseEnter', e);
-    setOptionsExpanded(true);
-  };
+  const handleMouseOptionsEnter = () => setOptionsExpanded(true);
 
-  const handleMouseLeave = (e:React.MouseEvent<SVGRectElement>) => {
-    console.log('handleMouseLeave', e);
-    setOptionsExpanded(false);
-  };
+  const handleMouseOptionsLeave = () => setOptionsExpanded(false);
 
   return (
     <g>   
     <text x={element.x} y={element.y} tabIndex={0} ref={ref}
+      fontSize={element.fontSize}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onFocus={handleOnFocus}
       onBlur={handleOnBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       style={{
         whiteSpace: "break-spaces",
-        fontSize: element.fontSize,
-        outline: element.hasFocus ? "1px solid gold" : "none",
+        outline: (element.focused) ? "1px solid gold" : 
+                 (element.selected) ? "1px solid blue" : "none",
         userSelect: "none",
-        cursor: (element.hasFocus) ? "text" :
+        cursor: (element.focused) ? "text" :
                 (element.isDragged) ? "grabbing" :
                 (element.mouseoverRegion === REGION.NONE) ? "default" :
-                ((element.mouseoverRegion === REGION.LEFT_SIDE) || element.mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
-                ((element.mouseoverRegion === REGION.TOP_SIDE) || element.mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
-                ((element.mouseoverRegion === REGION.TOP_RIGHT_CORNER) || (element.mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
-                ((element.mouseoverRegion === REGION.TOP_LEFT_CORNER) || (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
+                ((element.mouseoverRegion === REGION.LEFT_SIDE) ||
+                  element.mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
+                ((element.mouseoverRegion === REGION.TOP_SIDE) ||
+                  element.mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
+                ((element.mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
+                 (element.mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
+                ((element.mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
+                 (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
                 (element.mouseoverRegion === REGION.BODY) ? "grab" : "default"
       }}>
       {element.content}
     </text>
-    {element.hasFocus &&
+    {element.selected &&
     <ElementOptions
       x={element.x}
       y={element.y}
+      notifyParentFocused={notifyParentFocused}
+      notifyChangeFontSize={notifyChangeFontSize}
       offsetY={optionsOffsetY}
       expanded={optionsExpanded}
       fontSize={element.fontSize}
-      handleMouseEnter={handleMouseEnter}
-      handleMouseLeave={handleMouseLeave}
+      handleMouseEnter={handleMouseOptionsEnter}
+      handleMouseLeave={handleMouseOptionsLeave}
       />
     }
     </g>
@@ -145,21 +155,6 @@ type pEnum = {
   text:string,
 }
 
-const INPUT_STATE = {
-  FREE: {text: 'free'},
-  WRITING: {text: 'writing'},
-}
-
-type input = {
-  state:pEnum,
-  id: number,
-}
-
-const defaultInput = {
-  state:INPUT_STATE.FREE,
-  id:-1,
-}
-
 type drag = {
   active: boolean,
   id: number,
@@ -179,14 +174,14 @@ export default function JournalWriter() {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
   const [mouseDownY, setMouseDownY] = useState<number>(-1);
   const [elements, setElements] = useState<element[]>([]);
-  const [input, setInput] = useState<input>({state:INPUT_STATE.FREE, id:-1});
+  const [selectedId, setSelectedId] = useState<number>(0); // ID cannot be 0
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
+  const isPageVisible = usePageVisibility();
+  const speedRef = useRef(false);
 
   var nextId = Date.now();
-function getNextId() {
-  return nextId++;
-}
+  const getNextId = () => nextId++;
 
   const copyElements = () => elements.map((element) => {
       return {...element,
@@ -222,6 +217,15 @@ function getNextId() {
     setDrag(newDrag);
   }
 
+  const setElementOptionsFocus = (value:boolean) => {
+    const [newElements, selectedElement] = targetCopyElements(
+      (element:element) => element.id === selectedId);
+
+    selectedElement.optionsFocused = value;
+
+    setElements(newElements);
+  };
+
   const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
     e.stopPropagation();
 
@@ -231,7 +235,7 @@ function getNextId() {
     setMouseDownX(e.clientX);
     setMouseDownY(e.clientY);
 
-    if (input.id === element.id) return;
+    if (selectedId === element.id) return;
 
     changeDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
   }
@@ -239,10 +243,13 @@ function getNextId() {
   const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
     e.stopPropagation();
 
+    if (e.button !== 0)
+      return;
+
     if ((mouseDownX === e.clientX) &&
         (mouseDownY === e.clientY))
-      (e.detail !== 2) ? setInput({state:INPUT_STATE.WRITING, id:element.id}) :
-                       setInput(defaultInput);
+      (e.detail !== 2) ? setSelectedId(element.id) :
+                         setSelectedId(0);
 
     setMouseDownX(-1);
     setMouseDownY(-1);
@@ -289,15 +296,15 @@ function getNextId() {
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if ((mouseDownX === -1) ||
-        (mouseDownY === -1) ||
-        (!e.target))
+    if (e.button !== 0)
       return;
 
-    if (drag.active) {
-      changeDrag(dragDefault);
+    if ((mouseDownX === -1) ||
+        (mouseDownY === -1))
       return;
-    }
+
+    if (drag.active)
+      return changeDrag(dragDefault);
 
     let x = e.clientX;
     let y = e.clientY;
@@ -308,8 +315,8 @@ function getNextId() {
       const DEFAULT_OFFSET_Y = 0;
       const id = getNextId();
 
-      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), fontSize:16, content:"", mouseoverRegion:REGION.NONE, isDragged: false, hasFocus:true, ex:[]}));
-      setInput({state:INPUT_STATE.WRITING, id:id});
+      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), fontSize:16, content:"", mouseoverRegion:REGION.NONE, isDragged: false, selected:true, focused:true, optionsFocused:false, ex:[]}));
+      setSelectedId(id);
     }
 
     setMouseDownX(-1);
@@ -370,29 +377,37 @@ function getNextId() {
   }
 
   useEffect(() => {
-    if ((input.state === INPUT_STATE.WRITING) && (input.id > 0))
-      getMap().get(input.id).focus();
+    if (selectedId > 0)
+      getMap().get(selectedId).focus();
 
     const [newElements, oldFocusedElement, newFocusedElement] = targetCopyElements(
-      (element:element) => element.hasFocus,
-      (element:element) => (element.id === input.id));
+      (element:element) => element.selected,
+      (element:element) => (element.id === selectedId));
 
-    if (oldFocusedElement) oldFocusedElement.hasFocus = false;
+    if (oldFocusedElement) oldFocusedElement.selected = oldFocusedElement.focused = false;
     if (newFocusedElement) {
-      newFocusedElement.hasFocus = true;
+      newFocusedElement.selected = true;
+      newFocusedElement.focused = true;
       // Move it to the end of the list, so it's drawn last and is the top layer
-      newElements.splice(newElements.findIndex((element) => element === newFocusedElement), 1);
+      newElements.splice(newElements.findIndex((element) => (element === newFocusedElement)), 1);
       newElements.push(newFocusedElement);
     }
 
     setElements(newElements);
 
-  }, [input]);
+  }, [selectedId]);
+
+  const handleOnFocus = (id:number) => setElements(copyElements().map(
+    (element) => (element.id === id) ? {...element, focused:true} : {...element}));
 
   const handleOnBlur = (content:string, id:number) => {
     if (content === "")
       setElements(copyElements().filter((element) => element.id !== id));
-    setInput(defaultInput);
+    else {
+      setElements(elements.map((element) => (element.id !== id) ?
+        element :
+        {...element, focused:false}))
+    }
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -411,8 +426,8 @@ function getNextId() {
 
     e.preventDefault();
 
-    if ((input.state === INPUT_STATE.WRITING) && (input.id > 0)) {
-      const [newElements, updatedElement] = targetCopyElements((element:element) => element.id === input.id);
+    if (selectedId>0) {
+      const [newElements, updatedElement] = targetCopyElements((element:element) => element.id === selectedId);
 
       switch (e.key) {
       case "Backspace":
@@ -422,8 +437,8 @@ function getNextId() {
       case "Tab":
         console.log('tab'); break;
       case "Delete":
-        setInput(defaultInput);
-        setElements(newElements.filter((element) => element.id !== input.id));
+        setSelectedId(0);
+        setElements(newElements.filter((element) => element.id !== selectedId));
         return;
       default:
         updatedElement.content += e.key;
@@ -445,6 +460,16 @@ function getNextId() {
     return () => map.delete(id);
   };
 
+  const setElementFontSize = (id:number, fontSize:number) => {
+    console.log('Canvas setElementFontSize ' + id, fontSize);
+    const [newElements, targetElement] = targetCopyElements((element:element) => element.id===id);
+
+    if (!targetElement) return;
+
+    targetElement.fontSize = fontSize;
+    setElements(newElements);
+  }
+
   return (
     <svg className="bg-rose-50 w-screen h-screen"
          onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e)}
@@ -457,12 +482,14 @@ function getNextId() {
         <Element
           element={element}
           key={element.id}
+          notifyParentFocused={setElementOptionsFocus}
+          notifyChangeFontSize={setElementFontSize.bind(null, element.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element)}
+          parentOnFocus={handleOnFocus.bind(null, element.id)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}
-          map={getMap()}
           ref={ref.bind(null, element.id)}/>
       )}
     </svg>

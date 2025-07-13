@@ -4,6 +4,8 @@ import ElementInput from '@/components/ElementInput';
 type elementOptionsProps = {
   x:number,
   y:number,
+  notifyParentFocused?:Function,
+  notifyChangeFontSize?:Function,
   offsetY:RefObject<number>,
   expanded:boolean,
   fontSize:number,
@@ -12,18 +14,25 @@ type elementOptionsProps = {
 }
 
 const DEFAULT_OPTIONS_TEXT_SIZE = 16;
+const DEFAULT_OPTIONS_UNEXPANDED_SIZE = 10;
+const DEFAULT_OPTIONS_EXPANDED_WIDTH = 60;
+const DEFAULT_OPTIONS_EXPANDED_HEIGHT = 40;
+const DEFAULT_OPTIONS_UNEXPANDED_OPACITY = 0.7;
+const DEFAULT_OPTIONS_EXPANDED_OPACITY = 1;
 
-export default function ElementOptions({x, y, offsetY, expanded, fontSize, handleMouseEnter, handleMouseLeave} : elementOptionsProps) {
-  const [size, setSize] = useState(expanded ? 40 : 10);
-  const [opacity, setOpacity] = useState(expanded ? 1 : 0.7);
+export default function ElementOptions({x, y, notifyParentFocused, notifyChangeFontSize, offsetY, expanded, fontSize, handleMouseEnter, handleMouseLeave} : elementOptionsProps) {
+  const [width, setWidth] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_WIDTH : DEFAULT_OPTIONS_UNEXPANDED_SIZE);
+  const [height, setHeight] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE);
+  const [opacity, setOpacity] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY);
   const [moveX, setMoveX] = useState(expanded ? 20 : 0);
   const [moveY, setMoveY] = useState(expanded ? 20 : 0);
-  const [cornerRadius, setCornerRadius] = useState(expanded ? size : 5);
-  const targetSize = expanded ? 40 : 10;
-  const targetOpacity = expanded ? 1 : 0.7;
+  const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState(expanded ? 0.1 : 0.5);
+  const targetWidth = expanded ? DEFAULT_OPTIONS_EXPANDED_WIDTH : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
+  const targetHeight = expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
+  const targetOpacity = expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY;
   const targetMoveX = expanded ? -2 : 0;
   const targetMoveY = expanded ? 28 : 0;
-  const targetCornerRadius = expanded ? 0.1 : 0.5;
+  const targetCornerRadiusPercentage = expanded ? 0.1 : 0.5;
   const animationRef = useRef(0);
 
   var nextId = Date.now();
@@ -35,11 +44,12 @@ export default function ElementOptions({x, y, offsetY, expanded, fontSize, handl
     cancelAnimationFrame(animationRef.current);
 
     let start:number;
-    const initialSize = size;
+    const initialWidth = width;
+    const initialHeight = height;
     const initialOpacity = opacity;
     const initialMoveX = moveX;
     const initialMoveY = moveY;
-    const initialCornerRadius = cornerRadius;
+    const initialCornerRadiusPercentage = cornerRadiusPercentage;
     const duration = 100;
 
     function animate(time:number) {
@@ -47,11 +57,12 @@ export default function ElementOptions({x, y, offsetY, expanded, fontSize, handl
 
       const progress = Math.min((time-start) / duration, 1);
 
-      setSize(initialSize + (targetSize-initialSize)*progress);
+      setWidth(initialWidth + (targetWidth-initialWidth)*progress);
+      setHeight(initialHeight + (targetHeight-initialHeight)*progress);
       setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
       setMoveX(initialMoveX + (targetMoveX-initialMoveX)*progress);
       setMoveY(initialMoveY + (targetMoveY-initialMoveY)*progress);
-      setCornerRadius(initialCornerRadius + (targetCornerRadius-initialCornerRadius)*progress);
+      setCornerRadiusPercentage(initialCornerRadiusPercentage + (targetCornerRadiusPercentage-initialCornerRadiusPercentage)*progress);
 
       if (progress < 1)
         animationRef.current = requestAnimationFrame(animate);
@@ -62,16 +73,29 @@ export default function ElementOptions({x, y, offsetY, expanded, fontSize, handl
     return () => cancelAnimationFrame(animationRef.current);
   }, [expanded]);
 
+  const handleMouseDown = (e:React.MouseEvent<SVGGElement, MouseEvent>) => {
+    console.log('handleMouseDown elementOptions');
+    e.stopPropagation();
+  }
+
+  const handleMouseUp = (e:React.MouseEvent<SVGGElement, MouseEvent>) => {
+    console.log('handleMouseUp elementOptions');
+    e.stopPropagation();
+  }
+
   return (
     <g
+      onMouseDown={(e) => handleMouseDown(e)}
+      onMouseUp={(e) => handleMouseUp(e)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}>
     <rect
-      x={x - size - moveX}
+      x={x - width - moveX}
       y={y - offsetY.current - moveY}
-      width={size}
-      height={size}
-      rx={cornerRadius*size}
+      width={width}
+      height={height}
+      rx={cornerRadiusPercentage*width}
+      ry={cornerRadiusPercentage*height}
       fill="#ADD8E6"
       fillOpacity={opacity}
       stroke="#F4F3FF"
@@ -80,13 +104,14 @@ export default function ElementOptions({x, y, offsetY, expanded, fontSize, handl
     {expanded &&
     <ElementInput
       id={getNextId()}
-      x={x - size - moveX + 5}
+      x={x - width - moveX + 5}
       y={y - offsetY.current - moveY + 5}
-      width={size-10}
-      height={size-10}
+      notifyParentFocused={notifyParentFocused}
+      notifyChangeFontSize={notifyChangeFontSize}
+      parentWidth={width}
+      parentHeight={height}
       elementFontSize={fontSize}
       fontSize={DEFAULT_OPTIONS_TEXT_SIZE}
-      hasFocus={false}
       />
     }
     </g>
