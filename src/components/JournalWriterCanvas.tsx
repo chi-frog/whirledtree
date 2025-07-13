@@ -73,7 +73,8 @@ type elementProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-function Element({element, ref, notifyParentFocused, notifyChangeFontSize, handleMouseDown, handleMouseUp, parentOnFocus, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
+function Element({element, ref, notifyParentFocused, notifyChangeFontSize,
+                  handleMouseDown, handleMouseUp, parentOnFocus, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
   const optionsOffsetY = useRef<number>(element.fontSize*1.5);
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
 
@@ -377,6 +378,7 @@ export default function JournalWriter() {
   }
 
   useEffect(() => {
+    console.log('selecting', selectedId);
     if (selectedId > 0)
       getMap().get(selectedId).focus();
 
@@ -397,8 +399,10 @@ export default function JournalWriter() {
 
   }, [selectedId]);
 
-  const handleOnFocus = (id:number) => setElements(copyElements().map(
-    (element) => (element.id === id) ? {...element, focused:true} : {...element}));
+  const handleOnFocus = (id:number) => (id !== drag.id) &&
+    setElements(copyElements().map((element) =>
+      (element.id === id) ? {...element, focused:true} :
+                            {...element}));
 
   const handleOnBlur = (content:string, id:number) => {
     if (content === "")
@@ -461,10 +465,7 @@ export default function JournalWriter() {
   };
 
   const setElementFontSize = (id:number, fontSize:number) => {
-    console.log('Canvas setElementFontSize ' + id, fontSize);
     const [newElements, targetElement] = targetCopyElements((element:element) => element.id===id);
-
-    if (!targetElement) return;
 
     targetElement.fontSize = fontSize;
     setElements(newElements);
