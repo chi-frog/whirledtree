@@ -54,17 +54,20 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
   }
 
   const handleBlur = () => {
+    console.log('blur input');
     setFocused(false);
+    if (notifyParentFocused)
+      notifyParentFocused(false);
   }
 
   const handleFocus = () => {
+    console.log('focus input');
     setFocused(true);
+    if (notifyParentFocused)
+      notifyParentFocused(true);
   }
 
   useLayoutEffect(() => {
-    if (notifyParentFocused)
-      notifyParentFocused(focused);
-
     if (focused && ref)
       ref.current?.focus();
   }, [focused]);
@@ -80,19 +83,20 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
       style={{
         outline: focused ? "1px solid yellow" : "none",
         overflow: "scroll",
+        cursor: "text",
       }}
     >
     <rect
-      x={x + 10}
-      y={y}
+      x={x + parentWidth/2 - (parentHeight-10) / 2}
+      y={y + parentHeight/2 - (parentHeight-10) / 2}
       rx={5}
       width={parentHeight - 10}
       height={parentHeight - 10}
       fill="white">
     </rect>
     <text
-      x={x+parentWidth/2-15}
-      y={y+parentHeight/2}
+      x={x + parentWidth/2}
+      y={y + parentHeight/2}
       fontSize={fontSize}>
       {""+desiredFontSize}
     </text>

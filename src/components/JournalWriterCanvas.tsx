@@ -50,7 +50,6 @@ function svgGetBBox (svgEl:any) {
   tempSvg.appendChild(tempEl)
   let bb = tempEl.getBBox()
   document.body.removeChild(tempDiv)
-  console.log('tempdiv', tempDiv);
   return bb;
 }
 
@@ -67,7 +66,6 @@ type element = {
   fontFamily:string,
   content:string,
   mouseoverRegion:pEnum,
-  isDragged:boolean,
   selected:boolean,
   focused:boolean,
   optionsFocused:boolean,
@@ -78,6 +76,7 @@ type elementProps = {
   element:element,
   ref?:any,
   map?:any,
+  isDragged:boolean,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
@@ -88,7 +87,7 @@ type elementProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-function Element({element, ref, map, notifyParentFocused, notifyChangeFontSize,
+function Element({element, ref, map, isDragged, notifyParentFocused, notifyChangeFontSize,
                   handleMouseDown, handleMouseUp, parentOnFocus, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
   const [textHeight, setTextHeight] = useState<number>(element.fontSize);
@@ -99,6 +98,11 @@ function Element({element, ref, map, notifyParentFocused, notifyChangeFontSize,
 
     setTextHeight(bbox.height - (((bbox.y + bbox.height) - element.y) * 2));
   }, [ref]);
+
+  useEffect(() => {
+    map.get(element.id).focus();
+    console.log('focused', element);
+  }, [element.focused])
 
   const handleOnFocus = () => {
     if (parentOnFocus)
@@ -112,7 +116,10 @@ function Element({element, ref, map, notifyParentFocused, notifyChangeFontSize,
 
   const handleMouseOptionsEnter = () => setOptionsExpanded(true);
 
-  const handleMouseOptionsLeave = () => setOptionsExpanded(false);
+  const handleMouseOptionsLeave = () => {
+    if (!element.optionsFocused)
+      setOptionsExpanded(false);
+  }
 
   return (
     <g>
@@ -133,7 +140,7 @@ function Element({element, ref, map, notifyParentFocused, notifyChangeFontSize,
                  (element.selected) ? "1px solid blue" : "none",
         userSelect: "none",
         cursor: (element.focused) ? "text" :
-                (element.isDragged) ? "grabbing" :
+                (isDragged) ? "grabbing" :
                 (element.mouseoverRegion === REGION.NONE) ? "default" :
                 ((element.mouseoverRegion === REGION.LEFT_SIDE) ||
                   element.mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
@@ -225,8 +232,9 @@ function isFontAvailable(font: string): boolean {
   });
 }
 
-
+const DEFAULT_BASE_CONTENT = "";
 const DEFAULT_FONT = "Arial";
+const DEFAULT_FONT_SIZE = 16;
 const availableFonts = ["Aharoni, Arial, Helvetica"];
 
 
@@ -240,6 +248,13 @@ export default function JournalWriter() {
   const isPageVisible = usePageVisibility();
   const speedRef = useRef(false);
   const [font, setFont] = useState<string>(DEFAULT_FONT);
+  const [fontSize, setFontSize] = useState<number>(DEFAULT_FONT_SIZE);
+  const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
+
+  const updateSelectedId = (id:number) => {
+    console.log('elements', elements);
+    setSelectedId(id);
+  }
 
   var nextId = Date.now();
   const getNextId = () => nextId++;
@@ -265,19 +280,6 @@ export default function JournalWriter() {
     return elementsRef.current;
   }
 
-  const changeDrag = (newDrag:drag) => {
-    const [newElements, targetElement] = targetCopyElements(
-      (!newDrag.active) ? (element:element) => element.isDragged :
-                          (element:element) => element.id === newDrag.id);
-
-    if (targetElement) {
-      targetElement.isDragged = !targetElement.isDragged;
-      setElements(newElements);
-    }
-    
-    setDrag(newDrag);
-  }
-
   const setElementOptionsFocus = (value:boolean) => {
     const [newElements, selectedElement] = targetCopyElements(
       (element:element) => element.id === selectedId);
@@ -298,23 +300,49 @@ export default function JournalWriter() {
 
     if (selectedId === element.id) return;
 
-    changeDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
+    setDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
   }
 
   const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
     e.stopPropagation();
 
-    if (e.button !== 0)
+    if ((e.button !== 0))
       return;
 
     if ((mouseDownX === e.clientX) &&
-        (mouseDownY === e.clientY))
-      (e.detail !== 2) ? setSelectedId(element.id) :
-                         setSelectedId(0);
+        (mouseDownY === e.clientY)) {
+      if (e.detail !== 2) {
+        const [newElements, oldFocusedElement, newFocusedElement] = targetCopyElements(
+          (element:element) => element.selected,
+          (elementToFocus:element) => (element.id === elementToFocus.id));
+
+        if (oldFocusedElement)
+          oldFocusedElement.selected = oldFocusedElement.focused = false;
+        if (newFocusedElement) {
+          newFocusedElement.selected = true;
+          newFocusedElement.focused = true;
+          // Move it to the end of the list, so it's drawn last and is the top layer
+          newElements.splice(newElements.findIndex((element) => (element === newFocusedElement)), 1);
+          newElements.push(newFocusedElement);
+          setSelectedId(newFocusedElement.id);
+        }
+
+        setElements(newElements);
+      } else {
+        const [newElements, oldFocusedElement] = targetCopyElements(
+          (element:element) => element.selected);
+
+        if (oldFocusedElement)
+          oldFocusedElement.selected = oldFocusedElement.focused = false;
+
+        setElements(newElements);
+        setSelectedId(0);
+      }
+    }
 
     setMouseDownX(-1);
     setMouseDownY(-1);
-    changeDrag(dragDefault);
+    setDrag(dragDefault);
   }
 
   const within = (left:number, right:number, value:number) => ((value>=left) && (value<=right))
@@ -365,18 +393,33 @@ export default function JournalWriter() {
       return;
 
     if (drag.active)
-      return changeDrag(dragDefault);
+      return setDrag(dragDefault);
 
     let x = e.clientX;
     let y = e.clientY;
 
     if (Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2)) <= 5) {
-      const newElements = copyElements();
-      const DEFAULT_OFFSET_X = 0;
-      const DEFAULT_OFFSET_Y = 0;
       const id = getNextId();
+      const [newElements, oldFocusedElement] = targetCopyElements(
+        (element:element) => element.selected);
+      const newElement = {
+        id:id,
+        x:x,
+        y:y,
+        fontSize:fontSize,
+        fontFamily:font,
+        content:baseContent,
+        mouseoverRegion:REGION.NONE,
+        selected:true,
+        focused:true,
+        optionsFocused:false,
+        ex:[]};
 
-      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), fontSize:16, fontFamily:DEFAULT_FONT, content:"", mouseoverRegion:REGION.NONE, isDragged: false, selected:true, focused:true, optionsFocused:false, ex:[]}));
+      if (oldFocusedElement)
+        oldFocusedElement.selected = oldFocusedElement.focused = false;
+      newElements.push(newElement);
+
+      setElements(newElements);
       setSelectedId(id);
     }
 
@@ -395,12 +438,8 @@ export default function JournalWriter() {
         targetElement.y = y-drag.offsetY;
         break;
       case REGION.TOP_SIDE:
-        console.log('top');
-        console.log('hmm', getMap().get(targetElement.id).getBBox());
         if (y > targetElement.y) {
-          console.log('going down');
         } else {
-          console.log('going up');
         }
         break;
       case REGION.NONE:
@@ -437,27 +476,6 @@ export default function JournalWriter() {
     setElements(newElements);
   }
 
-  useEffect(() => {
-    if (selectedId > 0)
-      getMap().get(selectedId).focus();
-
-    const [newElements, oldFocusedElement, newFocusedElement] = targetCopyElements(
-      (element:element) => element.selected,
-      (element:element) => (element.id === selectedId));
-
-    if (oldFocusedElement) oldFocusedElement.selected = oldFocusedElement.focused = false;
-    if (newFocusedElement) {
-      newFocusedElement.selected = true;
-      newFocusedElement.focused = true;
-      // Move it to the end of the list, so it's drawn last and is the top layer
-      newElements.splice(newElements.findIndex((element) => (element === newFocusedElement)), 1);
-      newElements.push(newFocusedElement);
-    }
-
-    setElements(newElements);
-
-  }, [selectedId]);
-
   const handleOnFocus = (id:number) => (id !== drag.id) &&
     setElements(copyElements().map((element) =>
       (element.id === id) ? {...element, focused:true} :
@@ -468,7 +486,7 @@ export default function JournalWriter() {
       setElements(copyElements().filter((element) => element.id !== id));
     else {
       setElements(elements.map((element) => (element.id !== id) ?
-        element :
+        {...element} :
         {...element, focused:false}))
     }
   }
@@ -496,9 +514,9 @@ export default function JournalWriter() {
       case "Backspace":
         updatedElement.content = updatedElement.content.slice(0, updatedElement.content.length-1); break;
       case "Enter":
-        console.log('lol'); break;
+        break;
       case "Tab":
-        console.log('tab'); break;
+        break;
       case "Delete":
         setSelectedId(0);
         setElements(newElements.filter((element) => element.id !== selectedId));
@@ -544,6 +562,7 @@ export default function JournalWriter() {
           element={element}
           ref={ref.bind(null, element.id)}
           map={getMap()}
+          isDragged={element.id === drag.id}
           notifyParentFocused={setElementOptionsFocus}
           notifyChangeFontSize={setElementFontSize.bind(null, element.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}

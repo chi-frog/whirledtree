@@ -25,13 +25,13 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
   const [height, setHeight] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE);
   const [opacity, setOpacity] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY);
   const [moveX, setMoveX] = useState(expanded ? 0 : 0);
-  const [moveY, setMoveY] = useState(expanded ? height : 0);
+  const [moveY, setMoveY] = useState(expanded ? 0 : 0);
   const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState(expanded ? 0.1 : 0.5);
   const targetWidth = expanded ? DEFAULT_OPTIONS_EXPANDED_WIDTH : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
   const targetHeight = expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
   const targetOpacity = expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY;
   const targetMoveX = expanded ? 0 : 0;
-  const targetMoveY = expanded ? height : 0;
+  const targetMoveY = expanded ? 0 : 0;
   const targetCornerRadiusPercentage = expanded ? 0.1 : 0.5;
   const animationRef = useRef(0);
 
@@ -39,7 +39,7 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
   function getNextId() {
     return nextId++;
   }
-console.log('x y' + x + " " + y);
+  
   useEffect(() => {
     cancelAnimationFrame(animationRef.current);
 
@@ -84,7 +84,6 @@ console.log('x y' + x + " " + y);
   }
 
   const DEFAULT_SPACING_X = 5;
-  console.log('y', y - textHeight/2 + height/2);
 
   return (
     <svg
@@ -107,8 +106,8 @@ console.log('x y' + x + " " + y);
     {expanded &&
     <ElementInput
       id={getNextId()}
-      x={x - width - DEFAULT_SPACING_X - moveX}
-      y={y - height/2 - moveY}
+      x={x - width - DEFAULT_SPACING_X}
+      y={y - textHeight/2 - height/2}
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       parentWidth={width}
