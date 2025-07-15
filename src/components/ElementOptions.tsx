@@ -4,13 +4,13 @@ import ElementInput from '@/components/ElementInput';
 type elementOptionsProps = {
   x:number,
   y:number,
+  textHeight:number,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
-  offsetY:RefObject<number>,
   expanded:boolean,
   fontSize:number,
-  handleMouseEnter:MouseEventHandler<SVGRectElement>,
-  handleMouseLeave:MouseEventHandler<SVGRectElement>,
+  handleMouseEnter:MouseEventHandler<SVGSVGElement>,
+  handleMouseLeave:MouseEventHandler<SVGSVGElement>,
 }
 
 const DEFAULT_OPTIONS_TEXT_SIZE = 16;
@@ -20,18 +20,18 @@ const DEFAULT_OPTIONS_EXPANDED_HEIGHT = 40;
 const DEFAULT_OPTIONS_UNEXPANDED_OPACITY = 0.7;
 const DEFAULT_OPTIONS_EXPANDED_OPACITY = 1;
 
-export default function ElementOptions({x, y, notifyParentFocused, notifyChangeFontSize, offsetY, expanded, fontSize, handleMouseEnter, handleMouseLeave} : elementOptionsProps) {
+export default function ElementOptions({x, y, textHeight, notifyParentFocused, notifyChangeFontSize, expanded, fontSize, handleMouseEnter, handleMouseLeave} : elementOptionsProps) {
   const [width, setWidth] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_WIDTH : DEFAULT_OPTIONS_UNEXPANDED_SIZE);
   const [height, setHeight] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE);
   const [opacity, setOpacity] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY);
-  const [moveX, setMoveX] = useState(expanded ? 20 : 0);
-  const [moveY, setMoveY] = useState(expanded ? 20 : 0);
+  const [moveX, setMoveX] = useState(expanded ? 0 : 0);
+  const [moveY, setMoveY] = useState(expanded ? height : 0);
   const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState(expanded ? 0.1 : 0.5);
   const targetWidth = expanded ? DEFAULT_OPTIONS_EXPANDED_WIDTH : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
   const targetHeight = expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
   const targetOpacity = expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY;
-  const targetMoveX = expanded ? -2 : 0;
-  const targetMoveY = expanded ? 28 : 0;
+  const targetMoveX = expanded ? 0 : 0;
+  const targetMoveY = expanded ? height : 0;
   const targetCornerRadiusPercentage = expanded ? 0.1 : 0.5;
   const animationRef = useRef(0);
 
@@ -39,7 +39,7 @@ export default function ElementOptions({x, y, notifyParentFocused, notifyChangeF
   function getNextId() {
     return nextId++;
   }
-
+console.log('x y' + x + " " + y);
   useEffect(() => {
     cancelAnimationFrame(animationRef.current);
 
@@ -73,25 +73,28 @@ export default function ElementOptions({x, y, notifyParentFocused, notifyChangeF
     return () => cancelAnimationFrame(animationRef.current);
   }, [expanded]);
 
-  const handleMouseDown = (e:React.MouseEvent<SVGGElement, MouseEvent>) => {
+  const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     console.log('handleMouseDown elementOptions');
     e.stopPropagation();
   }
 
-  const handleMouseUp = (e:React.MouseEvent<SVGGElement, MouseEvent>) => {
+  const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     console.log('handleMouseUp elementOptions');
     e.stopPropagation();
   }
 
+  const DEFAULT_SPACING_X = 5;
+  console.log('y', y - textHeight/2 + height/2);
+
   return (
-    <g
+    <svg
       onMouseDown={(e) => handleMouseDown(e)}
       onMouseUp={(e) => handleMouseUp(e)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}>
     <rect
-      x={x - width - moveX}
-      y={y - offsetY.current - moveY}
+      x={x - width - DEFAULT_SPACING_X}
+      y={y - textHeight/2}
       width={width}
       height={height}
       rx={cornerRadiusPercentage*width}
@@ -104,8 +107,8 @@ export default function ElementOptions({x, y, notifyParentFocused, notifyChangeF
     {expanded &&
     <ElementInput
       id={getNextId()}
-      x={x - width - moveX + 5}
-      y={y - offsetY.current - moveY + 5}
+      x={x - width - DEFAULT_SPACING_X - moveX}
+      y={y - height/2 - moveY}
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       parentWidth={width}
@@ -114,6 +117,6 @@ export default function ElementOptions({x, y, notifyParentFocused, notifyChangeF
       fontSize={DEFAULT_OPTIONS_TEXT_SIZE}
       />
     }
-    </g>
+    </svg>
   );
 }

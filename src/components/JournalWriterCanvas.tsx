@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, KeyboardEventHandler, MouseEventHan
 import '../app/journalWriter.css';
 import ElementOptions from '@/components/ElementOptions';
 import usePageVisibility from '@/hooks/usePageVisibility';
+import CanvasInput from './CanvasInput';
 
 function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
   if (value === undefined || value === null) {
@@ -15,8 +16,6 @@ function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
 //
 function elementsFromPoint(x:number,y:number,stop:string) {
 	var elements = [], previousPointerEvents = [], current, i, d;
-
-  console.log('elementsFromPoint');
 
   // get all elements via elementFromPoint, and remove them from hit-testing in order
 	while ((current = document.elementFromPoint(x,y) as HTMLElement) && elements.indexOf(current)===-1 && current != null) {
@@ -41,6 +40,19 @@ function elementsFromPoint(x:number,y:number,stop:string) {
 	return elements;
 }
 
+function svgGetBBox (svgEl:any) {
+  let tempDiv = document.createElement('div')
+  tempDiv.setAttribute('style', "position:absolute; visibility:hidden; width:0; height:0")
+  document.body.appendChild(tempDiv)
+  let tempSvg = document.createElementNS("http://www.w3.org/2000/svg", 'svg')
+  tempDiv.appendChild(tempSvg)
+  let tempEl = svgEl.cloneNode(true)
+  tempSvg.appendChild(tempEl)
+  let bb = tempEl.getBBox()
+  document.body.removeChild(tempDiv)
+  console.log('tempdiv', tempDiv);
+  return bb;
+}
 
 type pair = {
   key: string,
@@ -52,6 +64,7 @@ type element = {
   x:number,
   y:number,
   fontSize:number,
+  fontFamily:string,
   content:string,
   mouseoverRegion:pEnum,
   isDragged:boolean,
@@ -64,6 +77,7 @@ type element = {
 type elementProps = {
   element:element,
   ref?:any,
+  map?:any,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
@@ -74,10 +88,17 @@ type elementProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-function Element({element, ref, notifyParentFocused, notifyChangeFontSize,
+function Element({element, ref, map, notifyParentFocused, notifyChangeFontSize,
                   handleMouseDown, handleMouseUp, parentOnFocus, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
-  const optionsOffsetY = useRef<number>(element.fontSize*1.5);
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
+  const [textHeight, setTextHeight] = useState<number>(element.fontSize);
+
+  useEffect(() => {
+    const bbox = map.get(element.id).getBBox();
+    if (bbox.height === 0) return; // So we keep the default
+
+    setTextHeight(bbox.height - (((bbox.y + bbox.height) - element.y) * 2));
+  }, [ref]);
 
   const handleOnFocus = () => {
     if (parentOnFocus)
@@ -94,8 +115,10 @@ function Element({element, ref, notifyParentFocused, notifyChangeFontSize,
   const handleMouseOptionsLeave = () => setOptionsExpanded(false);
 
   return (
-    <g>   
-    <text x={element.x} y={element.y} tabIndex={0} ref={ref}
+    <g>
+    <text
+      x={element.x} y={element.y}
+      ref={ref} tabIndex={0} 
       fontSize={element.fontSize}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -104,6 +127,7 @@ function Element({element, ref, notifyParentFocused, notifyChangeFontSize,
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       style={{
+        fontFamily: element.fontFamily,
         whiteSpace: "break-spaces",
         outline: (element.focused) ? "1px solid gold" : 
                  (element.selected) ? "1px solid blue" : "none",
@@ -121,9 +145,7 @@ function Element({element, ref, notifyParentFocused, notifyChangeFontSize,
                  (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
                 (element.mouseoverRegion === REGION.BODY) ? "grab" : "default"
       }}>
-      <tspan
-        style={{
-        }}>
+      <tspan>
         {element.content}
       </tspan>
     </text>
@@ -131,9 +153,9 @@ function Element({element, ref, notifyParentFocused, notifyChangeFontSize,
     <ElementOptions
       x={element.x}
       y={element.y}
+      textHeight={textHeight}
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
-      offsetY={optionsOffsetY}
       expanded={optionsExpanded}
       fontSize={element.fontSize}
       handleMouseEnter={handleMouseOptionsEnter}
@@ -176,6 +198,38 @@ const dragDefault = {
   offsetY:0
 }
 
+function isFontAvailable(font: string): boolean {
+  const testString = "mmmmmmmmmmlli";
+  const testSize = "72px";
+
+  const defaultFonts = ["monospace", "sans-serif", "serif"];
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) return false;
+
+  canvas.width = 1000;
+  canvas.height = 100;
+
+  // Get width for each default font
+  const baselineWidths = defaultFonts.map(baseFont => {
+    context.font = `${testSize} ${baseFont}`;
+    return context.measureText(testString).width;
+  });
+
+  // Measure with the target font + fallback
+  return defaultFonts.some((baseFont, i) => {
+    context.font = `${testSize} '${font}', ${baseFont}`;
+    const width = context.measureText(testString).width;
+    return width !== baselineWidths[i]; // If different, font is likely available
+  });
+}
+
+
+const DEFAULT_FONT = "Arial";
+const availableFonts = ["Aharoni, Arial, Helvetica"];
+
+
 export default function JournalWriter() {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
   const [mouseDownY, setMouseDownY] = useState<number>(-1);
@@ -185,6 +239,7 @@ export default function JournalWriter() {
   const elementsRef = useRef<Map<any, any>|null>(null);
   const isPageVisible = usePageVisibility();
   const speedRef = useRef(false);
+  const [font, setFont] = useState<string>(DEFAULT_FONT);
 
   var nextId = Date.now();
   const getNextId = () => nextId++;
@@ -321,7 +376,7 @@ export default function JournalWriter() {
       const DEFAULT_OFFSET_Y = 0;
       const id = getNextId();
 
-      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), fontSize:16, content:"", mouseoverRegion:REGION.NONE, isDragged: false, selected:true, focused:true, optionsFocused:false, ex:[]}));
+      setElements(newElements.concat({id:id, x:(x - DEFAULT_OFFSET_X), y:(y - DEFAULT_OFFSET_Y), fontSize:16, fontFamily:DEFAULT_FONT, content:"", mouseoverRegion:REGION.NONE, isDragged: false, selected:true, focused:true, optionsFocused:false, ex:[]}));
       setSelectedId(id);
     }
 
@@ -383,7 +438,6 @@ export default function JournalWriter() {
   }
 
   useEffect(() => {
-    console.log('selecting', selectedId);
     if (selectedId > 0)
       getMap().get(selectedId).focus();
 
@@ -486,8 +540,10 @@ export default function JournalWriter() {
          }}>
       {elements.map((element) =>
         <Element
-          element={element}
           key={element.id}
+          element={element}
+          ref={ref.bind(null, element.id)}
+          map={getMap()}
           notifyParentFocused={setElementOptionsFocus}
           notifyChangeFontSize={setElementFontSize.bind(null, element.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
@@ -495,9 +551,14 @@ export default function JournalWriter() {
           parentOnFocus={handleOnFocus.bind(null, element.id)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
-          handleKeyUp={handleKeyUp}
-          ref={ref.bind(null, element.id)}/>
+          handleKeyUp={handleKeyUp}/>
       )}
+      <CanvasInput
+        id={getNextId()}
+        x={20}
+        y={20}
+        fontSize={16}
+        font={font} />
     </svg>
   );
 }
