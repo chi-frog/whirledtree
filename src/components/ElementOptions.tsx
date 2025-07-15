@@ -94,7 +94,7 @@ console.log('x y' + x + " " + y);
       onMouseLeave={handleMouseLeave}>
     <rect
       x={x - width - DEFAULT_SPACING_X}
-      y={y - textHeight/2}
+      y={y - textHeight/2 - height/2}
       width={width}
       height={height}
       rx={cornerRadiusPercentage*width}
