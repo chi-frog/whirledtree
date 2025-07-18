@@ -268,11 +268,13 @@ export default function JournalWriter() {
     return elementsRef.current;
   }
 
-  const setElementOptionsFocus = (value:boolean) => {
+  const setElementOptionsFocus = (id:number, value:boolean) => {
     const [newElements, selectedElement] = targetCopyElements(
-      (element:element) => element.id === selectedId);
+      (element:element) => element.id === id);
 
     selectedElement.optionsFocused = value;
+    if (value)
+      setFocusedId(0);
 
     setElements(newElements);
   };
@@ -533,7 +535,7 @@ export default function JournalWriter() {
           selected={element.id === selectedId}
           focused={element.id === focusedId}
           isDragged={element.id === drag.id}
-          notifyParentFocused={setElementOptionsFocus}
+          notifyParentFocused={setElementOptionsFocus.bind(null, element.id)}
           notifyChangeFontSize={setElementFontSize.bind(null, element.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element.id)}

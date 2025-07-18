@@ -15,53 +15,62 @@ type elementInputProps = {
 export default function ElementInput({id, x, y, notifyParentFocused, notifyChangeFontSize, parentWidth, parentHeight, fontSize, elementFontSize} : elementInputProps) {
   const [focused, setFocused] = useState(false);
   const [desiredFontSize, setDesiredFontSize] = useState<string>("" + elementFontSize);
-  const ref = useRef<SVGTextElement>(null);
+  const [textHeight, setTextHeight] = useState<number>(fontSize);
+  const ref = useRef<SVGSVGElement>(null);
 
-  const handleKeyDown = (e:React.KeyboardEvent<SVGGElement>) => {
+  useEffect(() => {
+      if (!ref || !ref.current) return;
+
+      const bbox = ref.current.querySelector('text')?.getBBox();
+      if((!bbox) ||
+         (bbox.height === 0)) return;
+
+         console.log('bbox', bbox);
+  
+      setTextHeight(bbox.height);
+    }, [ref]);
+
+  const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/;
+    let newFontSize;
 
     if (numberRegex.test(e.key)) {
-      const newFontSize = desiredFontSize + e.key;
+      newFontSize = desiredFontSize + e.key;
 
       if (parseInt(newFontSize) > 1638) return;
-
-      setDesiredFontSize(newFontSize);
     } else {
       // Here we enable certain functionality
       switch (e.key) {
         case "Backspace":
-          setDesiredFontSize(desiredFontSize.slice(0, desiredFontSize.length-1));
-          return;
+          newFontSize = desiredFontSize.slice(0, desiredFontSize.length-1);
+          break;
         case "Delete":
-          setDesiredFontSize("");
-          return;
+          newFontSize = "";
+          break;
         default: return;
       }
     }
+
+    setDesiredFontSize(newFontSize);
+    if(notifyChangeFontSize) notifyChangeFontSize(newFontSize);
   }
 
-  useEffect(() => {
-    if (notifyChangeFontSize) notifyChangeFontSize(desiredFontSize);
-  }, [desiredFontSize]);
-
-  const handleMouseDown = (e:React.MouseEvent<SVGGElement, MouseEvent>) => {
+  const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     e.stopPropagation();
     setFocused(true);
   }
 
-  const handleMouseUp = (e:React.MouseEvent<SVGGElement, MouseEvent>) => {
+  const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     e.stopPropagation();
   }
 
   const handleBlur = () => {
-    console.log('blur input');
     setFocused(false);
     if (notifyParentFocused)
       notifyParentFocused(false);
   }
 
   const handleFocus = () => {
-    console.log('focus input');
     setFocused(true);
     if (notifyParentFocused)
       notifyParentFocused(true);
@@ -73,7 +82,11 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
   }, [focused]);
 
   return (
-    <g
+    <svg
+      x={parentWidth/2 - (parentHeight-10)/2}
+      y={parentHeight/2 - (parentHeight-10)/2}
+      width={parentHeight-10}
+      height={parentHeight-10}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
@@ -87,19 +100,19 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
       }}
     >
     <rect
-      x={x + parentWidth/2 - (parentHeight-10) / 2}
-      y={y + parentHeight/2 - (parentHeight-10) / 2}
-      rx={5}
       width={parentHeight - 10}
       height={parentHeight - 10}
+      rx={5}
       fill="white">
     </rect>
     <text
-      x={x + parentWidth/2}
-      y={y + parentHeight/2}
+      x={'50%'}
+      y={'50%'}
+      dominantBaseline={'middle'}
+      textAnchor={'middle'}
       fontSize={fontSize}>
       {""+desiredFontSize}
     </text>
-    </g>
+    </svg>
   );
 }

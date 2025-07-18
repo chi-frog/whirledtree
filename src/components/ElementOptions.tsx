@@ -87,13 +87,15 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
 
   return (
     <svg
+      x={x - width - DEFAULT_SPACING_X}
+      y={y - textHeight/2 - height/2}
+      width={width}
+      height={height}
       onMouseDown={(e) => handleMouseDown(e)}
       onMouseUp={(e) => handleMouseUp(e)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}>
     <rect
-      x={x - width - DEFAULT_SPACING_X}
-      y={y - textHeight/2 - height/2}
       width={width}
       height={height}
       rx={cornerRadiusPercentage*width}
