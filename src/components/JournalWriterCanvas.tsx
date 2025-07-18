@@ -66,8 +66,6 @@ type element = {
   fontFamily:string,
   content:string,
   mouseoverRegion:pEnum,
-  selected:boolean,
-  focused:boolean,
   optionsFocused:boolean,
   ex:pair[],
 }
@@ -76,19 +74,20 @@ type elementProps = {
   element:element,
   ref?:any,
   map?:any,
+  selected:boolean,
+  focused:boolean,
   isDragged:boolean,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
-  parentOnFocus?:Function,
   parentOnBlur?:Function,
   handleKeyDown?:KeyboardEventHandler<SVGTextElement>,
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-function Element({element, ref, map, isDragged, notifyParentFocused, notifyChangeFontSize,
-                  handleMouseDown, handleMouseUp, parentOnFocus, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
+function Element({element, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
+                  handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
   const [textHeight, setTextHeight] = useState<number>(element.fontSize);
 
@@ -101,13 +100,7 @@ function Element({element, ref, map, isDragged, notifyParentFocused, notifyChang
 
   useEffect(() => {
     map.get(element.id).focus();
-    console.log('focused', element);
-  }, [element.focused])
-
-  const handleOnFocus = () => {
-    if (parentOnFocus)
-      parentOnFocus();
-  }
+  }, [focused])
 
   const handleOnBlur = () => {
     if (parentOnBlur)
@@ -129,17 +122,16 @@ function Element({element, ref, map, isDragged, notifyParentFocused, notifyChang
       fontSize={element.fontSize}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
-      onFocus={handleOnFocus}
       onBlur={handleOnBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       style={{
         fontFamily: element.fontFamily,
         whiteSpace: "break-spaces",
-        outline: (element.focused) ? "1px solid gold" : 
-                 (element.selected) ? "1px solid blue" : "none",
+        outline: (focused) ? "1px solid gold" : 
+                 (selected) ? "1px solid blue" : "none",
         userSelect: "none",
-        cursor: (element.focused) ? "text" :
+        cursor: (focused) ? "text" :
                 (isDragged) ? "grabbing" :
                 (element.mouseoverRegion === REGION.NONE) ? "default" :
                 ((element.mouseoverRegion === REGION.LEFT_SIDE) ||
@@ -156,7 +148,7 @@ function Element({element, ref, map, isDragged, notifyParentFocused, notifyChang
         {element.content}
       </tspan>
     </text>
-    {element.selected &&
+    {selected &&
     <ElementOptions
       x={element.x}
       y={element.y}
@@ -242,7 +234,8 @@ export default function JournalWriter() {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
   const [mouseDownY, setMouseDownY] = useState<number>(-1);
   const [elements, setElements] = useState<element[]>([]);
-  const [selectedId, setSelectedId] = useState<number>(0); // ID cannot be 0
+  const [selectedId, setSelectedId] = useState<number>(0);
+  const [focusedId, setFocusedId] = useState<number>(0);
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
   const isPageVisible = usePageVisibility();
@@ -250,11 +243,6 @@ export default function JournalWriter() {
   const [font, setFont] = useState<string>(DEFAULT_FONT);
   const [fontSize, setFontSize] = useState<number>(DEFAULT_FONT_SIZE);
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
-
-  const updateSelectedId = (id:number) => {
-    console.log('elements', elements);
-    setSelectedId(id);
-  }
 
   var nextId = Date.now();
   const getNextId = () => nextId++;
@@ -292,7 +280,8 @@ export default function JournalWriter() {
   const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
     e.stopPropagation();
 
-    if (e.button !== 0)
+    if ((e.button !== 0) ||
+        (e.detail > 2))
       return;
 
     setMouseDownX(e.clientX);
@@ -303,41 +292,27 @@ export default function JournalWriter() {
     setDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
   }
 
-  const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
+  const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, id:number) => {
     e.stopPropagation();
 
-    if ((e.button !== 0))
+    if ((e.button !== 0) ||
+        (e.detail > 2))
       return;
 
     if ((mouseDownX === e.clientX) &&
         (mouseDownY === e.clientY)) {
-      if (e.detail !== 2) {
-        const [newElements, oldFocusedElement, newFocusedElement] = targetCopyElements(
-          (element:element) => element.selected,
-          (elementToFocus:element) => (element.id === elementToFocus.id));
+      if (selectedId !== id) {
+        setElements((newElements) => {
+          const elementToRemoveIndex = newElements.findIndex((element) => (element.id === id));
+          const elementToRemove = newElements.splice(elementToRemoveIndex, 1);
+          newElements.push(elementToRemove[0]);
 
-        if (oldFocusedElement)
-          oldFocusedElement.selected = oldFocusedElement.focused = false;
-        if (newFocusedElement) {
-          newFocusedElement.selected = true;
-          newFocusedElement.focused = true;
-          // Move it to the end of the list, so it's drawn last and is the top layer
-          newElements.splice(newElements.findIndex((element) => (element === newFocusedElement)), 1);
-          newElements.push(newFocusedElement);
-          setSelectedId(newFocusedElement.id);
-        }
-
-        setElements(newElements);
-      } else {
-        const [newElements, oldFocusedElement] = targetCopyElements(
-          (element:element) => element.selected);
-
-        if (oldFocusedElement)
-          oldFocusedElement.selected = oldFocusedElement.focused = false;
-
-        setElements(newElements);
-        setSelectedId(0);
+          return newElements;
+        });
       }
+        
+      setSelectedId((e.detail !== 2) ? id : 0);
+      setFocusedId((e.detail !== 2) ? id : 0);
     }
 
     setMouseDownX(-1);
@@ -377,7 +352,8 @@ export default function JournalWriter() {
   };
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if (e.button !== 0)
+    if ((e.button !== 0) ||
+        (e.detail > 2))
       return;
 
     setMouseDownX(e.clientX);
@@ -385,23 +361,33 @@ export default function JournalWriter() {
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if (e.button !== 0)
+    if ((e.button !== 0) ||
+        (e.detail > 2))
       return;
 
     if ((mouseDownX === -1) ||
         (mouseDownY === -1))
       return;
 
+    setMouseDownX(-1);
+    setMouseDownY(-1);
+
     if (drag.active)
       return setDrag(dragDefault);
+
+    if (e.detail === 2) {
+      e.preventDefault();
+      setSelectedId(0);
+      setFocusedId(0);
+      return;
+    }
 
     let x = e.clientX;
     let y = e.clientY;
 
     if (Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2)) <= 5) {
       const id = getNextId();
-      const [newElements, oldFocusedElement] = targetCopyElements(
-        (element:element) => element.selected);
+
       const newElement = {
         id:id,
         x:x,
@@ -410,21 +396,13 @@ export default function JournalWriter() {
         fontFamily:font,
         content:baseContent,
         mouseoverRegion:REGION.NONE,
-        selected:true,
-        focused:true,
         optionsFocused:false,
         ex:[]};
 
-      if (oldFocusedElement)
-        oldFocusedElement.selected = oldFocusedElement.focused = false;
-      newElements.push(newElement);
-
-      setElements(newElements);
+      setElements((elements) => elements.concat(newElement));
       setSelectedId(id);
+      setFocusedId(id);
     }
-
-    setMouseDownX(-1);
-    setMouseDownY(-1);
   }
 
   const handleMouseDrag = (e:React.MouseEvent<SVGSVGElement>) => {
@@ -476,19 +454,9 @@ export default function JournalWriter() {
     setElements(newElements);
   }
 
-  const handleOnFocus = (id:number) => (id !== drag.id) &&
-    setElements(copyElements().map((element) =>
-      (element.id === id) ? {...element, focused:true} :
-                            {...element}));
-
   const handleOnBlur = (content:string, id:number) => {
     if (content === "")
-      setElements(copyElements().filter((element) => element.id !== id));
-    else {
-      setElements(elements.map((element) => (element.id !== id) ?
-        {...element} :
-        {...element, focused:false}))
-    }
+      setElements((elements) => elements.filter((element) => (element.id !== id)));
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -562,12 +530,13 @@ export default function JournalWriter() {
           element={element}
           ref={ref.bind(null, element.id)}
           map={getMap()}
+          selected={element.id === selectedId}
+          focused={element.id === focusedId}
           isDragged={element.id === drag.id}
           notifyParentFocused={setElementOptionsFocus}
           notifyChangeFontSize={setElementFontSize.bind(null, element.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
-          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element)}
-          parentOnFocus={handleOnFocus.bind(null, element.id)}
+          handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element.id)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}/>
