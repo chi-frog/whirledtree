@@ -1,9 +1,10 @@
 'use client';
-import React, { useState, useEffect, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
+import React, { useState, useRef } from 'react';
 import '../app/journalWriter.css';
-import ElementOptions from '@/components/ElementOptions';
 import usePageVisibility from '@/hooks/usePageVisibility';
 import CanvasInput from './CanvasInput';
+import Element, { element, pair } from './Element';
+import { REGION } from './Region';
 
 function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
   if (value === undefined || value === null) {
@@ -51,131 +52,6 @@ function svgGetBBox (svgEl:any) {
   let bb = tempEl.getBBox()
   document.body.removeChild(tempDiv)
   return bb;
-}
-
-type pair = {
-  key: string,
-  value: number,
-}
-
-type element = {
-  id:number,
-  x:number,
-  y:number,
-  fontSize:number,
-  fontFamily:string,
-  content:string,
-  mouseoverRegion:pEnum,
-  optionsFocused:boolean,
-  ex:pair[],
-}
-
-type elementProps = {
-  element:element,
-  ref?:any,
-  map?:any,
-  selected:boolean,
-  focused:boolean,
-  isDragged:boolean,
-  notifyParentFocused?:Function,
-  notifyChangeFontSize?:Function,
-  handleMouseDown?:MouseEventHandler<SVGTextElement>,
-  handleMouseUp?:MouseEventHandler<SVGTextElement>,
-  parentOnBlur?:Function,
-  handleKeyDown?:KeyboardEventHandler<SVGTextElement>,
-  handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
-}
-
-function Element({element, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
-                  handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
-  const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
-  const [textHeight, setTextHeight] = useState<number>(element.fontSize);
-
-  useEffect(() => {
-    const bbox = map.get(element.id).getBBox();
-    if (bbox.height === 0) return; // So we keep the default
-
-    setTextHeight(bbox.height - (((bbox.y + bbox.height) - element.y) * 2));
-  }, [ref]);
-
-  useEffect(() => {
-    map.get(element.id).focus();
-  }, [focused])
-
-  const handleOnBlur = () => {
-    if (parentOnBlur)
-      parentOnBlur();
-  };
-
-  const handleMouseOptionsEnter = () => setOptionsExpanded(true);
-
-  const handleMouseOptionsLeave = () => {
-    if (!element.optionsFocused)
-      setOptionsExpanded(false);
-  }
-
-  return (
-    <g>
-    <text
-      x={element.x} y={element.y}
-      ref={ref} tabIndex={0} 
-      fontSize={element.fontSize}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onBlur={handleOnBlur}
-      onKeyDown={handleKeyDown}
-      onKeyUp={handleKeyUp}
-      style={{
-        fontFamily: element.fontFamily,
-        whiteSpace: "break-spaces",
-        outline: (focused) ? "1px solid gold" : 
-                 (selected) ? "1px solid blue" : "none",
-        userSelect: "none",
-        cursor: (focused) ? "text" :
-                (isDragged) ? "grabbing" :
-                (element.mouseoverRegion === REGION.NONE) ? "default" :
-                ((element.mouseoverRegion === REGION.LEFT_SIDE) ||
-                  element.mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
-                ((element.mouseoverRegion === REGION.TOP_SIDE) ||
-                  element.mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
-                ((element.mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
-                 (element.mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
-                ((element.mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
-                 (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
-                (element.mouseoverRegion === REGION.BODY) ? "grab" : "default"
-      }}>
-      <tspan>
-        {element.content}
-      </tspan>
-    </text>
-    {selected &&
-    <ElementOptions
-      x={element.x}
-      y={element.y}
-      textHeight={textHeight}
-      notifyParentFocused={notifyParentFocused}
-      notifyChangeFontSize={notifyChangeFontSize}
-      expanded={optionsExpanded}
-      fontSize={element.fontSize}
-      parentMouseEnter={handleMouseOptionsEnter}
-      parentMouseLeave={handleMouseOptionsLeave}
-      />
-    }
-    </g>
-  );
-}
-
-const REGION = {
-  TOP_LEFT_CORNER: {'text':'Top Left Corner'},
-  TOP_RIGHT_CORNER: {'text':'Top Right Corner'},
-  BOTTOM_LEFT_CORNER: {'text':'Bottom Left Corner'},
-  BOTTOM_RIGHT_CORNER: {'text':'Bottom Right Corner'},
-  TOP_SIDE: {'text':'Top Side'},
-  BOTTOM_SIDE: {'text':'Bottom Side'},
-  LEFT_SIDE: {'text':'Left Side'},
-  RIGHT_SIDE: {'text':'Right Side'},
-  BODY: {'text':'Body'},
-  NONE: {'text': 'None'},
 }
 
 type pEnum = {
@@ -238,8 +114,6 @@ export default function JournalWriter() {
   const [focusedId, setFocusedId] = useState<number>(0);
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
-  const isPageVisible = usePageVisibility();
-  const speedRef = useRef(false);
   const [font, setFont] = useState<string>(DEFAULT_FONT);
   const [fontSize, setFontSize] = useState<number>(DEFAULT_FONT_SIZE);
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
@@ -486,6 +360,7 @@ export default function JournalWriter() {
       case "Enter":
         break;
       case "Tab":
+        updatedElement.content += "   ";
         break;
       case "Delete":
         setSelectedId(0);
