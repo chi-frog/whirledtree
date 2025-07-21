@@ -157,8 +157,8 @@ function Element({element, ref, map, selected, focused, isDragged, notifyParentF
       notifyChangeFontSize={notifyChangeFontSize}
       expanded={optionsExpanded}
       fontSize={element.fontSize}
-      handleMouseEnter={handleMouseOptionsEnter}
-      handleMouseLeave={handleMouseOptionsLeave}
+      parentMouseEnter={handleMouseOptionsEnter}
+      parentMouseLeave={handleMouseOptionsLeave}
       />
     }
     </g>
@@ -289,7 +289,7 @@ export default function JournalWriter() {
     setMouseDownX(e.clientX);
     setMouseDownY(e.clientY);
 
-    if (selectedId === element.id) return;
+    if (focusedId === element.id) return;
 
     setDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
   }

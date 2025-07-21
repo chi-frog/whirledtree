@@ -4,6 +4,8 @@ type elementInputProps = {
   id:number,
   x:number,
   y:number,
+  width:number,
+  height:number,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   parentWidth:number,
@@ -12,37 +14,34 @@ type elementInputProps = {
   elementFontSize:number,
 }
 
-export default function ElementInput({id, x, y, notifyParentFocused, notifyChangeFontSize, parentWidth, parentHeight, fontSize, elementFontSize} : elementInputProps) {
+export default function ElementInput({id, x, y, width, height, notifyParentFocused, notifyChangeFontSize, parentWidth, parentHeight, fontSize, elementFontSize} : elementInputProps) {
   const [focused, setFocused] = useState(false);
-  const [desiredFontSize, setDesiredFontSize] = useState<string>("" + elementFontSize);
-  const [textHeight, setTextHeight] = useState<number>(fontSize);
+  //const [textHeight, setTextHeight] = useState<number>(fontSize);
   const ref = useRef<SVGSVGElement>(null);
 
-  useEffect(() => {
+  /*useEffect(() => {
       if (!ref || !ref.current) return;
 
       const bbox = ref.current.querySelector('text')?.getBBox();
       if((!bbox) ||
          (bbox.height === 0)) return;
-
-         console.log('bbox', bbox);
   
       setTextHeight(bbox.height);
-    }, [ref]);
+    }, [ref]);*/
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/;
-    let newFontSize;
+    let newFontSize = "" + elementFontSize;
 
     if (numberRegex.test(e.key)) {
-      newFontSize = desiredFontSize + e.key;
+      newFontSize = newFontSize + e.key;
 
       if (parseInt(newFontSize) > 1638) return;
     } else {
       // Here we enable certain functionality
       switch (e.key) {
         case "Backspace":
-          newFontSize = desiredFontSize.slice(0, desiredFontSize.length-1);
+          newFontSize = newFontSize.slice(0, newFontSize.length-1);
           break;
         case "Delete":
           newFontSize = "";
@@ -51,7 +50,7 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
       }
     }
 
-    setDesiredFontSize(newFontSize);
+    console.log('newFontSize:' + newFontSize);
     if(notifyChangeFontSize) notifyChangeFontSize(newFontSize);
   }
 
@@ -83,10 +82,10 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
 
   return (
     <svg
-      x={parentWidth/2 - (parentHeight-10)/2}
-      y={parentHeight/2 - (parentHeight-10)/2}
-      width={parentHeight-10}
-      height={parentHeight-10}
+      x={parentWidth/2 - width/2}
+      y={parentHeight/2 - height/2}
+      width={width}
+      height={height}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
@@ -100,8 +99,8 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
       }}
     >
     <rect
-      width={parentHeight - 10}
-      height={parentHeight - 10}
+      width={width}
+      height={height}
       rx={5}
       fill="white">
     </rect>
@@ -111,7 +110,7 @@ export default function ElementInput({id, x, y, notifyParentFocused, notifyChang
       dominantBaseline={'middle'}
       textAnchor={'middle'}
       fontSize={fontSize}>
-      {""+desiredFontSize}
+      {""+elementFontSize}
     </text>
     </svg>
   );
