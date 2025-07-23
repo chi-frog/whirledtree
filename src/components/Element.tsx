@@ -1,7 +1,8 @@
 'use client'
 import ElementOptions from '@/components/ElementOptions';
-import { KeyboardEventHandler, MouseEventHandler, useEffect, useState } from 'react';
+import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { REGION } from './Region';
+import '../app/journalWriter.css';
 
 type pEnum = {
   text:string,

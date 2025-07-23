@@ -50,8 +50,9 @@ export default function ElementInput({id, x, y, width, height, notifyParentFocus
       }
     }
 
-    console.log('newFontSize:' + newFontSize);
-    if(notifyChangeFontSize) notifyChangeFontSize(newFontSize);
+    const fontSizeParsed = parseInt(newFontSize);
+    if(notifyChangeFontSize)
+      notifyChangeFontSize(isNaN(fontSizeParsed) ? 0 : fontSizeParsed);
   }
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {

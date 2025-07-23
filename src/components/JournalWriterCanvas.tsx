@@ -5,6 +5,7 @@ import usePageVisibility from '@/hooks/usePageVisibility';
 import CanvasInput from './CanvasInput';
 import Element, { element, pair } from './Element';
 import { REGION } from './Region';
+import Cursor from './Cursor';
 
 function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
   if (value === undefined || value === null) {
@@ -394,7 +395,8 @@ export default function JournalWriter() {
   }
 
   return (
-    <svg className="bg-rose-50 w-screen h-screen"
+    <svg id="canvas"
+        className="bg-rose-50 w-screen h-screen"
          onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e)}
          onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e)}
          onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}
@@ -418,6 +420,7 @@ export default function JournalWriter() {
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}/>
       )}
+      <Cursor map={getMap()} element={elements.find((element) => element.id === focusedId)}/>
       <CanvasInput
         id={getNextId()}
         x={20}
