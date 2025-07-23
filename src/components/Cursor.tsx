@@ -27,10 +27,6 @@ function getTestBBox(fontSize:number) {
   if (canvas) {
     canvas.appendChild(fontSizeTest);
     bboxTest = fontSizeTest.getBBox();
-    console.log('fontSize', fontSize);
-    console.log('TEMP ELEMENT', fontSizeTest);
-    console.log('TEMPT ELEMTNDF BO', bboxTest);
-    console.log('canvas', canvas);
     fontSizeTest.remove();
   }
 
@@ -64,22 +60,16 @@ export default function Cursor({map, element} : cursorProps) {
     y = element.y;
     width=testBBox ? testBBox.width : 0;
     height = element.fontSize;
-  } else {
 
+  } else {
     const testBBox = getTestBBox(element.fontSize);
     const bbox = elementRef.getBBox();
 
-    console.log('testBBox', testBBox);
-    console.log('element', element);
-    console.log('bbox', bbox);
-
     x = element.x + bbox.width;
-    y = bbox.y;// + bbox.height - (((bbox.y + bbox.height) - element.y) * 2);
+    y = bbox.y;
     width = testBBox ? testBBox.width : 0;
     height = bbox.height;
   }
-
-  console.log('height', height);
 
   return (
     <svg
