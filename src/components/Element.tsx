@@ -20,7 +20,6 @@ export type element = {
   fontSize:number,
   fontFamily:string,
   content:string,
-  mouseoverRegion:pEnum,
   optionsFocused:boolean,
   ex:pair[],
 }
@@ -32,6 +31,7 @@ type elementProps = {
   selected:boolean,
   focused:boolean,
   isDragged:boolean,
+  mouseoverRegion:pEnum,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
@@ -41,7 +41,7 @@ type elementProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-export default function Element({element, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
+export default function Element({element, ref, map, selected, focused, isDragged, mouseoverRegion, notifyParentFocused, notifyChangeFontSize,
                   handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
   const [textHeight, setTextHeight] = useState<number>(element.fontSize);
@@ -72,7 +72,8 @@ export default function Element({element, ref, map, selected, focused, isDragged
   return (
     <g>
     <text
-      x={element.x} y={element.y}
+      x={element.x}
+      y={element.y}
       ref={ref} tabIndex={0} 
       fontSize={element.fontSize}
       onMouseDown={handleMouseDown}
@@ -88,16 +89,16 @@ export default function Element({element, ref, map, selected, focused, isDragged
         userSelect: "none",
         cursor: (focused) ? "text" :
                 (isDragged) ? "grabbing" :
-                (element.mouseoverRegion === REGION.NONE) ? "default" :
-                ((element.mouseoverRegion === REGION.LEFT_SIDE) ||
-                  element.mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
-                ((element.mouseoverRegion === REGION.TOP_SIDE) ||
-                  element.mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
-                ((element.mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
-                 (element.mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
-                ((element.mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
-                 (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
-                (element.mouseoverRegion === REGION.BODY) ? "grab" : "default"
+                (mouseoverRegion === REGION.NONE) ? "default" :
+                ((mouseoverRegion === REGION.LEFT_SIDE) ||
+                  mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
+                ((mouseoverRegion === REGION.TOP_SIDE) ||
+                  mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
+                ((mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
+                 (mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
+                ((mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
+                 (mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
+                (mouseoverRegion === REGION.BODY) ? "grab" : "default"
       }}>
       <tspan>
         {element.content}
