@@ -20,7 +20,6 @@ export type element = {
   fontSize:number,
   fontFamily:string,
   content:string,
-  mouseoverRegion:pEnum,
   optionsFocused:boolean,
   ex:pair[],
 }
@@ -73,6 +72,7 @@ export default function Element({element, ref, map, selected, focused, isDragged
     <g>
     <text
       x={element.x} y={element.y}
+      data-elementid={element.id}
       ref={ref} tabIndex={0} 
       fontSize={element.fontSize}
       onMouseDown={handleMouseDown}
@@ -86,18 +86,6 @@ export default function Element({element, ref, map, selected, focused, isDragged
         outline: (focused) ? "1px solid gold" : 
                  (selected) ? "1px solid blue" : "none",
         userSelect: "none",
-        cursor: (focused) ? "text" :
-                (isDragged) ? "grabbing" :
-                (element.mouseoverRegion === REGION.NONE) ? "default" :
-                ((element.mouseoverRegion === REGION.LEFT_SIDE) ||
-                  element.mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
-                ((element.mouseoverRegion === REGION.TOP_SIDE) ||
-                  element.mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
-                ((element.mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
-                 (element.mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
-                ((element.mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
-                 (element.mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
-                (element.mouseoverRegion === REGION.BODY) ? "grab" : "default"
       }}>
       <tspan>
         {element.content}

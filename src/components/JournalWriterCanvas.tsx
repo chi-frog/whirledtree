@@ -118,6 +118,7 @@ export default function JournalWriter() {
   const [font, setFont] = useState<string>(DEFAULT_FONT);
   const [fontSize, setFontSize] = useState<number>(DEFAULT_FONT_SIZE);
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
+  const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
 
   var nextId = Date.now();
   const getNextId = () => nextId++;
@@ -166,7 +167,7 @@ export default function JournalWriter() {
 
     if (focusedId === element.id) return;
 
-    setDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
+    setDrag({active:true, id:element.id, region:mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
   }
 
   const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, id:number) => {
@@ -190,6 +191,7 @@ export default function JournalWriter() {
         
       setSelectedId((e.detail !== 2) ? id : 0);
       setFocusedId((e.detail !== 2) ? id : 0);
+      setMouseoverRegion((e.detail !== 2) ? REGION.BODY_FOCUSED : getMouseoverRegion(e.clientX, e.clientY));
     }
 
     setMouseDownX(-1);
@@ -304,36 +306,38 @@ export default function JournalWriter() {
     setElements(newElements);
   }
 
+  const getMouseoverRegion = (x:number, y:number) => {
+    const domElements = elementsFromPoint(x, y, "svg");
+
+    if (domElements.length === 0)
+      return REGION.NONE;
+
+    // This will be a tspan - we want the text
+    const domText = domElements[0].parentElement;
+
+    if (!domText)
+      return REGION.NONE;
+
+    if (domText.getAttribute('data-elementid') === "" + focusedId)
+      return REGION.BODY_FOCUSED;
+
+    console.log('domElements[0]', domText?.getAttribute('data-elementid'));
+
+    return getRegion(x, y, domElements[0].getBoundingClientRect());
+  }
+
   const handleMouseMove = (e:React.MouseEvent<SVGSVGElement>) => {
     if (drag.active)
       return handleMouseDrag(e);
 
-    const x = e.clientX;
-    const y = e.clientY;
-    const domElements = elementsFromPoint(x, y, "svg");
-
-    if (domElements.length === 0)
-      return;
-
-    const domElement = domElements[0];
-    const map = getMap();
-    var id = -1;
-    Array.from(map, ([key, value]) => {
-      if (value.contains(domElement))
-        id = key;
-    }); //NOTE: I dont like that this calls on every element regardless
-
-    if (id <= 0) return;
-
-    const [newElements, targetElement] = targetCopyElements((element:element) => element.id === id);
-
-    targetElement.mouseoverRegion = getRegion(x, y, domElement.getBoundingClientRect());
-    setElements(newElements);
+    setMouseoverRegion(getMouseoverRegion(e.clientX, e.clientY));
   }
 
   const handleOnBlur = (content:string, id:number) => {
     if (content === "")
       setElements((elements) => elements.filter((element) => (element.id !== id)));
+    if (id === focusedId)
+      setFocusedId(0);
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -394,6 +398,8 @@ export default function JournalWriter() {
     setElements(newElements);
   }
 
+  console.log('focusedId', focusedId);
+
   return (
     <svg id="canvas"
         className="bg-rose-50 w-screen h-screen"
@@ -401,6 +407,17 @@ export default function JournalWriter() {
          onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e)}
          onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}
          style={{
+          cursor: (mouseoverRegion === REGION.NONE) ? "default" :
+                  (mouseoverRegion === REGION.BODY_FOCUSED) ? "text" :
+                  ((mouseoverRegion === REGION.LEFT_SIDE) ||
+                    mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
+                  ((mouseoverRegion === REGION.TOP_SIDE) ||
+                    mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
+                  ((mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
+                   (mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
+                  ((mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
+                   (mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
+                  (mouseoverRegion === REGION.BODY) ? "grab" : "default",
           ...drag.active ? { cursor:"grabbing" } : {}
          }}>
       {elements.map((element) =>
@@ -420,7 +437,9 @@ export default function JournalWriter() {
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}/>
       )}
-      <Cursor map={getMap()} element={elements.find((element) => element.id === focusedId)}/>
+      {(focusedId > 0) &&
+        <Cursor map={getMap()} element={elements.find((element) => element.id === focusedId)}/>
+      }
       <CanvasInput
         id={getNextId()}
         x={20}

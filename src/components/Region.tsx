@@ -8,5 +8,6 @@ export const REGION = {
   LEFT_SIDE: {'text':'Left Side'},
   RIGHT_SIDE: {'text':'Right Side'},
   BODY: {'text':'Body'},
+  BODY_FOCUSED: {'text': 'Body (Focused)'},
   NONE: {'text': 'None'},
 }

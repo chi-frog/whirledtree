@@ -57,9 +57,10 @@ export default function Cursor({map, element} : cursorProps) {
     const testBBox = getTestBBox(16);
 
     x = element.x;
-    y = element.y;
-    width=testBBox ? testBBox.width : 0;
+    y = testBBox ? element.y - testBBox.height : element.y;
+    width = testBBox ? testBBox.width : 0;
     height = element.fontSize;
+    console.log('testBox', testBBox);
 
   } else {
     const testBBox = getTestBBox(element.fontSize);
@@ -69,7 +70,10 @@ export default function Cursor({map, element} : cursorProps) {
     y = bbox.y;
     width = testBBox ? testBBox.width : 0;
     height = bbox.height;
+    console.log('realBox', bbox);
   }
+
+  console.log('re-rendered Cursor');
 
   return (
     <svg
