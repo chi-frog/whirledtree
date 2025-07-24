@@ -120,6 +120,8 @@ export default function JournalWriter() {
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
   const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
 
+  const {isPageVisible} = usePageVisibility();
+
   var nextId = Date.now();
   const getNextId = () => nextId++;
 
@@ -321,9 +323,7 @@ export default function JournalWriter() {
     if (domText.getAttribute('data-elementid') === "" + focusedId)
       return REGION.BODY_FOCUSED;
 
-    console.log('domElements[0]', domText?.getAttribute('data-elementid'));
-
-    return getRegion(x, y, domElements[0].getBoundingClientRect());
+    return getRegion(x, y, domText.getBoundingClientRect());
   }
 
   const handleMouseMove = (e:React.MouseEvent<SVGSVGElement>) => {
@@ -336,8 +336,9 @@ export default function JournalWriter() {
   const handleOnBlur = (content:string, id:number) => {
     if (content === "")
       setElements((elements) => elements.filter((element) => (element.id !== id)));
-    if (id === focusedId)
+    if (id === focusedId) {
       setFocusedId(0);
+    }
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -398,8 +399,6 @@ export default function JournalWriter() {
     setElements(newElements);
   }
 
-  console.log('focusedId', focusedId);
-
   return (
     <svg id="canvas"
         className="bg-rose-50 w-screen h-screen"
@@ -437,9 +436,6 @@ export default function JournalWriter() {
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}/>
       )}
-      {(focusedId > 0) &&
-        <Cursor map={getMap()} element={elements.find((element) => element.id === focusedId)}/>
-      }
       <CanvasInput
         id={getNextId()}
         x={20}

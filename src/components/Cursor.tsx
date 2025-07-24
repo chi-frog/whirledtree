@@ -1,79 +1,13 @@
 'use client'
 
-import { useRef, useState, useEffect } from "react";
-
-function svgGetBBox (svgEl:any) {
-  let tempDiv = document.createElement('div')
-  tempDiv.setAttribute('style', "position:absolute; visibility:hidden; width:0; height:0")
-  document.body.appendChild(tempDiv)
-  let tempSvg = document.createElementNS("http://www.w3.org/2000/svg", 'svg')
-  tempDiv.appendChild(tempSvg)
-  let tempEl = svgEl.cloneNode(true)
-  tempSvg.appendChild(tempEl)
-  let bb = tempEl.getBBox()
-  document.body.removeChild(tempDiv)
-  return bb;
-}
-
-function getTestBBox(fontSize:number) {
-  let fontSizeTest = document.createElementNS(SVG_NS, "text");
-  fontSizeTest.setAttribute('font-size', "" + fontSize);
-  fontSizeTest.setAttribute("font-family", "Arial");
-  fontSizeTest.setAttribute('style', "visibility:hidden;");
-  fontSizeTest.textContent = "I";
-  let canvas = document.querySelector("#canvas");
-  let bboxTest;
-
-  if (canvas) {
-    canvas.appendChild(fontSizeTest);
-    bboxTest = fontSizeTest.getBBox();
-    fontSizeTest.remove();
-  }
-
-  return bboxTest;
-}
-
 type cursorProps = {
-  map: any,
-  element:any,
+  x:number,
+  y:number,
+  width:number,
+  height:number,
 }
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-export default function Cursor({map, element} : cursorProps) {
-  if ((!map) ||
-      (!element)) {
-    console.log('map or element doesnt exist');
-    return null;
-  }
-
-  const elementRef = map.get(element.id);
-  let x;
-  let y;
-  let width;
-  let height;
-
-  if (!elementRef) {
-    const testBBox = getTestBBox(16);
-
-    x = element.x;
-    y = testBBox ? element.y - testBBox.height : element.y;
-    width = testBBox ? testBBox.width : 0;
-    height = element.fontSize;
-    console.log('testBox', testBBox);
-
-  } else {
-    const testBBox = getTestBBox(element.fontSize);
-    const bbox = elementRef.getBBox();
-
-    x = element.x + bbox.width;
-    y = bbox.y;
-    width = testBBox ? testBBox.width : 0;
-    height = bbox.height;
-    console.log('realBox', bbox);
-  }
-
-  console.log('re-rendered Cursor');
+export default function Cursor({x, y, width, height} : cursorProps) {
 
   return (
     <svg
