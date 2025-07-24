@@ -47,35 +47,6 @@ export default function Cursor({map, element} : cursorProps) {
     return null;
   }
 
-  const opacityIncreasing = useRef(true);
-  const [opacity, setOpacity] = useState(opacityIncreasing ? 1 : 0);
-  const targetOpacity = opacityIncreasing ? 1 : 0;
-  const animationRef = useRef(0);
-
-  useEffect(() => {
-    cancelAnimationFrame(animationRef.current);
-
-    let start:number;
-    const initialOpacity = opacity;
-    const duration = 1000;
-    console.log('Starting new animation chain');
-
-    function animate(time:number) {
-      if (!start) start = time;
-
-      const progress = Math.min((time-start) / duration, 1);
-
-      setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
-
-      if (progress < 1)
-        animationRef.current = requestAnimationFrame(animate);
-    }
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [element]);
-
   const elementRef = map.get(element.id);
   let x;
   let y;
@@ -100,8 +71,6 @@ export default function Cursor({map, element} : cursorProps) {
     height = bbox.height;
   }
 
-  console.log('y' + y + 'h' + height);
-
   return (
     <svg
       x={x}
@@ -117,7 +86,7 @@ export default function Cursor({map, element} : cursorProps) {
     <g
       id="layer1">
       <path
-        style={{
+         style={{
           baselineShift:"baseline",
           display:"inline",
           overflow:"visible",

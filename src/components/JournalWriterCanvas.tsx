@@ -110,7 +110,6 @@ const availableFonts = ["Aharoni, Arial, Helvetica"];
 export default function JournalWriter() {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
   const [mouseDownY, setMouseDownY] = useState<number>(-1);
-  const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
   const [elements, setElements] = useState<element[]>([]);
   const [selectedId, setSelectedId] = useState<number>(0);
   const [focusedId, setFocusedId] = useState<number>(0);
@@ -167,7 +166,7 @@ export default function JournalWriter() {
 
     if (focusedId === element.id) return;
 
-    setDrag({active:true, id:element.id, region:mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
+    setDrag({active:true, id:element.id, region:element.mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
   }
 
   const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, id:number) => {
@@ -180,7 +179,7 @@ export default function JournalWriter() {
     if ((mouseDownX === e.clientX) &&
         (mouseDownY === e.clientY)) {
       if (selectedId !== id) {
-        setElements((newElements) => { // NOTE: I tried to minify this and it didn't work
+        setElements((newElements) => {
           const elementToRemoveIndex = newElements.findIndex((element) => (element.id === id));
           const elementToRemove = newElements.splice(elementToRemoveIndex, 1);
           newElements.push(elementToRemove[0]);
@@ -243,8 +242,6 @@ export default function JournalWriter() {
         (e.detail > 2))
       return;
 
-      console.log('e', e);
-
     if ((mouseDownX === -1) ||
         (mouseDownY === -1))
       return;
@@ -275,6 +272,7 @@ export default function JournalWriter() {
         fontSize:fontSize,
         fontFamily:font,
         content:baseContent,
+        mouseoverRegion:REGION.NONE,
         optionsFocused:false,
         ex:[]};
 
@@ -318,8 +316,19 @@ export default function JournalWriter() {
       return;
 
     const domElement = domElements[0];
+    const map = getMap();
+    var id = -1;
+    Array.from(map, ([key, value]) => {
+      if (value.contains(domElement))
+        id = key;
+    }); //NOTE: I dont like that this calls on every element regardless
 
-    setMouseoverRegion(getRegion(x, y, domElement.getBoundingClientRect()));
+    if (id <= 0) return;
+
+    const [newElements, targetElement] = targetCopyElements((element:element) => element.id === id);
+
+    targetElement.mouseoverRegion = getRegion(x, y, domElement.getBoundingClientRect());
+    setElements(newElements);
   }
 
   const handleOnBlur = (content:string, id:number) => {
@@ -403,7 +412,6 @@ export default function JournalWriter() {
           selected={element.id === selectedId}
           focused={element.id === focusedId}
           isDragged={element.id === drag.id}
-          mouseoverRegion={mouseoverRegion}
           notifyParentFocused={setElementOptionsFocus.bind(null, element.id)}
           notifyChangeFontSize={setElementFontSize.bind(null, element.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
