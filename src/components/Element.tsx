@@ -77,10 +77,12 @@ export default function Element({element, ref, map, selected, focused, isDragged
 
   useEffect(() => {
     let bbox = map.get(element.id).getBBox();
+
+    setTextWidth(bbox.width);
+
     if (bbox.height === 0)
       bbox = getTestBBox(element.fontSize, element.x, element.y);
 
-    setTextWidth(bbox.width);
     setTextHeight(
       [bbox.height, // Full Height
        bbox.height - (((bbox.y + bbox.height) - element.y) * 2), // Height of only Letters

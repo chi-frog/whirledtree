@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef, useState } from "react";
+
 type cursorProps = {
   x:number,
   y:number,
@@ -8,6 +10,40 @@ type cursorProps = {
 }
 
 export default function Cursor({x, y, width, height} : cursorProps) {
+    const opacitySwitch = useRef(true);
+    const [opacity, setOpacity] = useState(opacitySwitch.current ? 0 : 1);
+    const targetOpacity = opacitySwitch.current ? 1 : 0;
+    const animationRef = useRef(0);
+
+    useEffect(() => {
+      cancelAnimationFrame(animationRef.current);
+  
+      let start:number;
+      const initialOpacity = opacity;
+      const duration = 500;
+      console.log('cursor animation started');
+  
+      function animate(time:number) {
+        if (!start) start = time;
+  
+        const progress = Math.min((time-start) / duration, 1);
+  
+        console.log('(' + x + ',' + y + ') ' + 'os: ' + opacitySwitch.current + 'io: ' + initialOpacity + " to:" + targetOpacity + " o:" + opacity + " pr:" + progress);
+        setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
+        console.log('opacity', initialOpacity + (targetOpacity-initialOpacity)*progress);
+  
+        if (progress < 1)
+          animationRef.current = requestAnimationFrame(animate);
+        else {
+          opacitySwitch.current = !opacitySwitch.current;
+          animationRef.current = requestAnimationFrame(animate);
+        }
+      }
+  
+      animationRef.current = requestAnimationFrame(animate);
+  
+      return () => cancelAnimationFrame(animationRef.current);
+    }, [opacitySwitch.current]);
 
   return (
     <svg
@@ -28,7 +64,7 @@ export default function Cursor({x, y, width, height} : cursorProps) {
           baselineShift:"baseline",
           display:"inline",
           overflow:"visible",
-          opacity:1,
+          opacity:opacity,
           vectorEffect:"none",
           strokeLinejoin:"round",
           stopColor:"#000000",
