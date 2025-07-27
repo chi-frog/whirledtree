@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import LeafSVG from "./svg/leaf";
 
 type elementInputProps = {
   id:number,
@@ -46,8 +47,15 @@ export default function CanvasInput({id, x, y, fontSize, font} : elementInputPro
   }, [font]);
 
   return (
-    <svg
+    <>
+    <LeafSVG
       x={x}
+      y={y}
+      width={15}
+      height={15}
+      />
+    <svg
+      x={x+15}
       y={y}
       width={60}
       height={textHeight + 10}
@@ -57,25 +65,26 @@ export default function CanvasInput({id, x, y, fontSize, font} : elementInputPro
       onMouseDown={(e) => handleMouseDown(e)}
       onMouseUp={(e) => handleMouseUp(e)}
       style={{
-        outline: focused ? "1px solid yellow" : "none",
+        outline: "none",
         visibility: (textHeight > 0) ? 'visible' : 'hidden', // This is so that it doesnt flicker
         cursor: 'pointer'
-      }}
-    >
-    <rect
-      rx={10}
-      width={'100%'}
-      height={'100%'}
-      fill="white">
-    </rect>
-    <text
-      x={'50%'}
-      y={'50%'}
-      dominantBaseline={'middle'}
-      textAnchor={'middle'}
-      fontSize={fontSize}>
-      {font}
-    </text>
+      }}>
+      <rect
+        rx={10}
+        width={'100%'}
+        height={'100%'}
+        stroke={focused ? "yellow" : "none"}
+        fill="white">
+      </rect>
+      <text
+        x={'50%'}
+        y={'50%'}
+        dominantBaseline={'middle'}
+        textAnchor={'middle'}
+        fontSize={fontSize}>
+        {font}
+      </text>
     </svg>
+    </>
   );
 }

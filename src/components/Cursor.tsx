@@ -21,16 +21,14 @@ export default function Cursor({x, y, width, height} : cursorProps) {
       let start:number;
       const initialOpacity = opacity;
       const duration = 500;
-      console.log('cursor animation started');
   
       function animate(time:number) {
         if (!start) start = time;
   
         const progress = Math.min((time-start) / duration, 1);
+        const linearOpacity = initialOpacity + (targetOpacity-initialOpacity)*progress; 
   
-        console.log('(' + x + ',' + y + ') ' + 'os: ' + opacitySwitch.current + 'io: ' + initialOpacity + " to:" + targetOpacity + " o:" + opacity + " pr:" + progress);
-        setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
-        console.log('opacity', initialOpacity + (targetOpacity-initialOpacity)*progress);
+        setOpacity(linearOpacity);
   
         if (progress < 1)
           animationRef.current = requestAnimationFrame(animate);

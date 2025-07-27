@@ -75,22 +75,18 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
   }, [expanded]);
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    console.log('handleMouseDown elementOptions');
     e.stopPropagation();
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    console.log('handleMouseUp elementOptions');
     e.stopPropagation();
   }
 
   const handleMouseEnter = (left:boolean) => {
-    console.log('handleMouseEnter');
     setHovered(left ? "left" : "right");
   }
 
   const handleMouseLeave = () => {
-    console.log('handleMouseLeave');
     setHovered("");
   }
 
