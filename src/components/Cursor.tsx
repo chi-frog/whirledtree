@@ -26,9 +26,10 @@ export default function Cursor({x, y, width, height} : cursorProps) {
         if (!start) start = time;
   
         const progress = Math.min((time-start) / duration, 1);
-        const linearOpacity = initialOpacity + (targetOpacity-initialOpacity)*progress; 
-  
-        setOpacity(linearOpacity);
+        const progressCubicEaseInOut = Math.pow(progress, 2) * 3 - Math.pow(progress, 3) * 2;
+        const opacity = initialOpacity + (targetOpacity-initialOpacity)*progressCubicEaseInOut;
+
+        setOpacity(opacity);
   
         if (progress < 1)
           animationRef.current = requestAnimationFrame(animate);
