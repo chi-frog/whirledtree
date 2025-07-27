@@ -16,18 +16,7 @@ type elementInputProps = {
 
 export default function ElementInput({id, x, y, width, height, notifyParentFocused, notifyChangeFontSize, parentWidth, parentHeight, fontSize, elementFontSize} : elementInputProps) {
   const [focused, setFocused] = useState(false);
-  //const [textHeight, setTextHeight] = useState<number>(fontSize);
   const ref = useRef<SVGSVGElement>(null);
-
-  /*useEffect(() => {
-      if (!ref || !ref.current) return;
-
-      const bbox = ref.current.querySelector('text')?.getBBox();
-      if((!bbox) ||
-         (bbox.height === 0)) return;
-  
-      setTextHeight(bbox.height);
-    }, [ref]);*/
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/;

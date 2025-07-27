@@ -9,6 +9,10 @@ type elementInputProps = {
   font:string,
 }
 
+const DEFAULT_LEAF_SIZE = 15;
+const DEFAULT_INPUT_SPACING = 5;
+const DEFAULT_INPUT_WIDTH = 80;
+
 export default function CanvasInput({id, x, y, fontSize, font} : elementInputProps) {
   const [focused, setFocused] = useState(false);
   const [desiredFont, setDesiredFont] = useState<string>(font);
@@ -48,16 +52,10 @@ export default function CanvasInput({id, x, y, fontSize, font} : elementInputPro
 
   return (
     <>
-    <LeafSVG
+    <svg
       x={x}
       y={y}
-      width={15}
-      height={15}
-      />
-    <svg
-      x={x+15}
-      y={y}
-      width={60}
+      width={DEFAULT_INPUT_WIDTH}
       height={textHeight + 10}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
@@ -76,15 +74,24 @@ export default function CanvasInput({id, x, y, fontSize, font} : elementInputPro
         stroke={focused ? "yellow" : "none"}
         fill="white">
       </rect>
-      <text
-        x={'50%'}
-        y={'50%'}
-        dominantBaseline={'middle'}
-        textAnchor={'middle'}
-        fontSize={fontSize}>
-        {font}
-      </text>
+      <svg
+        x={DEFAULT_LEAF_SIZE + DEFAULT_INPUT_SPACING*2}
+        width={DEFAULT_INPUT_WIDTH - DEFAULT_LEAF_SIZE - DEFAULT_INPUT_SPACING*2}
+        height={'100%'}>
+        <text
+          y={'50%'}
+          dominantBaseline={'middle'}
+          fontSize={fontSize}>
+          {font}
+        </text>
+      </svg>
     </svg>
+    <LeafSVG
+      x={x + DEFAULT_INPUT_SPACING}
+      y={y + (textHeight + 10)/2 - DEFAULT_LEAF_SIZE/2}
+      width={DEFAULT_LEAF_SIZE}
+      height={DEFAULT_LEAF_SIZE}
+      />
     </>
   );
 }
