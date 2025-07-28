@@ -1,11 +1,10 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, } from 'react';
 import '../app/journalWriter.css';
 import usePageVisibility from '@/hooks/usePageVisibility';
-import CanvasInput from './CanvasInput';
 import Element, { element, pair } from './Element';
 import { REGION } from './Region';
-import Cursor from './Cursor';
+import CanvasOptions from './CanvasOptions';
 
 function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
   if (value === undefined || value === null) {
@@ -42,17 +41,27 @@ function elementsFromPoint(x:number,y:number,stop:string) {
 	return elements;
 }
 
-function svgGetBBox (svgEl:any) {
-  let tempDiv = document.createElement('div')
-  tempDiv.setAttribute('style', "position:absolute; visibility:hidden; width:0; height:0")
-  document.body.appendChild(tempDiv)
-  let tempSvg = document.createElementNS("http://www.w3.org/2000/svg", 'svg')
-  tempDiv.appendChild(tempSvg)
-  let tempEl = svgEl.cloneNode(true)
-  tempSvg.appendChild(tempEl)
-  let bb = tempEl.getBBox()
-  document.body.removeChild(tempDiv)
-  return bb;
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function getTestBBox(content:string, fontSize:number, x?:number, y?:number) {
+  let fontSizeTest = document.createElementNS(SVG_NS, "text");
+  fontSizeTest.setAttribute('font-size', "" + fontSize);
+  fontSizeTest.setAttribute("font-family", "Arial");
+  fontSizeTest.setAttribute('style', "visibility:hidden;");
+  if (x) fontSizeTest.setAttribute('x', "" + x);
+  if (y) fontSizeTest.setAttribute('y', "" + y);
+  fontSizeTest.textContent = content;
+  let canvas = document.querySelector("#sandbox");
+  let bboxTest;
+
+  if (canvas) {
+    canvas.appendChild(fontSizeTest);
+    bboxTest = fontSizeTest.getBBox();
+    fontSizeTest.remove();
+  } else
+    bboxTest = {x:0, y:0, width:0, height:0};
+
+  return bboxTest;
 }
 
 type pEnum = {
@@ -103,9 +112,9 @@ function isFontAvailable(font: string): boolean {
 
 const DEFAULT_BASE_CONTENT = "";
 const DEFAULT_FONT = "Arial";
-const DEFAULT_FONT_SIZE = 16;
-const availableFonts = ["Aharoni, Arial, Helvetica"];
-
+const DEFAULT_OPTIONS_FONT_SIZE = 16;
+const DEFAULT_ELEMENT_FONT_SIZE = 16;
+const DEFAULT_SPACING = 20;
 
 export default function JournalWriter() {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
@@ -116,11 +125,13 @@ export default function JournalWriter() {
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
   const [font, setFont] = useState<string>(DEFAULT_FONT);
-  const [fontSize, setFontSize] = useState<number>(DEFAULT_FONT_SIZE);
+  const [optionsFontSize, setOptionsFontSize] = useState<number>(DEFAULT_OPTIONS_FONT_SIZE);
+  const [elementFontSize, setElementFontSize] = useState<number>(DEFAULT_ELEMENT_FONT_SIZE);
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
   const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
+  const fontTextWidth = useRef(0);
 
-  const {isPageVisible} = usePageVisibility();
+  const availableFonts = ["Aharoni", "Arial", "Helvetica"];
 
   var nextId = Date.now();
   const getNextId = () => nextId++;
@@ -273,7 +284,7 @@ export default function JournalWriter() {
         id:id,
         x:x,
         y:y,
-        fontSize:fontSize,
+        fontSize:elementFontSize,
         fontFamily:font,
         content:baseContent,
         mouseoverRegion:REGION.NONE,
@@ -320,7 +331,12 @@ export default function JournalWriter() {
     if (!domText)
       return REGION.NONE;
 
-    if (domText.getAttribute('data-elementid') === "" + focusedId)
+    const elementId = domText.getAttribute('data-elementid');
+
+    if (!elementId)
+      return REGION.NONE;
+
+    if (elementId === "" + focusedId)
       return REGION.BODY_FOCUSED;
 
     return getRegion(x, y, domText.getBoundingClientRect());
@@ -392,33 +408,37 @@ export default function JournalWriter() {
     return () => map.delete(id);
   };
 
-  const setElementFontSize = (id:number, fontSize:number) => {
+  const notifyElementFontSize = (id:number, fontSize:number) => {
     const [newElements, targetElement] = targetCopyElements((element:element) => element.id===id);
 
     targetElement.fontSize = fontSize;
     setElements(newElements);
   }
 
+  const notifyFontChange = (newFont:string) => {
+    console.log('change font to ', newFont);
+  }
+
   return (
     <svg id="canvas"
-        className="bg-rose-50 w-screen h-screen"
-         onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e)}
-         onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e)}
-         onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}
-         style={{
-          cursor: (mouseoverRegion === REGION.NONE) ? "default" :
-                  (mouseoverRegion === REGION.BODY_FOCUSED) ? "text" :
-                  ((mouseoverRegion === REGION.LEFT_SIDE) ||
-                    mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
-                  ((mouseoverRegion === REGION.TOP_SIDE) ||
-                    mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
-                  ((mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
-                   (mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
-                  ((mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
-                   (mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
-                  (mouseoverRegion === REGION.BODY) ? "grab" : "default",
-          ...drag.active ? { cursor:"grabbing" } : {}
-         }}>
+      className="bg-rose-50 w-screen h-screen"
+      onMouseDown={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseDown(e)}
+      onMouseUp={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseUp(e)}
+      onMouseMove={(e:React.MouseEvent<SVGSVGElement, MouseEvent>) => handleMouseMove(e)}
+      style={{
+        cursor: (mouseoverRegion === REGION.NONE) ? "default" :
+                (mouseoverRegion === REGION.BODY_FOCUSED) ? "text" :
+                ((mouseoverRegion === REGION.LEFT_SIDE) ||
+                  mouseoverRegion === REGION.RIGHT_SIDE) ? "ew-resize" :
+                ((mouseoverRegion === REGION.TOP_SIDE) ||
+                  mouseoverRegion === REGION.BOTTOM_SIDE) ? "ns-resize" :
+                ((mouseoverRegion === REGION.TOP_RIGHT_CORNER) ||
+                 (mouseoverRegion === REGION.BOTTOM_LEFT_CORNER)) ? "sw-resize" :
+                ((mouseoverRegion === REGION.TOP_LEFT_CORNER) ||
+                 (mouseoverRegion === REGION.BOTTOM_RIGHT_CORNER)) ? "nw-resize" :
+                (mouseoverRegion === REGION.BODY) ? "grab" : "default",
+        ...drag.active ? { cursor:"grabbing" } : {}
+      }}>
       {elements.map((element) =>
         <Element
           key={element.id}
@@ -429,19 +449,23 @@ export default function JournalWriter() {
           focused={element.id === focusedId}
           isDragged={element.id === drag.id}
           notifyParentFocused={setElementOptionsFocus.bind(null, element.id)}
-          notifyChangeFontSize={setElementFontSize.bind(null, element.id)}
+          notifyChangeFontSize={notifyElementFontSize.bind(null, element.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, element)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, element.id)}
           parentOnBlur={handleOnBlur.bind(null, element.content, element.id)}
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}/>
       )}
-      <CanvasInput
+      <CanvasOptions
         id={getNextId()}
-        x={20}
-        y={20}
-        fontSize={16}
-        font={font} />
+        x={DEFAULT_SPACING}
+        y={DEFAULT_SPACING}
+        fontSize={optionsFontSize}
+        font={font}
+        notifyFontChange={notifyFontChange}
+        fonts={availableFonts}
+        textWidth={fontTextWidth.current}
+        />
     </svg>
   );
 }
