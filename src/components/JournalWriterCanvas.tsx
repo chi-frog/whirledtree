@@ -129,7 +129,6 @@ export default function JournalWriter() {
   const [elementFontSize, setElementFontSize] = useState<number>(DEFAULT_ELEMENT_FONT_SIZE);
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
   const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
-  const fontTextWidth = useRef(0);
 
   const availableFonts = ["Aharoni", "Arial", "Helvetica"];
 
@@ -457,14 +456,12 @@ export default function JournalWriter() {
           handleKeyUp={handleKeyUp}/>
       )}
       <CanvasOptions
-        id={getNextId()}
         x={DEFAULT_SPACING}
         y={DEFAULT_SPACING}
         fontSize={optionsFontSize}
         font={font}
         notifyFontChange={notifyFontChange}
         fonts={availableFonts}
-        textWidth={fontTextWidth.current}
         />
     </svg>
   );
