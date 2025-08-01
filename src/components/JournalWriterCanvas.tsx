@@ -4,7 +4,6 @@ import '../app/journalWriter.css';
 import usePageVisibility from '@/hooks/usePageVisibility';
 import Element, { element, pair } from './Element';
 import { REGION } from './Region';
-import CanvasOptions from './CanvasOptions';
 
 function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
   if (value === undefined || value === null) {
@@ -112,9 +111,7 @@ function isFontAvailable(font: string): boolean {
 
 const DEFAULT_BASE_CONTENT = "";
 const DEFAULT_FONT = "Arial";
-const DEFAULT_OPTIONS_FONT_SIZE = 16;
 const DEFAULT_ELEMENT_FONT_SIZE = 16;
-const DEFAULT_SPACING = 20;
 
 export default function JournalWriter() {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
@@ -125,12 +122,9 @@ export default function JournalWriter() {
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
   const [font, setFont] = useState<string>(DEFAULT_FONT);
-  const [optionsFontSize, setOptionsFontSize] = useState<number>(DEFAULT_OPTIONS_FONT_SIZE);
   const [elementFontSize, setElementFontSize] = useState<number>(DEFAULT_ELEMENT_FONT_SIZE);
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
   const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
-
-  const availableFonts = ["Aharoni", "Arial", "Helvetica"];
 
   var nextId = Date.now();
   const getNextId = () => nextId++;
@@ -414,10 +408,6 @@ export default function JournalWriter() {
     setElements(newElements);
   }
 
-  const notifyFontChange = (newFont:string) => {
-    console.log('change font to ', newFont);
-  }
-
   return (
     <svg id="canvas"
       className="bg-rose-50 w-screen h-screen"
@@ -455,14 +445,6 @@ export default function JournalWriter() {
           handleKeyDown={handleKeyDown}
           handleKeyUp={handleKeyUp}/>
       )}
-      <CanvasOptions
-        x={DEFAULT_SPACING}
-        y={DEFAULT_SPACING}
-        fontSize={optionsFontSize}
-        font={font}
-        notifyFontChange={notifyFontChange}
-        fonts={availableFonts}
-        />
     </svg>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-type canvasFontOptionProps = {
+type fontOptionProps = {
   id:number,
   x:number,
   y:number,
@@ -16,14 +16,15 @@ type canvasFontOptionProps = {
 
 const INPUT_PADDING = 5;
 
-export default function CanvasFontOption({
+export default function FontOption({
   id, x, y, widths, heights,
-  cornerRadiusPercentage, fontSize, font, notifyFontChange, notifyFocused, fonts} : canvasFontOptionProps) {
+  cornerRadiusPercentage, fontSize, font, notifyFontChange, notifyFocused, fonts} : fontOptionProps) {
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [width, setWidth] = useState((focused) ? widths[1] : widths[0]);
   const [height, setHeight] = useState((focused) ? heights[1] : heights[0]);
   const targetWidth = (focused) ? widths[1] : widths[0];
+  const targetHeight = (focused) ? heights[1] : heights[0];
   const ref = useRef<SVGSVGElement>(null);
 
   const animationRef = useRef(0);
@@ -33,6 +34,7 @@ export default function CanvasFontOption({
 
     let start:number;
     const initialWidth = width;
+    const initialHeight = height;
     const duration = 100;
 
     function animate(time:number) {
@@ -41,6 +43,7 @@ export default function CanvasFontOption({
       const progress = Math.min((time-start) / duration, 1);
 
       setWidth(initialWidth + (targetWidth-initialWidth)*progress);
+      setHeight(initialHeight + (targetHeight-initialHeight)*progress);
       if (progress < 1)
         animationRef.current = requestAnimationFrame(animate);
     }
@@ -100,37 +103,49 @@ export default function CanvasFontOption({
         outline: "none",
         cursor: 'pointer',
       }}>
-      {fonts.map((_font, index) => {
-        if (index !== 0) return null;
+      {!focused &&
+        <g>
+          <rect
+            x={0}
+            y={height}
+            width={width}
+            height={focused ? heights[2] : height}
+            rx={width*cornerRadiusPercentage}
+            ry={height*cornerRadiusPercentage}
+            stroke={focused ? "yellow" : "black"}
+            fill={hovered ? "#EEEEEE" : 'white'}>
+          </rect>
+          <text
+            x={0}
+            y={height}
+            fontSize={fontSize}>
+            {font}
+          </text>
+        </g>
+      }
+      {focused &&
+      fonts.map((_font, _index) => {
         return (
           <g
             key={_font}>
             <rect
+              x={0}
+              y={_index*height}
               width={width}
-              height={height}
+              height={focused ? heights[2] : height}
               rx={width*cornerRadiusPercentage}
               ry={height*cornerRadiusPercentage}
               stroke={focused ? "yellow" : "black"}
               fill={hovered ? "#EEEEEE" : 'white'}>
             </rect>
-            <svg
-              x={INPUT_PADDING}
-              width={INPUT_PADDING + width}
-              height={'100%'}
-              style={{
-                pointerEvents:'auto'
-              }}>
-              <text
-                x={0}
-                y={'50%'}
-                dominantBaseline={'middle'}
-                fontSize={fontSize}>
-                {font}
-              </text>
-            </svg>
+            <text
+              x={0}
+              y={_index*height}
+              fontSize={fontSize}>
+              {fonts[_index]}
+            </text>
           </g>
-        );
-      })}
+        )})}
     </svg>
     </>
   );

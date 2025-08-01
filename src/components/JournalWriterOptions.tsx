@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import CanvasFontOption from "./CanvasFontOption"
+import FontOption from "./FontOption"
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -46,16 +46,16 @@ const INPUT_PADDING = 5;
 const DEFAULT_EXPANDED_WIDTH = 80;
 const DEFAULT_EXPANDED_HEIGHT = 40;
 
-type canvasOptionsProps = {
-  x:number,
-  y:number,
+type journalWriterOptionsProps = {
+  left:number,
+  top:number,
   fontSize:number,
   font:string,
   notifyFontChange:Function,
   fonts:string[],
 }
 
-export default function CanvasOptions({x, y, fontSize, font, notifyFontChange, fonts} : canvasOptionsProps) {
+export default function JournalWriterOptions({left, top, fontSize, font, notifyFontChange, fonts} : journalWriterOptionsProps) {
   const [focusedOption, setFocusedOption] = useState<any>(0);
 
   const [textWidth, setTextWidth] = useState<number>(0);
@@ -68,6 +68,7 @@ export default function CanvasOptions({x, y, fontSize, font, notifyFontChange, f
   const fontOptionHeights = [
     textHeight + TEXT_PADDING*2 + BORDER_PADDING*2,
     (textHeight + TEXT_PADDING*2)*fonts.length + BORDER_PADDING*2,
+    textHeight + TEXT_PADDING*2
   ];
 
   const [expanded, setExpanded] = useState<boolean>(false);
@@ -158,14 +159,16 @@ export default function CanvasOptions({x, y, fontSize, font, notifyFontChange, f
       setFocusedOption(0);
   }
 
-  console.log('width height ' + width, height);
-  console.log('targetW targetH ' + targetWidth, targetHeight);
-  console.log('focop', focusedOption);
+  console.log('redrawing');
 
   return (
+    <div
+      className="absolute"
+      style={{
+        left:left + "px",
+        top:top + "px"
+      }}>
     <svg
-      x={x}
-      y={y}
       width={width}
       height={height}
       onMouseDown={(e) => handleMouseDown(e)}
@@ -180,7 +183,7 @@ export default function CanvasOptions({x, y, fontSize, font, notifyFontChange, f
         opacity={opacity}
         />
       {expanded &&
-      <CanvasFontOption
+      <FontOption
         id={getNextId()}
         x={BORDER_PADDING}
         y={BORDER_PADDING}
@@ -193,5 +196,6 @@ export default function CanvasOptions({x, y, fontSize, font, notifyFontChange, f
         notifyFocused={notifyFocused}
         fonts={fonts}/>}
     </svg>
+    </div>
   );
 }
