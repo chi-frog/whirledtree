@@ -56,6 +56,7 @@ export default function FontOption({
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     e.stopPropagation();
     setFocused(true);
+    console.log('here?');
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -71,12 +72,12 @@ export default function FontOption({
   };
 
   const handleBlur = () => {
+    console.log('blurring');
     setFocused(false);
-    notifyFocused(false);
+    notifyFocused(id, false);
   }
 
   const handleFocus = () => {
-    setFocused(true);
     notifyFocused(id, true);
   }
 
@@ -107,17 +108,17 @@ export default function FontOption({
         <g>
           <rect
             x={0}
-            y={height}
+            y={0}
             width={width}
-            height={focused ? heights[2] : height}
+            height={height}
             rx={width*cornerRadiusPercentage}
             ry={height*cornerRadiusPercentage}
-            stroke={focused ? "yellow" : "black"}
+            stroke={"black"}
             fill={hovered ? "#EEEEEE" : 'white'}>
           </rect>
           <text
-            x={0}
-            y={height}
+            x={width/2 - widths[2]/2}
+            y={height - heights[2]/2}
             fontSize={fontSize}>
             {font}
           </text>
@@ -132,7 +133,7 @@ export default function FontOption({
               x={0}
               y={_index*height}
               width={width}
-              height={focused ? heights[2] : height}
+              height={focused ? heights[0] : height}
               rx={width*cornerRadiusPercentage}
               ry={height*cornerRadiusPercentage}
               stroke={focused ? "yellow" : "black"}

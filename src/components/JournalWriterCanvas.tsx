@@ -343,6 +343,7 @@ export default function JournalWriter() {
   }
 
   const handleOnBlur = (content:string, id:number) => {
+    console.log('canvas on blur');
     if (content === "")
       setElements((elements) => elements.filter((element) => (element.id !== id)));
     if (id === focusedId) {
