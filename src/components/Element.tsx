@@ -5,15 +5,6 @@ import { REGION } from './Region';
 import '../app/journalWriter.css';
 import Cursor from './Cursor';
 
-type pEnum = {
-  text:string,
-}
-
-export type pair = {
-  key: string,
-  value: number,
-}
-
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 function getTestBBox(fontSize:number, x?:number, y?:number) {
@@ -45,7 +36,6 @@ export type element = {
   fontFamily:string,
   content:string,
   optionsFocused:boolean,
-  ex:pair[],
 }
 
 type elementProps = {

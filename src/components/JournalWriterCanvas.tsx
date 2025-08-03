@@ -1,15 +1,9 @@
 'use client';
 import React, { useState, useRef, useEffect, } from 'react';
 import '../app/journalWriter.css';
-import usePageVisibility from '@/hooks/usePageVisibility';
-import Element, { element, pair } from './Element';
+import Element, { element } from './Element';
 import { REGION } from './Region';
-
-function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
-  if (value === undefined || value === null) {
-    throw new Error(`${value} is not defined`)
-  }
-}
+import useId from '@/hooks/useId';
 
 //
 // Returns a list of all elements under the cursor
@@ -82,41 +76,15 @@ const dragDefault = {
   offsetY:0
 }
 
-function isFontAvailable(font: string): boolean {
-  const testString = "mmmmmmmmmmlli";
-  const testSize = "72px";
 
-  const defaultFonts = ["monospace", "sans-serif", "serif"];
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-
-  if (!context) return false;
-
-  canvas.width = 1000;
-  canvas.height = 100;
-
-  // Get width for each default font
-  const baselineWidths = defaultFonts.map(baseFont => {
-    context.font = `${testSize} ${baseFont}`;
-    return context.measureText(testString).width;
-  });
-
-  // Measure with the target font + fallback
-  return defaultFonts.some((baseFont, i) => {
-    context.font = `${testSize} '${font}', ${baseFont}`;
-    const width = context.measureText(testString).width;
-    return width !== baselineWidths[i]; // If different, font is likely available
-  });
-}
 
 const DEFAULT_BASE_CONTENT = "";
 const DEFAULT_FONT = "Arial";
 const DEFAULT_ELEMENT_FONT_SIZE = 16;
 
-export default function JournalWriter() {
+export default function JournalWriterCanvas({elements, setElements} : {elements:element[], setElements:Function}) {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
   const [mouseDownY, setMouseDownY] = useState<number>(-1);
-  const [elements, setElements] = useState<element[]>([]);
   const [selectedId, setSelectedId] = useState<number>(0);
   const [focusedId, setFocusedId] = useState<number>(0);
   const [drag, setDrag] = useState<drag>(dragDefault);
@@ -126,19 +94,13 @@ export default function JournalWriter() {
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
   const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
 
-  var nextId = Date.now();
-  const getNextId = () => nextId++;
-
-  const copyElements = () => elements.map((element) => {
-      return {...element,
-              ex:element.ex.map((pair:pair) => {
-                return {...pair}})}});
+  const {getId} = useId();
 
   const targetCopyElements = (...funcs:Function[]) : [element[], element] | [element[], element, element] => {
-    const newElements = copyElements();
+    const newElements = [...elements]
     const ret:any = [newElements];
 
-    funcs.forEach ((func) => ret.push(newElements.find((element) => func(element))));
+    funcs.forEach ((func) => ret.push(newElements.find((_element:element) => func(_element))));
 
     return ret;
   }
@@ -186,12 +148,12 @@ export default function JournalWriter() {
     if ((mouseDownX === e.clientX) &&
         (mouseDownY === e.clientY)) {
       if (selectedId !== id) {
-        setElements((newElements) => {
-          const elementToRemoveIndex = newElements.findIndex((element) => (element.id === id));
-          const elementToRemove = newElements.splice(elementToRemoveIndex, 1);
-          newElements.push(elementToRemove[0]);
+        setElements((_newElements:element[]) => {
+          const elementToRemoveIndex = _newElements.findIndex((_element:element) => (_element.id === id));
+          const elementToRemove = _newElements.splice(elementToRemoveIndex, 1);
+          _newElements.push(elementToRemove[0]);
 
-          return newElements;
+          return _newElements;
         });
       }
         
@@ -271,7 +233,7 @@ export default function JournalWriter() {
     let y = e.clientY;
 
     if (Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2)) <= 5) {
-      const id = getNextId();
+      const id = getId();
 
       const newElement = {
         id:id,
@@ -284,7 +246,7 @@ export default function JournalWriter() {
         optionsFocused:false,
         ex:[]};
 
-      setElements((elements) => elements.concat(newElement));
+      setElements((_elements:element[]) => elements.concat(newElement));
       setSelectedId(id);
       setFocusedId(id);
     }
@@ -345,7 +307,7 @@ export default function JournalWriter() {
   const handleOnBlur = (content:string, id:number) => {
     console.log('canvas on blur');
     if (content === "")
-      setElements((elements) => elements.filter((element) => (element.id !== id)));
+      setElements((_elements:element[]) => _elements.filter((_element:element) => (_element.id !== id)));
     if (id === focusedId) {
       setFocusedId(0);
     }
@@ -368,7 +330,7 @@ export default function JournalWriter() {
     e.preventDefault();
 
     if (selectedId>0) {
-      const [newElements, updatedElement] = targetCopyElements((element:element) => element.id === selectedId);
+      const [newElements, updatedElement] = targetCopyElements((_element:element) => _element.id === selectedId);
 
       switch (e.key) {
       case "Backspace":
@@ -380,7 +342,7 @@ export default function JournalWriter() {
         break;
       case "Delete":
         setSelectedId(0);
-        setElements(newElements.filter((element) => element.id !== selectedId));
+        setElements(newElements.filter((_element:element) => _element.id !== selectedId));
         return;
       default:
         updatedElement.content += e.key;
