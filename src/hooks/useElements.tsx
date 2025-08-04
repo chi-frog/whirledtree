@@ -32,7 +32,16 @@ function useElements() {
     return id;
   }
 
-  return {elements, createElement, setElements}
+  const bringToFront = (id:number) => {
+    setElements((_newElements:element[]) => {
+      const elementToRemoveIndex = _newElements.findIndex((_element:element) => (_element.id === id));
+      const elementToRemove = _newElements.splice(elementToRemoveIndex, 1)[0];
+      _newElements.push(elementToRemove);
+    
+      return _newElements;});
+  };
+
+  return {elements, createElement, bringToFront, setElements}
 }
 
 export default useElements;

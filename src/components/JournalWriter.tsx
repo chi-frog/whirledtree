@@ -9,7 +9,7 @@ import useElements from '@/hooks/useElements';
 
 export default function JournalWriter({}) {
   const {font, fontSize, availableFonts} = useFont();
-  const {elements, createElement, setElements} = useElements();
+  const {elements, createElement, bringToFront, setElements} = useElements();
 
   const OPTIONS_PADDING = 20;
   
@@ -18,6 +18,7 @@ export default function JournalWriter({}) {
       <JournalWriterCanvas
         elements={elements}
         createElement={createElement}
+        bringToFront={bringToFront}
         setElements={setElements}
         font={font}
         fontSize={fontSize}

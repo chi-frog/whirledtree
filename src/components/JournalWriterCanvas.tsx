@@ -84,12 +84,13 @@ const DEFAULT_ELEMENT_FONT_SIZE = 16;
 type JournalWriterCanvasProps = {
   elements:element[],
   createElement:Function,
+  bringToFront:Function,
   setElements:Function,
   font:string,
   fontSize:number,
 }
 
-export default function JournalWriterCanvas({elements, createElement, setElements, font, fontSize}:JournalWriterCanvasProps) {
+export default function JournalWriterCanvas({elements, createElement, bringToFront, setElements, font, fontSize}:JournalWriterCanvasProps) {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
   const [mouseDownY, setMouseDownY] = useState<number>(-1);
   const [selectedId, setSelectedId] = useState<number>(0);
@@ -153,15 +154,8 @@ export default function JournalWriterCanvas({elements, createElement, setElement
 
     if ((mouseDownX === x) &&
         (mouseDownY === y)) {
-      if (selectedId !== id) {
-        setElements((_newElements:element[]) => {
-          const elementToRemoveIndex = _newElements.findIndex((_element:element) => (_element.id === id));
-          const elementToRemove = _newElements.splice(elementToRemoveIndex, 1);
-          _newElements.push(elementToRemove[0]);
-
-          return _newElements;
-        });
-      }
+      if (selectedId !== id)
+        bringToFront(id);
         
       setSelectedId((e.detail !== 2) ? id : 0);
       setFocusedId((e.detail !== 2) ? id : 0);
