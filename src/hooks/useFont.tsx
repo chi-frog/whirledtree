@@ -3,15 +3,16 @@
 import { useState } from "react";
 
 function Fonts() {
-  const fonts = ["Aharoni", "Arial", "Helvetica"];
+  const availableFonts = ["Aharoni", "Arial", "Helvetica"];
 
-  return {fonts};
+  return {availableFonts};
 }
 
-const {fonts} = Fonts();
+const {availableFonts} = Fonts();
 
-function useFont(defaultFont:string="Arial") {
+function useFont(defaultFont:string="Arial", defaultFontSize:number=16) {
   const [font, setFont] = useState<string>(defaultFont);
+  const [fontSize, setFontSize] = useState<number>(defaultFontSize);
 
   function isFontAvailable(font: string): boolean {
     const testString = "mmmmmmmmmmlli";
@@ -40,7 +41,7 @@ function useFont(defaultFont:string="Arial") {
     });
   }
 
-  return {font, fonts};
+  return {font, fontSize, availableFonts};
 }
 
 export default useFont;

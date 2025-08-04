@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
+import useFont from "@/hooks/useFont";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -42,7 +43,6 @@ const findWidestFont = (fonts:string[], fontSize:number) => {
 const DEFAULT_UNEXPANDED_SIZE = 30;
 const BORDER_PADDING = 5;
 const TEXT_PADDING = 5;
-const INPUT_PADDING = 5;
 const DEFAULT_EXPANDED_WIDTH = 80;
 const DEFAULT_EXPANDED_HEIGHT = 40;
 
@@ -52,11 +52,11 @@ type journalWriterOptionsProps = {
   fontSize:number,
   font:string,
   notifyFontChange:Function,
-  fonts:string[],
 }
 
-export default function JournalWriterOptions({left, top, fontSize, font, notifyFontChange, fonts} : journalWriterOptionsProps) {
+export default function JournalWriterOptions({left, top, fontSize, font, notifyFontChange} : journalWriterOptionsProps) {
   const [focusedOption, setFocusedOption] = useState<any>(0);
+  const {availableFonts} = useFont();
 
   const [textWidth, setTextWidth] = useState<number>(0);
   const [textHeight, setTextHeight] = useState<number[]>([]);
@@ -68,7 +68,7 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
     textWidth + BORDER_PADDING*2];
   const fontOptionHeights = [
     textHeight[0] + TEXT_PADDING*2 + BORDER_PADDING*2,
-    (textHeight[0] + TEXT_PADDING*2)*fonts.length + BORDER_PADDING*2,
+    (textHeight[0] + TEXT_PADDING*2)*availableFonts.length + BORDER_PADDING*2,
     (textHeight[1] + BORDER_PADDING*2)
   ];
 
@@ -99,12 +99,12 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
   const fontOptionId = useRef(Date.now());
 
   useLayoutEffect(() => {
-    const maxFontWidth = findWidestFont(fonts, fontSize);
+    const maxFontWidth = findWidestFont(availableFonts, fontSize);
 
     console.log('maxFontWidth', maxFontWidth);
 
     setMaxFontWidth(maxFontWidth);
-  }, [fonts]);
+  }, [availableFonts]);
 
   useEffect(() => {
     const bbox = getTestBBox(font, fontSize, left, top);
@@ -194,8 +194,7 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
         fontSize={fontSize}
         font={font}
         notifyFontChange={notifyFontChange}
-        notifyFocused={notifyFocused}
-        fonts={fonts}/>}
+        notifyFocused={notifyFocused}/>}
     </svg>
     </div>
   );

@@ -32,8 +32,8 @@ export type element = {
   id:number,
   x:number,
   y:number,
+  font:string,
   fontSize:number,
-  fontFamily:string,
   content:string,
   optionsFocused:boolean,
 }
@@ -109,7 +109,7 @@ export default function Element({element, ref, map, selected, focused, isDragged
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       style={{
-        fontFamily: element.fontFamily,
+        fontFamily: element.font,
         whiteSpace: "break-spaces",
         outline: (focused) ? "1px solid gold" : 
                  (selected) ? "1px solid blue" : "none",

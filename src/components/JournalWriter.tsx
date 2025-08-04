@@ -3,26 +3,41 @@ import JournalWriterCanvas from '@/components/JournalWriterCanvas';
 import JournalWriterOptions from './JournalWriterOptions';
 import { element } from './Element';
 import { useState } from 'react';
-import useId from '@/hooks/useId';
 import useFont from '@/hooks/useFont';
+import { REGION } from './Region';
 
 export default function JournalWriter({}) {
-  const { getId } = useId();
-  const {font, fonts} = useFont();
+  const {font, fontSize, availableFonts} = useFont();
   const [elements, setElements] = useState<element[]>([]);
-  
+
+  const createElement = (x:number, y:number, content:string) => {
+    const newElement = {
+      id:Date.now() - x*100 -y*10000,
+      x:x,
+      y:y,
+      font:font,
+      fontSize:fontSize,
+      content:content,
+      optionsFocused:false,};
+    
+    setElements((_elements:element[]) => elements.concat(newElement));
+  }
 
   const OPTIONS_PADDING = 20;
   
   return (
     <>
-      <JournalWriterCanvas elements={elements} setElements={setElements}/>
+      <JournalWriterCanvas
+        elements={elements}
+        setElements={setElements}
+        font={font}
+        fontSize={fontSize}
+        />
       <JournalWriterOptions
         left={OPTIONS_PADDING}
         top={OPTIONS_PADDING}
-        font={"Arial"}
-        fontSize={16}
-        fonts={fonts}
+        font={font}
+        fontSize={fontSize}
         notifyFontChange={() => null}
       />
     </>

@@ -11,14 +11,15 @@ type fontOptionProps = {
   font:string,
   notifyFontChange:Function,
   notifyFocused:Function,
-  fonts:string[],
 }
 
 const INPUT_PADDING = 5;
 
 export default function FontOption({
   id, x, y, widths, heights,
-  cornerRadiusPercentage, fontSize, font, notifyFontChange, notifyFocused, fonts} : fontOptionProps) {
+  cornerRadiusPercentage, fontSize, font, notifyFontChange, notifyFocused} : fontOptionProps) {
+  const {availableFonts} = useFonts();
+
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [width, setWidth] = useState((focused) ? widths[1] : widths[0]);
@@ -125,7 +126,7 @@ export default function FontOption({
         </g>
       }
       {focused &&
-      fonts.map((_font, _index) => {
+      availableFonts.map((_font:string, _index:number) => {
         return (
           <g
             key={_font}>
@@ -143,11 +144,15 @@ export default function FontOption({
               x={0}
               y={_index*height}
               fontSize={fontSize}>
-              {fonts[_index]}
+              {availableFonts[_index]}
             </text>
           </g>
         )})}
     </svg>
     </>
   );
+}
+
+function useFonts(): { availableFonts: any; } {
+  throw new Error("Function not implemented.");
 }
