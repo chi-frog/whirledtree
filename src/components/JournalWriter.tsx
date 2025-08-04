@@ -5,23 +5,11 @@ import { element } from './Element';
 import { useState } from 'react';
 import useFont from '@/hooks/useFont';
 import { REGION } from './Region';
+import useElements from '@/hooks/useElements';
 
 export default function JournalWriter({}) {
   const {font, fontSize, availableFonts} = useFont();
-  const [elements, setElements] = useState<element[]>([]);
-
-  const createElement = (x:number, y:number, content:string) => {
-    const newElement = {
-      id:Date.now() - x*100 -y*10000,
-      x:x,
-      y:y,
-      font:font,
-      fontSize:fontSize,
-      content:content,
-      optionsFocused:false,};
-    
-    setElements((_elements:element[]) => elements.concat(newElement));
-  }
+  const {elements, createElement, setElements} = useElements();
 
   const OPTIONS_PADDING = 20;
   
@@ -29,6 +17,7 @@ export default function JournalWriter({}) {
     <>
       <JournalWriterCanvas
         elements={elements}
+        createElement={createElement}
         setElements={setElements}
         font={font}
         fontSize={fontSize}

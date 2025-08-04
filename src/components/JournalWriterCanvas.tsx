@@ -83,12 +83,13 @@ const DEFAULT_ELEMENT_FONT_SIZE = 16;
 
 type JournalWriterCanvasProps = {
   elements:element[],
+  createElement:Function,
   setElements:Function,
   font:string,
   fontSize:number,
 }
 
-export default function JournalWriterCanvas({elements, setElements, font, fontSize}:JournalWriterCanvasProps) {
+export default function JournalWriterCanvas({elements, createElement, setElements, font, fontSize}:JournalWriterCanvasProps) {
   const [mouseDownX, setMouseDownX] = useState<number>(-1);
   const [mouseDownY, setMouseDownY] = useState<number>(-1);
   const [selectedId, setSelectedId] = useState<number>(0);
@@ -147,8 +148,11 @@ export default function JournalWriterCanvas({elements, setElements, font, fontSi
         (e.detail > 2))
       return;
 
-    if ((mouseDownX === e.clientX) &&
-        (mouseDownY === e.clientY)) {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if ((mouseDownX === x) &&
+        (mouseDownY === y)) {
       if (selectedId !== id) {
         setElements((_newElements:element[]) => {
           const elementToRemoveIndex = _newElements.findIndex((_element:element) => (_element.id === id));
@@ -161,7 +165,7 @@ export default function JournalWriterCanvas({elements, setElements, font, fontSi
         
       setSelectedId((e.detail !== 2) ? id : 0);
       setFocusedId((e.detail !== 2) ? id : 0);
-      setMouseoverRegion((e.detail !== 2) ? REGION.BODY_FOCUSED : getMouseoverRegion(e.clientX, e.clientY));
+      setMouseoverRegion((e.detail !== 2) ? REGION.BODY_FOCUSED : getMouseoverRegion(x, y));
     }
 
     setMouseDownX(-1);
@@ -218,16 +222,18 @@ export default function JournalWriterCanvas({elements, setElements, font, fontSi
         (mouseDownY === -1))
       return;
 
-    setMouseDownX(-1);
-    setMouseDownY(-1);
-
-    if (drag.active)
+    if (drag.active) {
+      setMouseDownX(-1);
+      setMouseDownY(-1);
       return setDrag(dragDefault);
+    }
 
     if (e.detail === 2) {
       e.preventDefault();
       setSelectedId(0);
       setFocusedId(0);
+      setMouseDownX(-1);
+      setMouseDownY(-1);
       return;
     }
 
@@ -235,24 +241,17 @@ export default function JournalWriterCanvas({elements, setElements, font, fontSi
     let y = e.clientY;
 
     if (Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2)) <= 5) {
-      const id=Date.now() -x*100 - y*10000;
-      const newElement = {
-        id:id,
-        x:x,
-        y:y,
-        font:font,
-        fontSize:fontSize,
-        content:baseContent,
-        optionsFocused:false,};
-
-      setElements((_elements:element[]) => elements.concat(newElement));
+      const id = createElement({x, y, font, fontSize, content:baseContent});
       setSelectedId(id);
       setFocusedId(id);
     }
+
+    setMouseDownX(-1);
+    setMouseDownY(-1);
   }
 
   const handleMouseDrag = (e:React.MouseEvent<SVGSVGElement>) => {
-    const [newElements, targetElement] = targetCopyElements((element:element) => element.id === drag.id);
+    const [newElements, targetElement] = targetCopyElements((_element:element) => _element.id === drag.id);
     const x = e.clientX;
     const y = e.clientY;
 

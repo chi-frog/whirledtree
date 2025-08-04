@@ -1,3 +1,4 @@
+import useFont from "@/hooks/useFont";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type fontOptionProps = {
@@ -18,7 +19,7 @@ const INPUT_PADDING = 5;
 export default function FontOption({
   id, x, y, widths, heights,
   cornerRadiusPercentage, fontSize, font, notifyFontChange, notifyFocused} : fontOptionProps) {
-  const {availableFonts} = useFonts();
+  const {availableFonts} = useFont();
 
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -151,8 +152,4 @@ export default function FontOption({
     </svg>
     </>
   );
-}
-
-function useFonts(): { availableFonts: any; } {
-  throw new Error("Function not implemented.");
 }
