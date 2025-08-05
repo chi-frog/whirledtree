@@ -1,15 +1,12 @@
 'use client';
 import JournalWriterCanvas from '@/components/JournalWriterCanvas';
 import JournalWriterOptions from './JournalWriterOptions';
-import { element } from './Element';
-import { useState } from 'react';
 import useFont from '@/hooks/useFont';
-import { REGION } from './Region';
 import useElements from '@/hooks/useElements';
 
 export default function JournalWriter({}) {
   const {font, fontSize, availableFonts} = useFont();
-  const {elements, createElement, bringToFront, setElements} = useElements();
+  const {elements, tbElements} = useElements();
 
   const OPTIONS_PADDING = 20;
   
@@ -17,9 +14,7 @@ export default function JournalWriter({}) {
     <>
       <JournalWriterCanvas
         elements={elements}
-        createElement={createElement}
-        bringToFront={bringToFront}
-        setElements={setElements}
+        tbElements={tbElements}
         font={font}
         fontSize={fontSize}
         />

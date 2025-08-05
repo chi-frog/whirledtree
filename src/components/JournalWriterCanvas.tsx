@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, } from 'react';
 import '../app/journalWriter.css';
 import Element, { element } from './Element';
 import { REGION } from './Region';
+import { tbElement } from '@/hooks/useElements';
 
 //
 // Returns a list of all elements under the cursor
@@ -83,22 +84,23 @@ const DEFAULT_ELEMENT_FONT_SIZE = 16;
 
 type JournalWriterCanvasProps = {
   elements:element[],
-  createElement:Function,
-  bringToFront:Function,
-  setElements:Function,
+  tbElements:tbElement,
   font:string,
   fontSize:number,
 }
 
-export default function JournalWriterCanvas({elements, createElement, bringToFront, setElements, font, fontSize}:JournalWriterCanvasProps) {
-  const [mouseDownX, setMouseDownX] = useState<number>(-1);
-  const [mouseDownY, setMouseDownY] = useState<number>(-1);
+export default function JournalWriterCanvas({elements, tbElements, font, fontSize} : JournalWriterCanvasProps) {
+  const [mouseDownPoint, setMouseDownPoint] = useState<{x:number, y:number}>({x:-1, y:-1});
   const [selectedId, setSelectedId] = useState<number>(0);
   const [focusedId, setFocusedId] = useState<number>(0);
   const [drag, setDrag] = useState<drag>(dragDefault);
   const elementsRef = useRef<Map<any, any>|null>(null);
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
   const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
+
+  const mouseDownPointExists = () => (mouseDownPoint.x && mouseDownPoint.y);
+  const clearMouseDownPoint = () => setMouseDownPoint({x:-1, y:-1});
+  const isFocused = (element:element) => (focusedId === element.id);
 
   const targetCopyElements = (...funcs:Function[]) : [element[], element] | [element[], element, element] => {
     const newElements = [...elements]
@@ -118,13 +120,13 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
 
   const setElementOptionsFocus = (id:number, value:boolean) => {
     const [newElements, selectedElement] = targetCopyElements(
-      (element:element) => element.id === id);
+      (_element:element) => _element.id === id);
 
     selectedElement.optionsFocused = value;
     if (value)
       setFocusedId(0);
 
-    setElements(newElements);
+    tbElements.setElements(newElements);
   };
 
   const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
@@ -134,12 +136,14 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
         (e.detail > 2))
       return;
 
-    setMouseDownX(e.clientX);
-    setMouseDownY(e.clientY);
+    const x = e.clientX;
+    const y = e.clientY;
 
-    if (focusedId === element.id) return;
+    setMouseDownPoint({x, y});
 
-    setDrag({active:true, id:element.id, region:mouseoverRegion, offsetX:(e.clientX-element.x), offsetY:(e.clientY-element.y)});
+    if (isFocused(element)) return;
+
+    setDrag({active:true, id:element.id, region:mouseoverRegion, offsetX:(x-element.x), offsetY:(y-element.y)});
   }
 
   const handleMouseUpElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, id:number) => {
@@ -152,18 +156,16 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
     const x = e.clientX;
     const y = e.clientY;
 
-    if ((mouseDownX === x) &&
-        (mouseDownY === y)) {
+    if (mouseDownPointExists()) {
       if (selectedId !== id)
-        bringToFront(id);
+        tbElements.bringToFront(id);
         
       setSelectedId((e.detail !== 2) ? id : 0);
       setFocusedId((e.detail !== 2) ? id : 0);
       setMouseoverRegion((e.detail !== 2) ? REGION.BODY_FOCUSED : getMouseoverRegion(x, y));
     }
 
-    setMouseDownX(-1);
-    setMouseDownY(-1);
+    clearMouseDownPoint();
     setDrag(dragDefault);
   }
 
@@ -203,45 +205,40 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
         (e.detail > 2))
       return;
 
-    setMouseDownX(e.clientX);
-    setMouseDownY(e.clientY);
+    const x = e.clientX;
+    const y = e.clientY;
+
+    setMouseDownPoint({x, y});
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if ((e.button !== 0) ||
-        (e.detail > 2))
-      return;
+    const {button, detail} = e;
 
-    if ((mouseDownX === -1) ||
-        (mouseDownY === -1))
+    if ((button !== 0) ||
+        (detail > 2) ||
+        (!mouseDownPointExists()))
       return;
 
     if (drag.active) {
-      setMouseDownX(-1);
-      setMouseDownY(-1);
-      return setDrag(dragDefault);
-    }
+      setDrag(dragDefault);
 
-    if (e.detail === 2) {
+    } else if (detail == 2) {
       e.preventDefault();
       setSelectedId(0);
       setFocusedId(0);
-      setMouseDownX(-1);
-      setMouseDownY(-1);
-      return;
+
+    } else {
+      let x = e.clientX;
+      let y = e.clientY;
+
+      if (Math.sqrt(Math.pow(y-mouseDownPoint.y, 2) + Math.pow(x-mouseDownPoint.x, 2)) <= 5) {
+        const id = tbElements.createElement({x, y, font, fontSize, content:baseContent});
+        setSelectedId(id);
+        setFocusedId(id);
+      }
     }
 
-    let x = e.clientX;
-    let y = e.clientY;
-
-    if (Math.sqrt(Math.pow(y-mouseDownY, 2) + Math.pow(x-mouseDownX, 2)) <= 5) {
-      const id = createElement({x, y, font, fontSize, content:baseContent});
-      setSelectedId(id);
-      setFocusedId(id);
-    }
-
-    setMouseDownX(-1);
-    setMouseDownY(-1);
+    clearMouseDownPoint();
   }
 
   const handleMouseDrag = (e:React.MouseEvent<SVGSVGElement>) => {
@@ -263,7 +260,7 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
       default:
     }
 
-    setElements(newElements);
+    tbElements.setElements(newElements);
   }
 
   const getMouseoverRegion = (x:number, y:number) => {
@@ -278,12 +275,12 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
     if (!domText)
       return REGION.NONE;
 
-    const elementId = domText.getAttribute('data-elementid');
+    const id = domText.getAttribute('data-elementid');
 
-    if (!elementId)
+    if (!id)
       return REGION.NONE;
 
-    if (elementId === "" + focusedId)
+    if (id === "" + focusedId)
       return REGION.BODY_FOCUSED;
 
     return getRegion(x, y, domText.getBoundingClientRect());
@@ -299,7 +296,7 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
   const handleOnBlur = (content:string, id:number) => {
     console.log('canvas on blur');
     if (content === "")
-      setElements((_elements:element[]) => _elements.filter((_element:element) => (_element.id !== id)));
+      tbElements.deleteElement(id);
     if (id === focusedId) {
       setFocusedId(0);
     }
@@ -322,25 +319,22 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
     e.preventDefault();
 
     if (selectedId>0) {
-      const [newElements, updatedElement] = targetCopyElements((_element:element) => _element.id === selectedId);
-
       switch (e.key) {
       case "Backspace":
-        updatedElement.content = updatedElement.content.slice(0, updatedElement.content.length-1); break;
+        tbElements.transformContent(selectedId, (_content:string) => _content.substring(0, _content.length-1));
+        break;
       case "Enter":
         break;
       case "Tab":
-        updatedElement.content += "   ";
+        tbElements.transformContent(selectedId, (_content:string) => _content + "   ");
         break;
       case "Delete":
         setSelectedId(0);
-        setElements(newElements.filter((_element:element) => _element.id !== selectedId));
+        tbElements.deleteElement(selectedId);
         return;
       default:
-        updatedElement.content += e.key;
+        tbElements.transformContent(selectedId, (_content:string) => _content + e.key);
       }
-
-      setElements(newElements);
     }
   }
 
@@ -356,12 +350,8 @@ export default function JournalWriterCanvas({elements, createElement, bringToFro
     return () => map.delete(id);
   };
 
-  const notifyElementFontSize = (id:number, fontSize:number) => {
-    const [newElements, targetElement] = targetCopyElements((element:element) => element.id===id);
-
-    targetElement.fontSize = fontSize;
-    setElements(newElements);
-  }
+  const notifyElementFontSize = (id:number, fontSize:number) =>
+    tbElements.updateElementField(id, 'fontSize', (_fontSize:number) => fontSize);
 
   return (
     <svg id="canvas"
