@@ -79,8 +79,6 @@ const dragDefault = {
 
 
 const DEFAULT_BASE_CONTENT = "";
-const DEFAULT_FONT = "Arial";
-const DEFAULT_ELEMENT_FONT_SIZE = 16;
 
 type JournalWriterCanvasProps = {
   elements:element[],
@@ -119,14 +117,9 @@ export default function JournalWriterCanvas({elements, tbElements, font, fontSiz
   }
 
   const setElementOptionsFocus = (id:number, value:boolean) => {
-    const [newElements, selectedElement] = targetCopyElements(
-      (_element:element) => _element.id === id);
-
-    selectedElement.optionsFocused = value;
+    tbElements.updateElementField(id, 'optionsFocused', (_optionsFocused:boolean) => value)
     if (value)
       setFocusedId(0);
-
-    tbElements.setElements(newElements);
   };
 
   const handleMouseDownElement = (e:React.MouseEvent<SVGTextElement, MouseEvent>, element:element) => {
@@ -242,25 +235,20 @@ export default function JournalWriterCanvas({elements, tbElements, font, fontSiz
   }
 
   const handleMouseDrag = (e:React.MouseEvent<SVGSVGElement>) => {
-    const [newElements, targetElement] = targetCopyElements((_element:element) => _element.id === drag.id);
     const x = e.clientX;
     const y = e.clientY;
 
     switch(drag.region) {
       case REGION.BODY:
-        targetElement.x = x-drag.offsetX;
-        targetElement.y = y-drag.offsetY;
+        //tbElements.updateElementField(drag.id, 'x', () => x-drag.offsetX);
+        //tbElements.updateElementField(drag.id, 'y', () => y-drag.offsetY);
+        tbElements.updateElementFields(drag.id, ['x', 'y'], [()=>x-drag.offsetX, ()=>y-drag.offsetY]);
         break;
       case REGION.TOP_SIDE:
-        if (y > targetElement.y) {
-        } else {
-        }
         break;
       case REGION.NONE:
       default:
     }
-
-    tbElements.setElements(newElements);
   }
 
   const getMouseoverRegion = (x:number, y:number) => {

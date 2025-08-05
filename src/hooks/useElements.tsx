@@ -17,6 +17,7 @@ export type tbElement = {
   createElement:Function,
   updateElement:Function,
   updateElementField:Function,
+  updateElementFields:Function,
   deleteElement:Function,
   bringToFront:Function,
   transformContent:Function,
@@ -57,6 +58,25 @@ function useElements() {
             [key]: callback(_element[key]),}
           : _element));
 
+  const updateElementFields = <K extends keyof element>
+    (id: number, keys: K[], callbacks: ((prev: element[K]) => element[K])[]) =>
+    setElements((_elements) =>
+      _elements.map((_element) => {
+        if (_element.id === id) {
+          const newElement = {..._element};
+
+          for (let i=0; i<keys.length; i++) {
+            const key = keys[i];
+            const callback = callbacks[i];
+
+            newElement[key] = callback(newElement[key])
+          }
+
+          return newElement;
+          }
+        else
+          return _element}));
+
   const deleteElement = (id:number) =>
     setElements((_elements) =>
       _elements.filter((_element) =>
@@ -83,6 +103,7 @@ function useElements() {
     createElement,
     updateElement,
     updateElementField,
+    updateElementFields,
     deleteElement,
     bringToFront,
     transformContent,
