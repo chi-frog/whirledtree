@@ -100,15 +100,6 @@ export default function JournalWriterCanvas({elements, tbElements, font, fontSiz
   const clearMouseDownPoint = () => setMouseDownPoint({x:-1, y:-1});
   const isFocused = (element:element) => (focusedId === element.id);
 
-  const targetCopyElements = (...funcs:Function[]) : [element[], element] | [element[], element, element] => {
-    const newElements = [...elements]
-    const ret:any = [newElements];
-
-    funcs.forEach ((func) => ret.push(newElements.find((_element:element) => func(_element))));
-
-    return ret;
-  }
-
   function getMap() {
     if (!elementsRef.current)
       elementsRef.current = new Map();
@@ -240,8 +231,6 @@ export default function JournalWriterCanvas({elements, tbElements, font, fontSiz
 
     switch(drag.region) {
       case REGION.BODY:
-        //tbElements.updateElementField(drag.id, 'x', () => x-drag.offsetX);
-        //tbElements.updateElementField(drag.id, 'y', () => y-drag.offsetY);
         tbElements.updateElementFields(drag.id, ['x', 'y'], [()=>x-drag.offsetX, ()=>y-drag.offsetY]);
         break;
       case REGION.TOP_SIDE:

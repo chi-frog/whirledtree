@@ -65,12 +65,8 @@ function useElements() {
         if (_element.id === id) {
           const newElement = {..._element};
 
-          for (let i=0; i<keys.length; i++) {
-            const key = keys[i];
-            const callback = callbacks[i];
-
-            newElement[key] = callback(newElement[key])
-          }
+          for (let i=0,key=keys[i]; i<keys.length; i++,key=keys[i])
+            newElement[key] = callbacks[i](newElement[key])
 
           return newElement;
           }
