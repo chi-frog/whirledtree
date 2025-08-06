@@ -4,6 +4,7 @@ import '../app/journalWriter.css';
 import Element, { element } from './Element';
 import { REGION } from './Region';
 import { tbElement } from '@/hooks/useElements';
+import useRefMap from '@/hooks/useRefMap';
 
 //
 // Returns a list of all elements under the cursor
@@ -92,20 +93,13 @@ export default function JournalWriterCanvas({elements, tbElements, font, fontSiz
   const [selectedId, setSelectedId] = useState<number>(0);
   const [focusedId, setFocusedId] = useState<number>(0);
   const [drag, setDrag] = useState<drag>(dragDefault);
-  const elementsRef = useRef<Map<any, any>|null>(null);
+  const {getMap, getRef} = useRefMap();
   const [baseContent, setBaseContent] = useState<string>(DEFAULT_BASE_CONTENT);
   const [mouseoverRegion, setMouseoverRegion] = useState<pEnum>(REGION.NONE);
 
   const mouseDownPointExists = () => (mouseDownPoint.x && mouseDownPoint.y);
   const clearMouseDownPoint = () => setMouseDownPoint({x:-1, y:-1});
   const isFocused = (element:element) => (focusedId === element.id);
-
-  function getMap() {
-    if (!elementsRef.current)
-      elementsRef.current = new Map();
-
-    return elementsRef.current;
-  }
 
   const setElementOptionsFocus = (id:number, value:boolean) => {
     tbElements.updateElementField(id, 'optionsFocused', (_optionsFocused:boolean) => value)
@@ -318,15 +312,6 @@ export default function JournalWriterCanvas({elements, tbElements, font, fontSiz
   const handleKeyUp = (e:React.KeyboardEvent<SVGTextElement>) => {
   }
 
-  const ref = (id:number, node:any) => {
-    if (!node) return () => {};
-
-    const map = getMap();
-    map.set(id, node);
-
-    return () => map.delete(id);
-  };
-
   const notifyElementFontSize = (id:number, fontSize:number) =>
     tbElements.updateElementField(id, 'fontSize', (_fontSize:number) => fontSize);
 
@@ -355,7 +340,7 @@ export default function JournalWriterCanvas({elements, tbElements, font, fontSiz
         <Element
           key={element.id}
           element={element}
-          ref={ref.bind(null, element.id)}
+          ref={getRef.bind(null, element.id)}
           map={getMap()}
           selected={element.id === selectedId}
           focused={element.id === focusedId}
