@@ -57,8 +57,6 @@ export default function FontOption({
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     e.stopPropagation();
-    setFocused(true);
-    console.log('here?');
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -80,13 +78,10 @@ export default function FontOption({
   }
 
   const handleFocus = () => {
+    console.log('focusing');
+    setFocused(true);
     notifyFocused(id, true);
   }
-
-  useLayoutEffect(() => {
-    if (focused && ref)
-      ref.current?.focus();
-  }, [focused]);
 
   return (
     <>

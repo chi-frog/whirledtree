@@ -84,14 +84,12 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
   const [opacity, setOpacity] = useState<number>(expanded ? 1 : 0.7);
   const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState<number>(expanded ? 0.1 : 0.5);
 
-  const targetWidth = (expanded) ?
-    (focusedOption!==0) ? fontOptionWidths[1] :
-    (textWidth>0) ?  fontOptionWidths[0] :
-    DEFAULT_EXPANDED_WIDTH : DEFAULT_UNEXPANDED_SIZE;
-  const targetHeight = (expanded) ?
-    (focusedOption!==0) ? fontOptionHeights[1] :
-    (textHeight[0]>0) ? fontOptionHeights[0] :
-    DEFAULT_EXPANDED_HEIGHT : DEFAULT_UNEXPANDED_SIZE;
+  const targetWidth = (expanded) ? (focusedOption!==0) ? fontOptionWidths[1] :
+                                   (textWidth>0) ?  fontOptionWidths[0] :
+                                   DEFAULT_EXPANDED_WIDTH : DEFAULT_UNEXPANDED_SIZE;
+  const targetHeight = (expanded) ? (focusedOption!==0) ? fontOptionHeights[1] :
+                                    (textHeight[0]>0) ? fontOptionHeights[0] :
+                                    DEFAULT_EXPANDED_HEIGHT : DEFAULT_UNEXPANDED_SIZE;
   const targetOpacity = (expanded) ? 1 : 0.7;
   const targetCornerRadiusPercentage = (expanded) ? 0.1 : 0.5;
   const animationRef = useRef(0);
@@ -100,8 +98,6 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
 
   useLayoutEffect(() => {
     const maxFontWidth = findWidestFont(availableFonts, fontSize);
-
-    console.log('maxFontWidth', maxFontWidth);
 
     setMaxFontWidth(maxFontWidth);
   }, [availableFonts]);
@@ -156,10 +152,7 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
   const notifyFocused = (id:number, focused:boolean) => {
     console.log('focused', focused);
     console.log('id', id);
-    if (focused)
-      setFocusedOption(id);
-    else
-      setFocusedOption(0);
+    setFocusedOption((focused) ? id : 0);
   }
 
   return (
