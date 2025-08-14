@@ -29,11 +29,11 @@ export default function FontOption({
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [width, setWidth] = useState((focused) ?
-    maxFontWidth + options.text.padding*2 : 0);
+    maxFontWidth + options.text.padding.x*2 : 0);
   const [height, setHeight] = useState((focused) ?
     fontDims.height*5 : 0);
   const targetWidth = (focused) ?
-    maxFontWidth + options.text.padding*2 : 0;
+    maxFontWidth + options.text.padding.y*2 : 0;
   const targetHeight = (focused) ?
     fontDims.height*5 : 0;
 

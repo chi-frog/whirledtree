@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
-type elementInputProps = {
+type LeafInputProps = {
   id:number,
   x:number,
   y:number,
@@ -11,16 +11,19 @@ type elementInputProps = {
   parentWidth:number,
   parentHeight:number,
   fontSize:number,
-  elementFontSize:number,
+  leafFontSize:number,
 }
 
-export default function ElementInput({id, x, y, width, height, notifyParentFocused, notifyChangeFontSize, parentWidth, parentHeight, fontSize, elementFontSize} : elementInputProps) {
+export default function ElementInput({
+    id, x, y, width, height, notifyParentFocused,
+    notifyChangeFontSize, parentWidth, parentHeight,
+    fontSize, leafFontSize} : LeafInputProps) {
   const [focused, setFocused] = useState(false);
   const ref = useRef<SVGSVGElement>(null);
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/;
-    let newFontSize = "" + elementFontSize;
+    let newFontSize = "" + leafFontSize;
 
     if (numberRegex.test(e.key)) {
       newFontSize = newFontSize + e.key;
@@ -100,7 +103,7 @@ export default function ElementInput({id, x, y, width, height, notifyParentFocus
       dominantBaseline={'middle'}
       textAnchor={'middle'}
       fontSize={fontSize}>
-      {""+elementFontSize}
+      {""+leafFontSize}
     </text>
     </svg>
   );

@@ -182,19 +182,19 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize} : J
     if (selectedId>0) {
       switch (e.key) {
       case "Backspace":
-        tbElements.transformContent(selectedId, (_content:string) => _content.substring(0, _content.length-1));
+        leafTb.transformContent(selectedId, (_content:string) => _content.substring(0, _content.length-1));
         break;
       case "Enter":
         break;
       case "Tab":
-        tbElements.transformContent(selectedId, (_content:string) => _content + "   ");
+        leafTb.transformContent(selectedId, (_content:string) => _content + "   ");
         break;
       case "Delete":
         setSelectedId(0);
-        tbElements.deleteElement(selectedId);
+        leafTb.remove(selectedId);
         return;
       default:
-        tbElements.transformContent(selectedId, (_content:string) => _content + e.key);
+        leafTb.transformContent(selectedId, (_content:string) => _content + e.key);
       }
     }
   }

@@ -1,5 +1,5 @@
 'use client'
-import ElementOptions from '@/components/ElementOptions';
+import ElementOptions from '@/components/LeafOptions';
 import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import '../app/journalWriter.css';
 import Cursor from './Cursor';
@@ -28,7 +28,7 @@ function getTestBBox(fontSize:number, x?:number, y?:number) {
   return bboxTest;
 }
 
-type elementProps = {
+type LeafProps = {
   leaf:LeafType,
   ref?:any,
   map?:any,
@@ -45,7 +45,7 @@ type elementProps = {
 }
 
 export default function Leaf({leaf, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
-                  handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
+                  handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : LeafProps) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
   const [textHeight, setTextHeight] = useState<number[]>([leaf.fontSize, leaf.fontSize, leaf.fontSize]);
   const [textWidth, setTextWidth] = useState<number>(0);
@@ -68,7 +68,7 @@ export default function Leaf({leaf, ref, map, selected, focused, isDragged, noti
       [bbox.height, // Full Height
        bbox.height - (((bbox.y + bbox.height) - leaf.y) * 2), // Height of only Letters
        bbox.height - ((bbox.y + bbox.height) - leaf.y)]); // Height of Letters and the Lower Empty Space
-  }, [ref]);
+  }, [leaf.font]);
 
   useEffect(() => {
     map.get(leaf.id).focus();

@@ -1,7 +1,7 @@
-import { MouseEvent, MouseEventHandler, RefObject, useEffect, useRef, useState } from "react";
-import ElementInput from '@/components/ElementInput';
+import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
+import LeafInput from '@/components/LeafInput';
 
-type elementOptionsProps = {
+type LeafOptionsProps = {
   x:number,
   y:number,
   textHeight:number,
@@ -13,27 +13,40 @@ type elementOptionsProps = {
   parentMouseLeave:MouseEventHandler<SVGSVGElement>,
 }
 
-const DEFAULT_OPTIONS_TEXT_SIZE = 16;
-const DEFAULT_OPTIONS_UNEXPANDED_SIZE = 10;
-const DEFAULT_OPTIONS_EXPANDED_WIDTH = 80;
-const DEFAULT_OPTIONS_EXPANDED_HEIGHT = 40;
-const DEFAULT_OPTIONS_UNEXPANDED_OPACITY = 0.7;
-const DEFAULT_OPTIONS_EXPANDED_OPACITY = 1;
+const options = {
+  unexpanded: {
+    size:10,
+    opacity:0.7,
+    cornerRadiusPercentage:0.5,
+  },
+  expanded: {
+    width:80,
+    height:40,
+    opacity:1,
+    cornerRadiusPercentage:0.1,
+  },
+  text: {
+    size:16,
+  },
+  spacing: {
+    x:5,
+  }
+}
 
-export default function ElementOptions({x, y, textHeight, notifyParentFocused, notifyChangeFontSize, expanded, fontSize, parentMouseEnter, parentMouseLeave} : elementOptionsProps) {
-  const [width, setWidth] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_WIDTH : DEFAULT_OPTIONS_UNEXPANDED_SIZE);
-  const [height, setHeight] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE);
-  const [opacity, setOpacity] = useState(expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY);
+export default function LeafOptions({
+    x, y, textHeight, notifyParentFocused, notifyChangeFontSize,
+    expanded, fontSize, parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
+  const [width, setWidth] = useState(expanded ? options.expanded.width : options.unexpanded.size);
+  const [height, setHeight] = useState(expanded ? options.expanded.height : options.unexpanded.size);
+  const [opacity, setOpacity] = useState(expanded ? options.expanded.opacity : options.unexpanded.opacity);
   const [hovered, setHovered] = useState<string>("");
   const [moveX, setMoveX] = useState(expanded ? 0 : 0);
   const [moveY, setMoveY] = useState(expanded ? 0 : 0);
   const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState(expanded ? 0.1 : 0.5);
-  const targetWidth = expanded ? DEFAULT_OPTIONS_EXPANDED_WIDTH : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
-  const targetHeight = expanded ? DEFAULT_OPTIONS_EXPANDED_HEIGHT : DEFAULT_OPTIONS_UNEXPANDED_SIZE;
-  const targetOpacity = expanded ? DEFAULT_OPTIONS_EXPANDED_OPACITY : DEFAULT_OPTIONS_UNEXPANDED_OPACITY;
-  const targetMoveX = expanded ? 0 : 0;
-  const targetMoveY = expanded ? 0 : 0;
-  const targetCornerRadiusPercentage = expanded ? 0.1 : 0.5;
+  const targetWidth = expanded ? options.expanded.width : options.unexpanded.size;
+  const targetHeight = expanded ? options.expanded.height : options.unexpanded.size;
+  const targetOpacity = expanded ? options.expanded.opacity : options.unexpanded.opacity;
+  const targetCornerRadiusPercentage = expanded ? options.expanded.cornerRadiusPercentage : options.unexpanded.cornerRadiusPercentage;
   const animationRef = useRef(0);
 
   var nextId = Date.now();
@@ -48,8 +61,6 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
     const initialWidth = width;
     const initialHeight = height;
     const initialOpacity = opacity;
-    const initialMoveX = moveX;
-    const initialMoveY = moveY;
     const initialCornerRadiusPercentage = cornerRadiusPercentage;
     const duration = 100;
 
@@ -61,8 +72,6 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
       setWidth(initialWidth + (targetWidth-initialWidth)*progress);
       setHeight(initialHeight + (targetHeight-initialHeight)*progress);
       setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
-      setMoveX(initialMoveX + (targetMoveX-initialMoveX)*progress);
-      setMoveY(initialMoveY + (targetMoveY-initialMoveY)*progress);
       setCornerRadiusPercentage(initialCornerRadiusPercentage + (targetCornerRadiusPercentage-initialCornerRadiusPercentage)*progress);
 
       if (progress < 1)
@@ -95,11 +104,9 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
     if (notifyChangeFontSize) notifyChangeFontSize(left ? fontSize-1 : fontSize+1);
   }
 
-  const DEFAULT_SPACING_X = 5;
-
   return (
     <svg
-      x={x - width - DEFAULT_SPACING_X}
+      x={x - width - options.spacing.x}
       y={y - textHeight/2 - height/2}
       width={width}
       height={height}
@@ -190,9 +197,9 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
     </svg>
     }
     {expanded &&
-    <ElementInput
+    <LeafInput
       id={getNextId()}
-      x={x - width - DEFAULT_SPACING_X}
+      x={x - width - options.spacing.x}
       y={y - textHeight/2 - height/2}
       width={height-5}
       height={height-10}
@@ -200,8 +207,8 @@ export default function ElementOptions({x, y, textHeight, notifyParentFocused, n
       notifyChangeFontSize={notifyChangeFontSize}
       parentWidth={width}
       parentHeight={height}
-      elementFontSize={fontSize}
-      fontSize={DEFAULT_OPTIONS_TEXT_SIZE}
+      leafFontSize={fontSize}
+      fontSize={options.text.size}
       />
     }
     </svg>
