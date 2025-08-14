@@ -1,34 +1,43 @@
-import useFont from "@/hooks/useFont";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Dimension, Font } from "@/hooks/useFont";
+import { useEffect, useRef, useState } from "react";
+import { options } from "./JournalWriterOptions";
 
 type fontOptionProps = {
   id:number,
   x:number,
   y:number,
-  widths:number[],
-  heights:number[],
+  labelWidth:number,
+  labelHeight:number,
   cornerRadiusPercentage:number,
+  font:Font,
   fontSize:number,
-  font:string,
+  availableFonts:Font[],
+  maxFontWidth:number,
   notifyFontChange:Function,
   notifyFocused:Function,
 }
 
-const INPUT_PADDING = 5;
-
 export default function FontOption({
-  id, x, y, widths, heights,
-  cornerRadiusPercentage, fontSize, font, notifyFontChange, notifyFocused} : fontOptionProps) {
-  const {availableFonts} = useFont();
+  id, x, y, labelWidth, labelHeight, cornerRadiusPercentage,
+  font, fontSize, availableFonts, maxFontWidth,
+  notifyFontChange, notifyFocused} : fontOptionProps) {
+
+  let fontDims = font.getDims(fontSize);
+
+  console.log('fontDims - FontOption', fontDims);
 
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const [width, setWidth] = useState((focused) ? widths[1] : widths[0]);
-  const [height, setHeight] = useState((focused) ? heights[1] : heights[0]);
-  const targetWidth = (focused) ? widths[1] : widths[0];
-  const targetHeight = (focused) ? heights[1] : heights[0];
-  const ref = useRef<SVGSVGElement>(null);
+  const [width, setWidth] = useState((focused) ?
+    maxFontWidth + options.text.padding*2 : 0);
+  const [height, setHeight] = useState((focused) ?
+    fontDims.height*5 : 0);
+  const targetWidth = (focused) ?
+    maxFontWidth + options.text.padding*2 : 0;
+  const targetHeight = (focused) ?
+    fontDims.height*5 : 0;
 
+  const ref = useRef<SVGSVGElement>(null);
   const animationRef = useRef(0);
 
   useEffect(() => {
@@ -56,7 +65,11 @@ export default function FontOption({
   }, [focused]);
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    console.log('mouseDown');
     e.stopPropagation();
+
+    if (e.button !== 0)
+      e.preventDefault();
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -72,24 +85,49 @@ export default function FontOption({
   };
 
   const handleBlur = () => {
-    console.log('blurring');
+    console.log('blurred');
     setFocused(false);
     notifyFocused(id, false);
   }
 
   const handleFocus = () => {
-    console.log('focusing');
+    console.log('focused');
     setFocused(true);
     notifyFocused(id, true);
   }
+
+  const fontsJSX =
+    availableFonts.map((_font:Font, _index:number) => {
+      const dims = _font.getDims(fontSize);
+      return (
+        <g
+          key={_font.name}>
+          <rect
+            x={width}
+            y={_index*dims.height}
+            width={width}
+            height={dims.height}
+            rx={width*cornerRadiusPercentage}
+            ry={height*cornerRadiusPercentage}
+            stroke={"yellow"}
+            fill={hovered ? "#EEEEEE" : 'white'}>
+          </rect>
+          <text
+            x={width/2 - dims.width}
+            y={_index*dims.height + dims.height}
+            fontSize={fontSize}>
+            {_font.name}
+          </text>
+        </g>
+      )});
 
   return (
     <>
     <svg
       x={x}
       y={y}
-      width={width}
-      height={height}
+      width={labelWidth}
+      height={labelHeight}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
@@ -101,49 +139,7 @@ export default function FontOption({
         outline: "none",
         cursor: 'pointer',
       }}>
-      {!focused &&
-        <g>
-          <rect
-            x={0}
-            y={0}
-            width={width}
-            height={height}
-            rx={width*cornerRadiusPercentage}
-            ry={height*cornerRadiusPercentage}
-            stroke={"black"}
-            fill={hovered ? "#EEEEEE" : 'white'}>
-          </rect>
-          <text
-            x={width/2 - widths[2]/2}
-            y={height - heights[2]/2}
-            fontSize={fontSize}>
-            {font}
-          </text>
-        </g>
-      }
-      {focused &&
-      availableFonts.map((_font:string, _index:number) => {
-        return (
-          <g
-            key={_font}>
-            <rect
-              x={0}
-              y={_index*height}
-              width={width}
-              height={focused ? heights[0] : height}
-              rx={width*cornerRadiusPercentage}
-              ry={height*cornerRadiusPercentage}
-              stroke={focused ? "yellow" : "black"}
-              fill={hovered ? "#EEEEEE" : 'white'}>
-            </rect>
-            <text
-              x={0}
-              y={_index*height}
-              fontSize={fontSize}>
-              {availableFonts[_index]}
-            </text>
-          </g>
-        )})}
+      {focused && fontsJSX}
     </svg>
     </>
   );

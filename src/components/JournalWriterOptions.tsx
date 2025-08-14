@@ -1,116 +1,82 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
-import useFont from "@/hooks/useFont";
+import { Dimension, Font } from "@/hooks/useFont";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-function getTestBBox(content:string, fontSize:number, x?:number, y?:number) {
-  let fontSizeTest = document.createElementNS(SVG_NS, "text");
-  fontSizeTest.setAttribute('font-size', "" + fontSize);
-  fontSizeTest.setAttribute("font-family", "Arial");
-  fontSizeTest.setAttribute('style', "visibility:hidden;");
-  if (x) fontSizeTest.setAttribute('x', "" + x);
-  if (y) fontSizeTest.setAttribute('y', "" + y);
-  fontSizeTest.textContent = content;
-  let canvas = document.querySelector("#canvas");
-  let bboxTest;
-
-  if (canvas) {
-    canvas.appendChild(fontSizeTest);
-    bboxTest = fontSizeTest.getBBox();
-    fontSizeTest.remove();
-  } else
-    bboxTest = {x:0, y:0, width:0, height:0};
-
-  return bboxTest;
+export const options = {
+  unexpanded: {
+    width:30,
+    height:30,
+    opacity:0.7,
+    cornerRadiusPercentage:0.5,
+  },
+  expanded: {
+    fallback:{
+      width:80,
+      height:40,
+    },
+    opacity:1,
+    cornerRadiusPercentage:0.1,
+  },
+  border: {
+    padding:5,
+  },
+  text: {
+    padding: {
+      x:5,
+      y:2,
+    }
+  },
+  focused: {
+    height:100,
+  }
 }
-
-const findWidestFont = (fonts:string[], fontSize:number) => {
-  let largestWidth = 0;
-
-  fonts.forEach((_font) => {
-    const bbox = getTestBBox(_font, fontSize);
-
-    if (bbox.width > largestWidth)
-      largestWidth = bbox.width;
-  });
-
-  return largestWidth;
-}
-
-const DEFAULT_UNEXPANDED_SIZE = 30;
-const BORDER_PADDING = 5;
-const TEXT_PADDING = 5;
-const DEFAULT_EXPANDED_WIDTH = 80;
-const DEFAULT_EXPANDED_HEIGHT = 40;
 
 type journalWriterOptionsProps = {
   left:number,
   top:number,
+  font:Font,
   fontSize:number,
-  font:string,
+  availableFonts:Font[],
+  maxFontWidth:number,
   notifyFontChange:Function,
 }
 
-export default function JournalWriterOptions({left, top, fontSize, font, notifyFontChange} : journalWriterOptionsProps) {
+export default function JournalWriterOptions({left, top, font, fontSize,
+  availableFonts, maxFontWidth, notifyFontChange} : journalWriterOptionsProps) {
   const [focusedOption, setFocusedOption] = useState<any>(0);
-  const {availableFonts} = useFont();
+  
+  const fontDims = font.getDims(fontSize);
 
-  const [textWidth, setTextWidth] = useState<number>(0);
-  const [textHeight, setTextHeight] = useState<number[]>([]);
-  const [maxFontWidth, setMaxFontWidth] = useState<number>(0);
-
-  const fontOptionWidths = [
-    textWidth + TEXT_PADDING*2 + BORDER_PADDING*2,
-    maxFontWidth + TEXT_PADDING*2 + BORDER_PADDING*2,
-    textWidth + BORDER_PADDING*2];
-  const fontOptionHeights = [
-    textHeight[0] + TEXT_PADDING*2 + BORDER_PADDING*2,
-    (textHeight[0] + TEXT_PADDING*2)*availableFonts.length + BORDER_PADDING*2,
-    (textHeight[1] + BORDER_PADDING*2)
-  ];
+  const fontOptionWidth = font.loaded ? fontDims.width : 0;
+  const fontOptionHeight = font.loaded ? fontDims.height : 0;
 
   const [expanded, setExpanded] = useState<boolean>(false);
   const [width, setWidth] = useState<number>((expanded) ?
-    (focusedOption!==0) ? fontOptionWidths[1] :
-    (textWidth>0) ? fontOptionWidths[0] :
-    DEFAULT_EXPANDED_WIDTH : DEFAULT_UNEXPANDED_SIZE);
+    (fontOptionWidth>0) ? (fontOptionWidth + options.text.padding.x*2 + options.border.padding*2) :
+                          (options.expanded.fallback.width) :
+    (options.unexpanded.width));
   const [height, setHeight] = useState<number>((expanded) ?
-    (focusedOption!==0) ? fontOptionHeights[1] :
-    (textHeight[0]>0) ? fontOptionHeights[0] :
-    DEFAULT_EXPANDED_HEIGHT : DEFAULT_UNEXPANDED_SIZE);
-  const [opacity, setOpacity] = useState<number>(expanded ? 1 : 0.7);
-  const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState<number>(expanded ? 0.1 : 0.5);
+    (fontOptionHeight>0) ? (fontOptionHeight + options.text.padding.y*2 + options.border.padding*2) :
+                           (options.expanded.fallback.height) :
+    (options.unexpanded.height));
+  const [opacity, setOpacity] = useState<number>((expanded) ? 1 : 0.7);
+  const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState<number>((expanded) ? 0.1 : 0.5);
 
-  const targetWidth = (expanded) ? (focusedOption!==0) ? fontOptionWidths[1] :
-                                   (textWidth>0) ?  fontOptionWidths[0] :
-                                   DEFAULT_EXPANDED_WIDTH : DEFAULT_UNEXPANDED_SIZE;
-  const targetHeight = (expanded) ? (focusedOption!==0) ? fontOptionHeights[1] :
-                                    (textHeight[0]>0) ? fontOptionHeights[0] :
-                                    DEFAULT_EXPANDED_HEIGHT : DEFAULT_UNEXPANDED_SIZE;
-  const targetOpacity = (expanded) ? 1 : 0.7;
-  const targetCornerRadiusPercentage = (expanded) ? 0.1 : 0.5;
+  const targetWidth = (expanded) ?
+    (fontOptionWidth>0) ? (fontOptionWidth + options.text.padding.x*2 + options.border.padding*2) :
+                          (options.expanded.fallback.width) :
+    (options.unexpanded.width);
+  const targetHeight = (expanded) ?
+    (fontOptionHeight>0) ? (fontOptionHeight + options.text.padding.y*2 + options.border.padding*2) :
+                           (options.expanded.fallback.height) :
+    (options.unexpanded.height);
+  const targetOpacity = (expanded) ? options.expanded.opacity : options.unexpanded.opacity;
+  const targetCornerRadiusPercentage = (expanded) ? options.expanded.cornerRadiusPercentage : options.unexpanded.cornerRadiusPercentage;
   const animationRef = useRef(0);
 
   const fontOptionId = useRef(Date.now());
-
-  useLayoutEffect(() => {
-    const maxFontWidth = findWidestFont(availableFonts, fontSize);
-
-    setMaxFontWidth(maxFontWidth);
-  }, [availableFonts]);
-
-  useEffect(() => {
-    const bbox = getTestBBox(font, fontSize, left, top);
-
-    setTextWidth(bbox.width);
-    setTextHeight(
-      [bbox.height, // Full Height
-       bbox.height - (((bbox.y + bbox.height) - left) * 2), // Height of only Letters
-       bbox.height - ((bbox.y + bbox.height) - top)]); // Height of Letters and the Lower Empty Space
-  }, [font, fontSize]);
 
   useEffect(() => {
       cancelAnimationFrame(animationRef.current);
@@ -139,20 +105,25 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
       animationRef.current = requestAnimationFrame(animate);
   
       return () => cancelAnimationFrame(animationRef.current);
-    }, [expanded, focusedOption, textWidth, maxFontWidth, textHeight,]);
+    }, [expanded, focusedOption, fontOptionWidth, fontOptionHeight, maxFontWidth,]);
 
   const handleMouseEnter = () => setExpanded(true);
 
+  //const handleMouseLeave = () => setExpanded((focusedOption) ? true : false);
   const handleMouseLeave = () => setExpanded(true);
 
+
   const handleMouseDown = (e:any) => {
+    if (focusedOption)
+      e.preventDefault();
+
     e.stopPropagation();
   }
 
   const notifyFocused = (id:number, focused:boolean) => {
-    console.log('focused', focused);
-    console.log('id', id);
     setFocusedOption((focused) ? id : 0);
+    if (!focused)
+      setExpanded(false);
   }
 
   return (
@@ -177,17 +148,44 @@ export default function JournalWriterOptions({left, top, fontSize, font, notifyF
         opacity={opacity}
         />
       {expanded &&
+      <rect
+          className="hover:fill-gray-200 hover:cursor-pointer hover:stroke-yellow-600"
+          x={options.border.padding}
+          y={options.border.padding}
+          width={fontOptionWidth + options.text.padding.x*2}
+          height={fontOptionHeight + options.text.padding.y*2}
+          rx={fontOptionWidth*cornerRadiusPercentage}
+          ry={fontOptionHeight*cornerRadiusPercentage}
+          stroke={"black"}
+          fill={'white'}>
+        </rect>}
+      {expanded &&
+        <text
+          className="cursor-pointer"
+          x={options.border.padding + (fontOptionWidth + options.text.padding.x*2)/2 - fontOptionWidth/2}
+          y={options.border.padding + (fontOptionHeight + options.text.padding.y*2)/2 + fontOptionHeight/2 - fontDims.textHeightGap}
+          fontSize={fontSize}
+          style={{
+            pointerEvents:'none'
+          }}>
+          {font.name}
+        </text>
+      }
+      {expanded &&
       <FontOption
         id={fontOptionId.current}
-        x={BORDER_PADDING}
-        y={BORDER_PADDING}
-        widths={fontOptionWidths.map((width) => width - BORDER_PADDING*2)}
-        heights={fontOptionHeights.map((height) => height - BORDER_PADDING*2)}
+        x={options.border.padding}
+        y={options.border.padding}
+        labelWidth={width - options.border.padding*2}
+        labelHeight={height - options.border.padding*2}
         cornerRadiusPercentage={cornerRadiusPercentage}
-        fontSize={fontSize}
         font={font}
+        fontSize={fontSize}
+        availableFonts={availableFonts}
+        maxFontWidth={maxFontWidth}
         notifyFontChange={notifyFontChange}
-        notifyFocused={notifyFocused}/>}
+        notifyFocused={notifyFocused}/>
+      }
     </svg>
     </div>
   );

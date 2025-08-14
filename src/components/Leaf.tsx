@@ -1,9 +1,9 @@
 'use client'
 import ElementOptions from '@/components/ElementOptions';
 import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
-import { REGION } from './Region';
 import '../app/journalWriter.css';
 import Cursor from './Cursor';
+import { Leaf as LeafType } from '@/hooks/useLeaves';
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -28,18 +28,8 @@ function getTestBBox(fontSize:number, x?:number, y?:number) {
   return bboxTest;
 }
 
-export type element = {
-  id:number,
-  x:number,
-  y:number,
-  font:string,
-  fontSize:number,
-  content:string,
-  optionsFocused:boolean,
-}
-
 type elementProps = {
-  element:element,
+  leaf:LeafType,
   ref?:any,
   map?:any,
   selected:boolean,
@@ -54,33 +44,34 @@ type elementProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-export default function Element({element, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
+export default function Leaf({leaf, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
                   handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : elementProps) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
-  const [textHeight, setTextHeight] = useState<number[]>([element.fontSize, element.fontSize, element.fontSize]);
+  const [textHeight, setTextHeight] = useState<number[]>([leaf.fontSize, leaf.fontSize, leaf.fontSize]);
   const [textWidth, setTextWidth] = useState<number>(0);
   const cursorWidth = useRef<number>(0);
 
   useEffect(() => {
-    cursorWidth.current = getTestBBox(element.fontSize)?.width;
-  }, [element.fontSize]);
+    cursorWidth.current = getTestBBox(leaf.fontSize)?.width;
+  }, [leaf.fontSize]);
 
   useEffect(() => {
-    let bbox = map.get(element.id).getBBox();
+    let bbox = map.get(leaf.id).getBBox();
+    console.log('here');
 
     setTextWidth(bbox.width);
 
     if (bbox.height === 0)
-      bbox = getTestBBox(element.fontSize, element.x, element.y);
+      bbox = getTestBBox(leaf.fontSize, leaf.x, leaf.y);
 
     setTextHeight(
       [bbox.height, // Full Height
-       bbox.height - (((bbox.y + bbox.height) - element.y) * 2), // Height of only Letters
-       bbox.height - ((bbox.y + bbox.height) - element.y)]); // Height of Letters and the Lower Empty Space
+       bbox.height - (((bbox.y + bbox.height) - leaf.y) * 2), // Height of only Letters
+       bbox.height - ((bbox.y + bbox.height) - leaf.y)]); // Height of Letters and the Lower Empty Space
   }, [ref]);
 
   useEffect(() => {
-    map.get(element.id).focus();
+    map.get(leaf.id).focus();
   }, [focused])
 
   const handleOnBlur = () => {
@@ -91,50 +82,50 @@ export default function Element({element, ref, map, selected, focused, isDragged
   const handleMouseOptionsEnter = () => setOptionsExpanded(true);
 
   const handleMouseOptionsLeave = () => {
-    if (!element.optionsFocused)
+    if (!leaf.optionsFocused)
       setOptionsExpanded(false);
   }
   
   return (
     <g>
     <text
-      x={element.x}
-      y={element.y}
-      data-elementid={element.id}
+      x={leaf.x}
+      y={leaf.y}
+      data-elementid={leaf.id}
       ref={ref} tabIndex={0} 
-      fontSize={element.fontSize}
+      fontSize={leaf.fontSize}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onBlur={handleOnBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       style={{
-        fontFamily: element.font,
+        fontFamily: leaf.font.name,
         whiteSpace: "break-spaces",
         outline: (focused) ? "1px solid gold" : 
                  (selected) ? "1px solid blue" : "none",
         userSelect: "none",
       }}>
       <tspan>
-        {element.content}
+        {leaf.content}
       </tspan>
     </text>
     {focused &&
       <Cursor
-        x={element.x + textWidth}
-        y={element.y - textHeight[2]}
+        x={leaf.x + textWidth}
+        y={leaf.y - textHeight[2]}
         width={cursorWidth.current}
         height={textHeight[0]}/>
     }
     {selected &&
     <ElementOptions
-      x={element.x}
-      y={element.y}
+      x={leaf.x}
+      y={leaf.y}
       textHeight={textHeight[1]}
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       expanded={optionsExpanded}
-      fontSize={element.fontSize}
+      fontSize={leaf.fontSize}
       parentMouseEnter={handleMouseOptionsEnter}
       parentMouseLeave={handleMouseOptionsLeave}
       />

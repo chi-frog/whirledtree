@@ -59,8 +59,6 @@ export const getRegion = (x:number,y:number,rect:any) => {
   
       if (domText.getAttribute('data-elementid') === "" + focusedId)
         return REGION.BODY_FOCUSED;
-  
-      console.log('domElements[0]', domText?.getAttribute('data-elementid'));
-  
+    
       return getRegion(x, y, domElements[0].getBoundingClientRect());
     }
