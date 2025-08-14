@@ -1,43 +1,41 @@
-import { Dimension, Font } from "@/hooks/useFont";
+import { Font } from "@/hooks/useFont";
 import { useEffect, useRef, useState } from "react";
 import { options } from "./JournalWriterOptions";
 
 type fontOptionProps = {
-  id:number,
+  focused:boolean,
   x:number,
   y:number,
-  labelWidth:number,
-  labelHeight:number,
-  cornerRadiusPercentage:number,
   font:Font,
   fontSize:number,
   availableFonts:Font[],
   maxFontWidth:number,
+  notifyMouseLeave:Function,
   notifyFontChange:Function,
-  notifyFocused:Function,
 }
 
 export default function FontOption({
-  id, x, y, labelWidth, labelHeight, cornerRadiusPercentage,
+  focused, x, y,
   font, fontSize, availableFonts, maxFontWidth,
-  notifyFontChange, notifyFocused} : fontOptionProps) {
+  notifyMouseLeave} : fontOptionProps) {
 
   let fontDims = font.getDims(fontSize);
 
-  console.log('fontDims - FontOption', fontDims);
+  const getWidth = () =>
+    (focused) ?
+      (maxFontWidth + options.text.padding.x*2 + options.border.padding*2) :
+      0;
 
-  const [focused, setFocused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [width, setWidth] = useState((focused) ?
-    maxFontWidth + options.text.padding.x*2 : 0);
-  const [height, setHeight] = useState((focused) ?
-    fontDims.height*5 : 0);
-  const targetWidth = (focused) ?
-    maxFontWidth + options.text.padding.y*2 : 0;
-  const targetHeight = (focused) ?
-    fontDims.height*5 : 0;
+  const getHeight = () =>
+    (focused) ?
+      (fontDims.height + options.text.padding.y*2 + options.border.padding)*5 + options.border.padding :
+      0;
 
-  const ref = useRef<SVGSVGElement>(null);
+  const [width, setWidth] = useState(getWidth());
+  const [height, setHeight] = useState(getHeight());
+  const targetWidth = getWidth();
+  const targetHeight = getHeight();
+
   const animationRef = useRef(0);
 
   useEffect(() => {
@@ -76,24 +74,8 @@ export default function FontOption({
     e.stopPropagation();
   }
 
-  const handleMouseEnter = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    setHovered(true);
-  };
-
-  const handleMouseLeave = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    setHovered(false);
-  };
-
-  const handleBlur = () => {
-    console.log('blurred');
-    setFocused(false);
-    notifyFocused(id, false);
-  }
-
-  const handleFocus = () => {
-    console.log('focused');
-    setFocused(true);
-    notifyFocused(id, true);
+  const handleMouseLeave = () => {
+    notifyMouseLeave();
   }
 
   const fontsJSX =
@@ -103,18 +85,19 @@ export default function FontOption({
         <g
           key={_font.name}>
           <rect
-            x={width}
-            y={_index*dims.height}
-            width={width}
-            height={dims.height}
-            rx={width*cornerRadiusPercentage}
-            ry={height*cornerRadiusPercentage}
-            stroke={"yellow"}
-            fill={hovered ? "#EEEEEE" : 'white'}>
+            className="cursor-pointer stroke-black hover:stroke-yellow-200 hover:fill-gray-200"
+            x={options.border.padding}
+            y={options.border.padding + (_index*(dims.height + options.text.padding.y*2 + options.border.padding))}
+            width={width - options.border.padding*2}
+            height={dims.height + options.text.padding.y*2}
+            rx={5}
+            ry={5}
+            fill={'white'}>
           </rect>
           <text
-            x={width/2 - dims.width}
-            y={_index*dims.height + dims.height}
+            className="pointer-events-none"
+            x={options.border.padding + (width - options.border.padding*2)/2 - (dims.width/2)}
+            y={options.border.padding + (dims.height + options.text.padding.y*2)/2 + (dims.textHeight/2) + (_index*(dims.height + options.text.padding.y*2 + options.border.padding))}
             fontSize={fontSize}>
             {_font.name}
           </text>
@@ -126,19 +109,22 @@ export default function FontOption({
     <svg
       x={x}
       y={y}
-      width={labelWidth}
-      height={labelHeight}
-      ref={ref} tabIndex={0}
-      onBlur={handleBlur}
-      onFocus={handleFocus}
+      width={width}
+      height={height}
       onMouseDown={(e) => handleMouseDown(e)}
       onMouseUp={(e) => handleMouseUp(e)}
-      onMouseEnter={(e) => handleMouseEnter(e)}
-      onMouseLeave={(e) => handleMouseLeave(e)}
+      onMouseLeave={handleMouseLeave}
       style={{
         outline: "none",
-        cursor: 'pointer',
       }}>
+      <rect
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        rx={5}
+        ry={5}
+        fill='#ADD8E6' />
       {focused && fontsJSX}
     </svg>
     </>

@@ -20,12 +20,10 @@ const createDimension = ({width, height, textHeight, textHeightGap}:Dimension={w
   ({width, height, textHeight, textHeightGap});
 const getDims = (dimsMap:Map<number, Dimension>, fontSize:number) => {
   const result = dimsMap.get(fontSize);
-  console.log('dimsMap - getDims', dimsMap);
   return result ? result : createDimension();
 };
 const createFont:(name:string)=>Font = (name:string) => {
   const dimsMap = new Map<number, Dimension>();
-  console.log('name - createFont', name);
   return {name:name, dimsMap, getDims:getDims.bind(null, dimsMap), loaded:false}};
 const copyFont = (font:Font) => {
   const dimsMap = new Map<number, Dimension>();
@@ -35,6 +33,8 @@ const defaultFonts = [
   createFont("Aharoni"),
   createFont("Arial"),
   createFont("Helvetica"),
+  createFont("Times New Roman"),
+  createFont("Georgia"),
 ];
 
 function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
@@ -47,16 +47,14 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
 
   useEffect(() => {
     let newMaxWidth = maxWidth;
-    console.log('attempting font measurement');
 
     if ((unloadedFonts.length > 0) || (getDims(loadedFonts[0].dimsMap, fontSize).width === 0)) {
       const loadedFonts = unloadedFonts.map((_font) => copyFont(_font));
-      console.log('carrying out font measurement');
 
       loadedFonts.forEach((_font) => {
         const bbox = getTextBBox(_font.name, fontSize, 0, 0);
 
-        if (bbox.width > maxWidth) newMaxWidth = bbox.width;
+        if (bbox.width > newMaxWidth) newMaxWidth = bbox.width;
         _font.dimsMap.set(fontSize, createDimension({width: bbox.width,
                                                      height: bbox.height,
                                                      textHeight: bbox.height - (((bbox.y + bbox.height)) * 2),
@@ -70,13 +68,10 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
         }
       });
 
-      console.log('loadedFonts', loadedFonts);
-      console.log('unloadedFonts', unloadedFonts);
-
       setLoadedFonts(loadedFonts);
       setUnloadedFonts([]);
     }
-
+    
     setMaxWidth(newMaxWidth);
     loaded.current = true;
 
