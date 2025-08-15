@@ -31,6 +31,7 @@ const copyFont = (font:Font) => {
 
 const defaultFontNames = [
   "Aharoni", "Arial", "Helvetica", "Times New Roman", "Georgia",
+  "Roboto", "Times",
 ]
 
 const defaultFonts = defaultFontNames.map((_name) => createFont(_name));

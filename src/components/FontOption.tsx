@@ -60,7 +60,7 @@ export default function FontOption({
     animationRef.current = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationRef.current);
-  }, [focused]);
+  }, [focused, font]);
 
   const handleMouseDown = (e:React.MouseEvent<SVGRectElement, MouseEvent>, font:Font) => {
     console.log('mouseDown', font);
@@ -75,6 +75,7 @@ export default function FontOption({
     notifyMouseLeave();
   }
 
+  const sysFontHeight = fontDims.height;
   const fontsJSX =
     availableFonts.map((_font:Font, _index:number) => {
       const dims = _font.getDims(fontSize);
@@ -85,9 +86,9 @@ export default function FontOption({
           <rect
             className="cursor-pointer stroke-black hover:stroke-yellow-200 hover:fill-gray-200"
             x={options.border.padding}
-            y={options.border.padding + (_index*(dims.height + options.text.padding.y*2 + options.border.padding))}
+            y={options.border.padding + (_index*(sysFontHeight + options.text.padding.y*2 + options.border.padding))}
             width={width - options.border.padding*2}
-            height={dims.height + options.text.padding.y*2}
+            height={sysFontHeight + options.text.padding.y*2}
             rx={5}
             ry={5}
             fill={'white'}
@@ -96,7 +97,7 @@ export default function FontOption({
           <text
             className='pointer-events-none'
             x={options.border.padding + (width - options.border.padding*2)/2 - (dims.width/2)}
-            y={options.border.padding + (dims.height + options.text.padding.y*2)/2 + (dims.textHeight/2) + (_index*(dims.height + options.text.padding.y*2 + options.border.padding))}
+            y={options.border.padding + (dims.height + options.text.padding.y*2)/2 + (dims.textHeight/2) + (_index*(sysFontHeight + options.text.padding.y*2 + options.border.padding))}
             fontSize={fontSize}
             style={{
               fontFamily:_font.name

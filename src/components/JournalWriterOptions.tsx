@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
-import { Dimension, Font } from "@/hooks/useFont";
+import { Font } from "@/hooks/useFont";
 
 export const options = {
   unexpanded: {
@@ -89,6 +89,9 @@ export default function JournalWriterOptions({left, top, font, fontSize,
 
   useEffect(() => {
       cancelAnimationFrame(animationRef.current);
+
+      console.log('font-' + font, fontDims);
+      console.log('targetHeight', targetHeight);
   
       let start:number;
       const initialWidth = width;
@@ -114,7 +117,7 @@ export default function JournalWriterOptions({left, top, font, fontSize,
       animationRef.current = requestAnimationFrame(animate);
   
       return () => cancelAnimationFrame(animationRef.current);
-    }, [expanded, focusedOption, fontLabelWidth, fontLabelHeight, maxFontWidth,]);
+    }, [expanded, focusedOption, fontLabelWidth, fontLabelHeight, font, maxFontWidth,]);
 
   const handleMouseEnter = () => setExpanded(true);
 
@@ -161,6 +164,8 @@ export default function JournalWriterOptions({left, top, font, fontSize,
         (fontDims.height + options.text.padding.y*2 + options.border.padding)*5 + options.border.padding :
         0;
 
+        console.log('svgHeight', svgHeight);
+
   return (
     <div
       className="absolute"
@@ -200,12 +205,13 @@ export default function JournalWriterOptions({left, top, font, fontSize,
         </rect>}
       {expanded &&
         <text
-          className="cursor-pointer font-[roboto]"
+          className="cursor-pointer"
           x={options.border.padding + (fontLabelWidth + options.text.padding.x*2)/2 - fontLabelWidth/2}
           y={options.border.padding + (fontLabelHeight + options.text.padding.y*2)/2 + fontLabelHeight/2 - fontDims.textHeightGap}
           fontSize={fontSize}
           style={{
             pointerEvents:'none',
+            fontFamily:font.name,
           }}>
           {font.name}
         </text>
