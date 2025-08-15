@@ -11,13 +11,13 @@ type fontOptionProps = {
   availableFonts:Font[],
   maxFontWidth:number,
   notifyMouseLeave:Function,
-  notifyFontChange:Function,
+  notifySetFont:Function,
 }
 
 export default function FontOption({
   focused, x, y,
   font, fontSize, availableFonts, maxFontWidth,
-  notifyMouseLeave} : fontOptionProps) {
+  notifyMouseLeave, notifySetFont} : fontOptionProps) {
 
   let fontDims = font.getDims(fontSize);
 
@@ -62,16 +62,13 @@ export default function FontOption({
     return () => cancelAnimationFrame(animationRef.current);
   }, [focused]);
 
-  const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    console.log('mouseDown');
+  const handleMouseDown = (e:React.MouseEvent<SVGRectElement, MouseEvent>, font:Font) => {
+    console.log('mouseDown', font);
     e.stopPropagation();
-
     if (e.button !== 0)
       e.preventDefault();
-  }
 
-  const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    e.stopPropagation();
+    notifySetFont(font);
   }
 
   const handleMouseLeave = () => {
@@ -81,6 +78,7 @@ export default function FontOption({
   const fontsJSX =
     availableFonts.map((_font:Font, _index:number) => {
       const dims = _font.getDims(fontSize);
+
       return (
         <g
           key={_font.name}>
@@ -92,13 +90,17 @@ export default function FontOption({
             height={dims.height + options.text.padding.y*2}
             rx={5}
             ry={5}
-            fill={'white'}>
+            fill={'white'}
+            onMouseDown={(e) => handleMouseDown(e, _font)}>
           </rect>
           <text
-            className="pointer-events-none"
+            className='pointer-events-none'
             x={options.border.padding + (width - options.border.padding*2)/2 - (dims.width/2)}
             y={options.border.padding + (dims.height + options.text.padding.y*2)/2 + (dims.textHeight/2) + (_index*(dims.height + options.text.padding.y*2 + options.border.padding))}
-            fontSize={fontSize}>
+            fontSize={fontSize}
+            style={{
+              fontFamily:_font.name
+            }}>
             {_font.name}
           </text>
         </g>
@@ -111,8 +113,6 @@ export default function FontOption({
       y={y}
       width={width}
       height={height}
-      onMouseDown={(e) => handleMouseDown(e)}
-      onMouseUp={(e) => handleMouseUp(e)}
       onMouseLeave={handleMouseLeave}
       style={{
         outline: "none",

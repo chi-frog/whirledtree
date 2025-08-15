@@ -29,13 +29,11 @@ const copyFont = (font:Font) => {
   const dimsMap = new Map<number, Dimension>();
   return {...font, dimsMap:new Map(font.dimsMap), getDims:getDims.bind(null, dimsMap)}};
 
-const defaultFonts = [
-  createFont("Aharoni"),
-  createFont("Arial"),
-  createFont("Helvetica"),
-  createFont("Times New Roman"),
-  createFont("Georgia"),
-];
+const defaultFontNames = [
+  "Aharoni", "Arial", "Helvetica", "Times New Roman", "Georgia",
+]
+
+const defaultFonts = defaultFontNames.map((_name) => createFont(_name));
 
 function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
   const [unloadedFonts, setUnloadedFonts] = useState<Font[]>(defaultFonts);
@@ -49,10 +47,12 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
     let newMaxWidth = maxWidth;
 
     if ((unloadedFonts.length > 0) || (getDims(loadedFonts[0].dimsMap, fontSize).width === 0)) {
-      const loadedFonts = unloadedFonts.map((_font) => copyFont(_font));
+      let loadedFonts =
+        unloadedFonts.map((_font) => copyFont(_font)).
+          filter((_font) => isFontAvailable(_font));
 
       loadedFonts.forEach((_font) => {
-        const bbox = getTextBBox(_font.name, fontSize, 0, 0);
+        const bbox = getTextBBox(_font.name, _font, fontSize, 0, 0);
 
         if (bbox.width > newMaxWidth) newMaxWidth = bbox.width;
         _font.dimsMap.set(fontSize, createDimension({width: bbox.width,
@@ -67,7 +67,7 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
           setFont(_font);
         }
       });
-
+      console.log('loadedFonts', loadedFonts);
       setLoadedFonts(loadedFonts);
       setUnloadedFonts([]);
     }
@@ -78,7 +78,8 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
     return () => {loaded.current = false};
   }, [unloadedFonts, fontSize]);
 
-  function isFontAvailable(font: string): boolean {
+  function isFontAvailable(font:Font): boolean {
+    const fontName = font.name;
     const testString = "mmmmmmmmmmlli";
     const testSize = "72px";
 
@@ -99,7 +100,7 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
 
     // Measure with the target font + fallback
     return defaultFonts.some((baseFont, i) => {
-      context.font = `${testSize} '${font}', ${baseFont}`;
+      context.font = `${testSize} '${fontName}', ${baseFont}`;
       const width = context.measureText(testString).width;
       return width !== baselineWidths[i]; // If different, font is likely available
     });
@@ -107,10 +108,10 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
 
   const SVG_NS = "http://www.w3.org/2000/svg";
 
-  function getTextBBox(content:string, fontSize:number, x?:number, y?:number) {
+  function getTextBBox(content:string, font:Font, fontSize:number, x?:number, y?:number) {
     let fontSizeTest = document.createElementNS(SVG_NS, "text");
     fontSizeTest.setAttribute('font-size', "" + fontSize);
-    fontSizeTest.setAttribute("font-family", "Arial");
+    fontSizeTest.setAttribute("font-family", font.name);
     fontSizeTest.setAttribute('style', "visibility:hidden;");
     if (x) fontSizeTest.setAttribute('x', "" + x);
     if (y) fontSizeTest.setAttribute('y', "" + y);
@@ -128,7 +129,7 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
     return bboxTest;
   }
 
-  return {font, fontSize, loadedFonts, maxWidth};
+  return {font, setFont, fontSize, loadedFonts, maxWidth};
 }
 
 export default useFont;

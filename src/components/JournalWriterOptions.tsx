@@ -37,11 +37,11 @@ type journalWriterOptionsProps = {
   fontSize:number,
   availableFonts:Font[],
   maxFontWidth:number,
-  notifyFontChange:Function,
+  notifySetFont:Function,
 }
 
 export default function JournalWriterOptions({left, top, font, fontSize,
-  availableFonts, maxFontWidth, notifyFontChange} : journalWriterOptionsProps) {
+  availableFonts, maxFontWidth, notifySetFont} : journalWriterOptionsProps) {
   const [focusedOption, setFocusedOption] = useState<string>("");
   
   const fontDims = font.getDims(fontSize);
@@ -105,7 +105,7 @@ export default function JournalWriterOptions({left, top, font, fontSize,
         setWidth(initialWidth + (targetWidth-initialWidth)*progress);
         setHeight(initialHeight + (targetHeight-initialHeight)*progress);
         setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
-        setCornerRadiusPercentage(initialCornerRadiusPercentage + (targetCornerRadiusPercentage-initialCornerRadiusPercentage)*progress);
+        setCornerRadiusPercentage(Math.min(5, initialCornerRadiusPercentage + (targetCornerRadiusPercentage-initialCornerRadiusPercentage)*progress));
   
         if (progress < 1)
           animationRef.current = requestAnimationFrame(animate);
@@ -123,7 +123,7 @@ export default function JournalWriterOptions({left, top, font, fontSize,
     setFocusedOption("")};
 
   const handleOptionLeave = () => {
-    setFocusedOption("");
+    //setFocusedOption("");
   }
 
   const handleMouseDown = (e:any) => {
@@ -200,12 +200,12 @@ export default function JournalWriterOptions({left, top, font, fontSize,
         </rect>}
       {expanded &&
         <text
-          className="cursor-pointer"
+          className="cursor-pointer font-[roboto]"
           x={options.border.padding + (fontLabelWidth + options.text.padding.x*2)/2 - fontLabelWidth/2}
           y={options.border.padding + (fontLabelHeight + options.text.padding.y*2)/2 + fontLabelHeight/2 - fontDims.textHeightGap}
           fontSize={fontSize}
           style={{
-            pointerEvents:'none'
+            pointerEvents:'none',
           }}>
           {font.name}
         </text>
@@ -229,7 +229,7 @@ export default function JournalWriterOptions({left, top, font, fontSize,
         availableFonts={availableFonts}
         maxFontWidth={maxFontWidth}
         notifyMouseLeave={handleOptionLeave}
-        notifyFontChange={notifyFontChange}/>
+        notifySetFont={notifySetFont}/>
       }
     </svg>
     </div>

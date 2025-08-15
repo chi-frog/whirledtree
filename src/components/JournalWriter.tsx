@@ -1,16 +1,19 @@
 'use client';
 import JournalWriterCanvas from '@/components/JournalWriterCanvas';
 import JournalWriterOptions from './JournalWriterOptions';
-import useFont from '@/hooks/useFont';
+import useFont, { Font } from '@/hooks/useFont';
 import useElements from '@/hooks/useLeaves';
-import { useState } from 'react';
 
 export default function JournalWriter({}) {
-  const {font, fontSize, loadedFonts, maxWidth} = useFont();
-  //const {canvasFontIndex, setCanvasFontIndex} = useState<number>(loadedFonts.findIndex((_font) => _font.name === font.name));
+  const {font, setFont, fontSize, loadedFonts, maxWidth} = useFont();
   const {leaves, leafTb} = useElements();
 
   const OPTIONS_PADDING = 20;
+
+  const notifySetFont = (font:Font) => {
+    console.log('font change', font);
+    setFont(font);
+  }
   
   return (
     <>
@@ -27,7 +30,7 @@ export default function JournalWriter({}) {
         fontSize={fontSize}
         availableFonts={loadedFonts}
         maxFontWidth={maxWidth}
-        notifyFontChange={() => null}
+        notifySetFont={notifySetFont}
       />
     </>
   );
