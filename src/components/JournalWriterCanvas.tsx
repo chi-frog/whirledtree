@@ -156,7 +156,6 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
   }
 
   const handleOnBlur = (content:string, id:number) => {
-    console.log('canvas on blur');
     if (content === "")
       leafTb.remove(id);
     if (id === focusedId) {

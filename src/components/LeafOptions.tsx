@@ -53,8 +53,6 @@ export default function LeafOptions({
   function getNextId() {
     return nextId++;
   }
-
-  console.log('textHeight options', textHeight);
   
   useEffect(() => {
     cancelAnimationFrame(animationRef.current);

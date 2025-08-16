@@ -99,8 +99,6 @@ export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragg
     if (!leaf.optionsFocused)
       setOptionsExpanded(false);
   }
-
-  console.log('textHeight', textHeight);
   
   return (
     <g>

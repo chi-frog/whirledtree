@@ -63,7 +63,6 @@ export default function FontOption({
   }, [focused, font]);
 
   const handleMouseDown = (e:React.MouseEvent<SVGRectElement, MouseEvent>, font:Font) => {
-    console.log('mouseDown', font);
     e.stopPropagation();
     if (e.button !== 0)
       e.preventDefault();

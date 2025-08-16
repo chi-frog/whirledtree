@@ -11,7 +11,6 @@ export default function JournalWriter({}) {
   const OPTIONS_PADDING = 20;
 
   const notifySetFont = (font:Font) => {
-    console.log('font change', font);
     setFont(font);
   }
   

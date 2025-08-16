@@ -72,7 +72,6 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
           setFont(_font);
         }
       });
-      console.log('loadedFonts', loadedFonts);
       setLoadedFonts(loadedFonts);
       setUnloadedFonts([]);
     }

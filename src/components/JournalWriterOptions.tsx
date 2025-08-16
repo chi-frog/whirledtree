@@ -89,9 +89,6 @@ export default function JournalWriterOptions({left, top, font, fontSize,
 
   useEffect(() => {
       cancelAnimationFrame(animationRef.current);
-
-      console.log('font-' + font, fontDims);
-      console.log('targetHeight', targetHeight);
   
       let start:number;
       const initialWidth = width;
@@ -163,8 +160,6 @@ export default function JournalWriterOptions({left, top, font, fontSize,
       (focusedOption === "font") ?
         (fontDims.height + options.text.padding.y*2 + options.border.padding)*5 + options.border.padding :
         0;
-
-        console.log('svgHeight', svgHeight);
 
   return (
     <div
