@@ -140,7 +140,7 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
 
       return createDimension({width: bbox.width,
                               height: bbox.height,
-                              textHeight: bbox.height - (((bbox.y + bbox.height)) * 2),
+                              textHeight: bbox.height - (((bbox.y + bbox.height))*2),
                               textHeightGap: (bbox.y + bbox.height)});
     },
   }

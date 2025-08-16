@@ -52,22 +52,37 @@ export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragg
   const [textHeight, setTextHeight] = useState<number[]>([leaf.fontSize, leaf.fontSize, leaf.fontSize]);
   const [textWidth, setTextWidth] = useState<number>(0);
   const cursorWidth = useRef<number>(0);
+  const cursorHeight = useRef<number>(0);
 
   useEffect(() => {
-    cursorWidth.current = getTestBBox(leaf.fontSize)?.width;
-  }, [leaf.fontSize]);
+    const dims = fontTb.getDims("I", leaf.font, leaf.fontSize);
+    cursorWidth.current = dims.width;
+    cursorHeight.current = dims.height;
+    if (cursorWidth.current === 0) {
+      const test = getTestBBox(leaf.fontSize);
+      cursorWidth.current = test.width;
+      cursorHeight.current = test.height;
+    }
+  }, [leaf.font, leaf.fontSize]);
 
   useEffect(() => {
     const dims = fontTb.getDims(leaf.content, leaf.font, leaf.fontSize);
-    console.log('dims', dims);
+
+    if (dims.height === 0) {
+      const bbox = getTestBBox(leaf.fontSize, 0, 0);
+      setTextWidth(0);
+      setTextHeight([bbox.height, // Full Height
+                     bbox.height - ((bbox.y + bbox.height))*2, // Height of only Letters
+                     bbox.height - ((bbox.y + bbox.height))*2 + (bbox.y + bbox.height)]);
+    } else {
 
     setTextWidth(dims.width);
-
     setTextHeight(
       [dims.height, // Full Height
        dims.textHeight, // Height of only Letters
        dims.textHeight + dims.textHeightGap]); // Height of Letters and the Lower Empty Space
-  }, [leaf.font, leaf.fontSize, leaf.content]);
+      }
+    }, [leaf.font, leaf.fontSize, leaf.content]);
 
   useEffect(() => {
     map.get(leaf.id).focus();
@@ -84,6 +99,8 @@ export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragg
     if (!leaf.optionsFocused)
       setOptionsExpanded(false);
   }
+
+  console.log('textHeight', textHeight);
   
   return (
     <g>
@@ -111,10 +128,10 @@ export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragg
     </text>
     {focused &&
       <Cursor
-        x={leaf.x + textWidth + cursorWidth.current}
+        x={leaf.x + textWidth}
         y={leaf.y - textHeight[2]}
         width={cursorWidth.current}
-        height={textHeight[0]}/>
+        height={cursorHeight.current}/>
     }
     {selected &&
     <ElementOptions
