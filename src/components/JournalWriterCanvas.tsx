@@ -5,7 +5,7 @@ import Leaf from './Leaf';
 import { leafTb, Leaf as LeafType } from '@/hooks/useLeaves';
 import useRefMap from '@/hooks/useRefMap';
 import { REGION, getMouseoverRegion } from '@/helpers/region';
-import { Font } from '@/hooks/useFont';
+import { Font, FontTb } from '@/hooks/useFont';
 
 type pEnum = {
   text:string,
@@ -31,9 +31,10 @@ type JournalWriterCanvasProps = {
   leafTb:leafTb,
   font:Font,
   fontSize:number,
+  fontTb:FontTb,
 }
 
-export default function JournalWriterCanvas({leaves, leafTb, font, fontSize} : JournalWriterCanvasProps) {
+export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fontTb} : JournalWriterCanvasProps) {
   const [mouseDownPoint, setMouseDownPoint] = useState<{x:number, y:number}>({x:-1, y:-1});
   const [selectedId, setSelectedId] = useState<number>(0);
   const [focusedId, setFocusedId] = useState<number>(0);
@@ -227,6 +228,7 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize} : J
         <Leaf
           key={_leaf.id}
           leaf={_leaf}
+          fontTb={fontTb}
           ref={getRef.bind(null, _leaf.id)}
           map={getMap()}
           selected={_leaf.id === selectedId}

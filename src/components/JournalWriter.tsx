@@ -5,7 +5,7 @@ import useFont, { Font } from '@/hooks/useFont';
 import useElements from '@/hooks/useLeaves';
 
 export default function JournalWriter({}) {
-  const {font, setFont, fontSize, loadedFonts, maxWidth} = useFont();
+  const {font, setFont, fontSize, loadedFonts, maxWidth, fontTb} = useFont();
   const {leaves, leafTb} = useElements();
 
   const OPTIONS_PADDING = 20;
@@ -22,6 +22,7 @@ export default function JournalWriter({}) {
         leafTb={leafTb}
         font={font}
         fontSize={fontSize}
+        fontTb={fontTb}
         />
       <JournalWriterOptions
         left={OPTIONS_PADDING}

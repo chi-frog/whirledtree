@@ -9,6 +9,10 @@ export type Dimension = {
   textHeightGap:number,
 }
 
+export type FontTb = {
+  getDims:(content:string, font:Font, fontSize:number)=>Dimension
+}
+
 export type Font = {
   name:string,
   dimsMap:Map<number, Dimension>, // Map the dimensions per font size requested,
@@ -130,7 +134,18 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
     return bboxTest;
   }
 
-  return {font, setFont, fontSize, loadedFonts, maxWidth};
+  const fontTb:FontTb = {
+    getDims: (content:string, font:Font, fontSize:number, x?:number, y?:number) => {
+      const bbox = getTextBBox(content, font, fontSize, x, y);
+
+      return createDimension({width: bbox.width,
+                              height: bbox.height,
+                              textHeight: bbox.height - (((bbox.y + bbox.height)) * 2),
+                              textHeightGap: (bbox.y + bbox.height)});
+    },
+  }
+
+  return {font, setFont, fontSize, loadedFonts, maxWidth, fontTb};
 }
 
 export default useFont;

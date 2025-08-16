@@ -117,7 +117,7 @@ export default function JournalWriterOptions({left, top, font, fontSize,
       animationRef.current = requestAnimationFrame(animate);
   
       return () => cancelAnimationFrame(animationRef.current);
-    }, [expanded, focusedOption, fontLabelWidth, fontLabelHeight, font, maxFontWidth,]);
+    }, [expanded, focusedOption, fontLabelWidth, fontLabelHeight, maxFontWidth,]);
 
   const handleMouseEnter = () => setExpanded(true);
 

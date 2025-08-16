@@ -4,6 +4,7 @@ import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } 
 import '../app/journalWriter.css';
 import Cursor from './Cursor';
 import { Leaf as LeafType } from '@/hooks/useLeaves';
+import { FontTb } from '@/hooks/useFont';
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -30,6 +31,7 @@ function getTestBBox(fontSize:number, x?:number, y?:number) {
 
 type LeafProps = {
   leaf:LeafType,
+  fontTb:FontTb,
   ref?:any,
   map?:any,
   selected:boolean,
@@ -44,7 +46,7 @@ type LeafProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-export default function Leaf({leaf, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
+export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
                   handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : LeafProps) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
   const [textHeight, setTextHeight] = useState<number[]>([leaf.fontSize, leaf.fontSize, leaf.fontSize]);
@@ -56,19 +58,16 @@ export default function Leaf({leaf, ref, map, selected, focused, isDragged, noti
   }, [leaf.fontSize]);
 
   useEffect(() => {
-    let bbox = map.get(leaf.id).getBBox();
-    console.log('here');
+    const dims = fontTb.getDims(leaf.content, leaf.font, leaf.fontSize);
+    console.log('dims', dims);
 
-    setTextWidth(bbox.width);
-
-    if (bbox.height === 0)
-      bbox = getTestBBox(leaf.fontSize, leaf.x, leaf.y);
+    setTextWidth(dims.width);
 
     setTextHeight(
-      [bbox.height, // Full Height
-       bbox.height - (((bbox.y + bbox.height) - leaf.y) * 2), // Height of only Letters
-       bbox.height - ((bbox.y + bbox.height) - leaf.y)]); // Height of Letters and the Lower Empty Space
-  }, [leaf.font]);
+      [dims.height, // Full Height
+       dims.textHeight, // Height of only Letters
+       dims.textHeight + dims.textHeightGap]); // Height of Letters and the Lower Empty Space
+  }, [leaf.font, leaf.fontSize, leaf.content]);
 
   useEffect(() => {
     map.get(leaf.id).focus();
@@ -112,7 +111,7 @@ export default function Leaf({leaf, ref, map, selected, focused, isDragged, noti
     </text>
     {focused &&
       <Cursor
-        x={leaf.x + textWidth}
+        x={leaf.x + textWidth + cursorWidth.current}
         y={leaf.y - textHeight[2]}
         width={cursorWidth.current}
         height={textHeight[0]}/>
