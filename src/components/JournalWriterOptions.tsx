@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
 import { Font, FontTb } from "@/hooks/useFont";
+import useAnimation from "@/hooks/useAnimation";
 import TextBox from "./svg/TextBox";
 
 export const options = {
@@ -44,6 +45,7 @@ type journalWriterOptionsProps = {
 
 export default function JournalWriterOptions({left, top, font, fontSize,
   availableFonts, maxFontWidth, fontTb, notifySetFont} : journalWriterOptionsProps) {
+  const [expanded, setExpanded] = useState<boolean>(false);
   const [focusedOption, setFocusedOption] = useState<string>("");
   
   const fontDims = font.getDims(fontSize);
@@ -75,51 +77,13 @@ export default function JournalWriterOptions({left, top, font, fontSize,
       options.expanded.cornerRadiusPercentage :
       options.unexpanded.cornerRadiusPercentage;
 
-  const [expanded, setExpanded] = useState<boolean>(false);
-  const [width, setWidth] = useState<number>(getWidth());
-  const [height, setHeight] = useState<number>(getHeight());
-  const [opacity, setOpacity] = useState<number>(getOpacity());
-  const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState<number>(getCornerRadiusPercentage());
-
-  const targetWidth = getWidth();
-  const targetHeight = getHeight();
-  const targetOpacity = getOpacity();
-  const targetCornerRadiusPercentage = getCornerRadiusPercentage();
-  const animationRef = useRef(0);
+  const [width, height, opacity, cornerRadiusPercentage] = useAnimation(
+    [getWidth, getHeight, getOpacity, getCornerRadiusPercentage],
+    [expanded, focusedOption, fontDims]);
 
   const optionsRef = useRef<SVGSVGElement>(null);
 
-  useEffect(() => {
-      cancelAnimationFrame(animationRef.current);
-  
-      let start:number;
-      const initialWidth = width;
-      const initialHeight = height;
-      const initialOpacity = opacity;
-      const initialCornerRadiusPercentage = cornerRadiusPercentage;
-      const duration = 100;
-  
-      function animate(time:number) {
-        if (!start) start = time;
-  
-        const progress = Math.min((time-start) / duration, 1);
-  
-        setWidth(initialWidth + (targetWidth-initialWidth)*progress);
-        setHeight(initialHeight + (targetHeight-initialHeight)*progress);
-        setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
-        setCornerRadiusPercentage(Math.min(5, initialCornerRadiusPercentage + (targetCornerRadiusPercentage-initialCornerRadiusPercentage)*progress));
-  
-        if (progress < 1)
-          animationRef.current = requestAnimationFrame(animate);
-      }
-  
-      animationRef.current = requestAnimationFrame(animate);
-  
-      return () => cancelAnimationFrame(animationRef.current);
-    }, [expanded, focusedOption, fontLabelWidth, fontLabelHeight, maxFontWidth,]);
-
   const handleMouseEnter = () => setExpanded(true);
-
   const handleMouseLeave = () => {
     setExpanded(false)
     setFocusedOption("")};

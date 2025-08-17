@@ -79,8 +79,6 @@ export default function FontOption({
   const sysFontHeight = fontDims.height;
   const fontsJSX =
     availableFonts.map((_font:Font, _index:number) => {
-      const dims = _font.getDims(fontSize);
-
       return (
         <g
           key={_font.name}>
