@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react";
-import { Dimension } from "./useFont"
 
 function useAnimation(valueFunctions:(() => number)[], dependencies:any[]) {
   const [values, setValues] = useState<number[]>(valueFunctions.map((_func) => _func()));

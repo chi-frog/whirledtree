@@ -2,6 +2,7 @@ import { Font, FontTb } from "@/hooks/useFont";
 import { useEffect, useRef, useState } from "react";
 import { options } from "./JournalWriterOptions";
 import TextBox from "./svg/TextBox";
+import useAnimation from "@/hooks/useAnimation";
 
 type fontOptionProps = {
   focused:boolean,
@@ -33,36 +34,9 @@ export default function FontOption({
       (fontDims.height + options.text.padding.y*2 + options.border.padding)*5 + options.border.padding :
       0;
 
-  const [width, setWidth] = useState(getWidth());
-  const [height, setHeight] = useState(getHeight());
-  const targetWidth = getWidth();
-  const targetHeight = getHeight();
-
-  const animationRef = useRef(0);
-
-  useEffect(() => {
-    cancelAnimationFrame(animationRef.current);
-
-    let start:number;
-    const initialWidth = width;
-    const initialHeight = height;
-    const duration = 100;
-
-    function animate(time:number) {
-      if (!start) start = time;
-
-      const progress = Math.min((time-start) / duration, 1);
-
-      setWidth(initialWidth + (targetWidth-initialWidth)*progress);
-      setHeight(initialHeight + (targetHeight-initialHeight)*progress);
-      if (progress < 1)
-        animationRef.current = requestAnimationFrame(animate);
-    }
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [focused, font]);
+  const [width, height] = useAnimation(
+    [getWidth, getHeight],
+    [focused, font]);
 
   const handleMouseDown = (e:React.MouseEvent<SVGRectElement, MouseEvent>, font:Font) => {
     e.stopPropagation();

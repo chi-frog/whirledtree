@@ -1,5 +1,6 @@
 import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
 import LeafInput from '@/components/LeafInput';
+import useAnimation from "@/hooks/useAnimation";
 
 type LeafOptionsProps = {
   x:number,
@@ -36,52 +37,21 @@ const options = {
 export default function LeafOptions({
     x, y, textHeight, notifyParentFocused, notifyChangeFontSize,
     expanded, fontSize, parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
-  const [width, setWidth] = useState(expanded ? options.expanded.width : options.unexpanded.size);
-  const [height, setHeight] = useState(expanded ? options.expanded.height : options.unexpanded.size);
-  const [opacity, setOpacity] = useState(expanded ? options.expanded.opacity : options.unexpanded.opacity);
   const [hovered, setHovered] = useState<string>("");
-  const [moveX, setMoveX] = useState(expanded ? 0 : 0);
-  const [moveY, setMoveY] = useState(expanded ? 0 : 0);
-  const [cornerRadiusPercentage, setCornerRadiusPercentage] = useState(expanded ? 0.1 : 0.5);
-  const targetWidth = expanded ? options.expanded.width : options.unexpanded.size;
-  const targetHeight = expanded ? options.expanded.height : options.unexpanded.size;
-  const targetOpacity = expanded ? options.expanded.opacity : options.unexpanded.opacity;
-  const targetCornerRadiusPercentage = expanded ? options.expanded.cornerRadiusPercentage : options.unexpanded.cornerRadiusPercentage;
-  const animationRef = useRef(0);
+  
+  const getWidth = () => expanded ? options.expanded.width : options.unexpanded.size;
+  const getHeight = () => expanded ? options.expanded.height : options.unexpanded.size;
+  const getOpacity = () => expanded ? options.expanded.opacity : options.unexpanded.opacity;
+  const getCornerRadiusPercentage = () => expanded ? 0.1 : 0.5;
+
+  const [width, height, opacity, cornerRadiusPercentage] = useAnimation(
+    [getWidth, getHeight, getOpacity, getCornerRadiusPercentage],
+    [expanded]);
 
   var nextId = Date.now();
   function getNextId() {
     return nextId++;
   }
-  
-  useEffect(() => {
-    cancelAnimationFrame(animationRef.current);
-
-    let start:number;
-    const initialWidth = width;
-    const initialHeight = height;
-    const initialOpacity = opacity;
-    const initialCornerRadiusPercentage = cornerRadiusPercentage;
-    const duration = 100;
-
-    function animate(time:number) {
-      if (!start) start = time;
-
-      const progress = Math.min((time-start) / duration, 1);
-
-      setWidth(initialWidth + (targetWidth-initialWidth)*progress);
-      setHeight(initialHeight + (targetHeight-initialHeight)*progress);
-      setOpacity(initialOpacity + (targetOpacity-initialOpacity)*progress);
-      setCornerRadiusPercentage(initialCornerRadiusPercentage + (targetCornerRadiusPercentage-initialCornerRadiusPercentage)*progress);
-
-      if (progress < 1)
-        animationRef.current = requestAnimationFrame(animate);
-    }
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [expanded]);
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     e.stopPropagation();
