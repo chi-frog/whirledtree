@@ -30,6 +30,7 @@ export default function JournalWriter({}) {
         fontSize={fontSize}
         availableFonts={loadedFonts}
         maxFontWidth={maxWidth}
+        fontTb={fontTb}
         notifySetFont={notifySetFont}
       />
     </>

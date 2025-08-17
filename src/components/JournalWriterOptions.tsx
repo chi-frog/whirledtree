@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
-import { Font } from "@/hooks/useFont";
+import { Font, FontTb } from "@/hooks/useFont";
+import TextBox from "./svg/TextBox";
 
 export const options = {
   unexpanded: {
@@ -37,17 +38,18 @@ type journalWriterOptionsProps = {
   fontSize:number,
   availableFonts:Font[],
   maxFontWidth:number,
+  fontTb:FontTb,
   notifySetFont:Function,
 }
 
 export default function JournalWriterOptions({left, top, font, fontSize,
-  availableFonts, maxFontWidth, notifySetFont} : journalWriterOptionsProps) {
+  availableFonts, maxFontWidth, fontTb, notifySetFont} : journalWriterOptionsProps) {
   const [focusedOption, setFocusedOption] = useState<string>("");
   
   const fontDims = font.getDims(fontSize);
 
-  const fontLabelWidth = font.loaded ? fontDims.width : 0;
-  const fontLabelHeight = font.loaded ? fontDims.height : 0;
+  const fontLabelWidth = fontDims.width;
+  const fontLabelHeight = fontDims.height;
 
   const getWidth = () =>
     (expanded) ?
@@ -186,31 +188,16 @@ export default function JournalWriterOptions({left, top, font, fontSize,
         opacity={opacity}
         />
       {expanded &&
-      <rect
-        className="hover:fill-gray-200 hover:cursor-pointer hover:stroke-yellow-600"
-        x={options.border.padding}
-        y={options.border.padding}
-        width={fontLabelWidth + options.text.padding.x*2}
-        height={fontLabelHeight + options.text.padding.y*2}
-        rx={fontLabelWidth*cornerRadiusPercentage}
-        ry={fontLabelHeight*cornerRadiusPercentage}
-        stroke={"black"}
-        fill={'white'}
-        onMouseDown={fontHandleMouseDown}>
-        </rect>}
-      {expanded &&
-        <text
-          className="cursor-pointer"
-          x={options.border.padding + (fontLabelWidth + options.text.padding.x*2)/2 - fontLabelWidth/2}
-          y={options.border.padding + (fontLabelHeight + options.text.padding.y*2)/2 + fontLabelHeight/2 - fontDims.textHeightGap}
+        <TextBox
+          x={options.border.padding}
+          y={options.border.padding}
+          padding={options.text.padding}
+          cornerRadiusPercentage={cornerRadiusPercentage}
+          text={font.name}
+          font={font}
           fontSize={fontSize}
-          style={{
-            pointerEvents:'none',
-            fontFamily:font.name,
-          }}>
-          {font.name}
-        </text>
-      }
+          fontTb={fontTb}
+          onMouseDown={fontHandleMouseDown} />}
       {expanded && (focusedOption === "font") &&
       <rect
         x={fontLabelWidth + options.text.padding.x*2 + options.border.padding*2 - 3}
@@ -229,6 +216,7 @@ export default function JournalWriterOptions({left, top, font, fontSize,
         fontSize={fontSize}
         availableFonts={availableFonts}
         maxFontWidth={maxFontWidth}
+        fontTb={fontTb}
         notifyMouseLeave={handleOptionLeave}
         notifySetFont={notifySetFont}/>
       }

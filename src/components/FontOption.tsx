@@ -1,6 +1,7 @@
-import { Font } from "@/hooks/useFont";
+import { Font, FontTb } from "@/hooks/useFont";
 import { useEffect, useRef, useState } from "react";
 import { options } from "./JournalWriterOptions";
+import TextBox from "./svg/TextBox";
 
 type fontOptionProps = {
   focused:boolean,
@@ -10,13 +11,14 @@ type fontOptionProps = {
   fontSize:number,
   availableFonts:Font[],
   maxFontWidth:number,
+  fontTb:FontTb,
   notifyMouseLeave:Function,
   notifySetFont:Function,
 }
 
 export default function FontOption({
   focused, x, y,
-  font, fontSize, availableFonts, maxFontWidth,
+  font, fontSize, availableFonts, maxFontWidth, fontTb,
   notifyMouseLeave, notifySetFont} : fontOptionProps) {
 
   let fontDims = font.getDims(fontSize);
@@ -82,27 +84,17 @@ export default function FontOption({
       return (
         <g
           key={_font.name}>
-          <rect
-            className="cursor-pointer stroke-black hover:stroke-yellow-200 hover:fill-gray-200"
+          <TextBox
             x={options.border.padding}
             y={options.border.padding + (_index*(sysFontHeight + options.text.padding.y*2 + options.border.padding))}
-            width={width - options.border.padding*2}
-            height={sysFontHeight + options.text.padding.y*2}
-            rx={5}
-            ry={5}
-            fill={'white'}
-            onMouseDown={(e) => handleMouseDown(e, _font)}>
-          </rect>
-          <text
-            className='pointer-events-none'
-            x={options.border.padding + (width - options.border.padding*2)/2 - (dims.width/2)}
-            y={options.border.padding + (dims.height + options.text.padding.y*2)/2 + (dims.textHeight/2) + (_index*(sysFontHeight + options.text.padding.y*2 + options.border.padding))}
+            height={sysFontHeight}
+            padding={options.text.padding}
+            cornerRadiusPercentage={0.1}
+            text={_font.name}
+            font={_font}
             fontSize={fontSize}
-            style={{
-              fontFamily:_font.name
-            }}>
-            {_font.name}
-          </text>
+            fontTb={fontTb}
+            onMouseDown={(e) => handleMouseDown(e, _font)} />
         </g>
       )});
 
