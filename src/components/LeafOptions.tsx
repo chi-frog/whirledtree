@@ -1,6 +1,7 @@
 import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
 import LeafInput from '@/components/LeafInput';
 import useAnimation from "@/hooks/useAnimation";
+import { Font, FontTb } from "@/hooks/useFont";
 
 type LeafOptionsProps = {
   x:number,
@@ -9,7 +10,9 @@ type LeafOptionsProps = {
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   expanded:boolean,
+  systemFont:Font,
   fontSize:number,
+  fontTb:FontTb,
   parentMouseEnter:MouseEventHandler<SVGSVGElement>,
   parentMouseLeave:MouseEventHandler<SVGSVGElement>,
 }
@@ -36,7 +39,7 @@ const options = {
 
 export default function LeafOptions({
     x, y, textHeight, notifyParentFocused, notifyChangeFontSize,
-    expanded, fontSize, parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
+    expanded, systemFont, fontSize, fontTb, parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
   const [hovered, setHovered] = useState<string>("");
   
   const getWidth = () => expanded ? options.expanded.width : options.unexpanded.size;
@@ -47,11 +50,6 @@ export default function LeafOptions({
   const [width, height, opacity, cornerRadiusPercentage] = useAnimation(
     [getWidth, getHeight, getOpacity, getCornerRadiusPercentage],
     [expanded]);
-
-  var nextId = Date.now();
-  function getNextId() {
-    return nextId++;
-  }
 
   const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     e.stopPropagation();
@@ -168,17 +166,16 @@ export default function LeafOptions({
     }
     {expanded &&
     <LeafInput
-      id={getNextId()}
-      x={x - width - options.spacing.x}
-      y={y - textHeight/2 - height/2}
       width={height-5}
       height={height-10}
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       parentWidth={width}
       parentHeight={height}
-      leafFontSize={fontSize}
+      systemFont={systemFont}
       fontSize={options.text.size}
+      fontTb={fontTb}
+      leafFontSize={fontSize}
       />
     }
     </svg>

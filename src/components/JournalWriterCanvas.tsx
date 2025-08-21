@@ -179,6 +179,10 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
 
     e.preventDefault();
 
+    if (e.ctrlKey) {
+      console.log('ctrl key' + e.key);
+    }
+
     if (selectedId>0) {
       switch (e.key) {
       case "Backspace":
@@ -196,6 +200,8 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
       default:
         leafTb.transformContent(selectedId, (_content:string) => _content + e.key);
       }
+    } else {
+      console.log('this should not happen lol');
     }
   }
 
@@ -233,6 +239,7 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
           selected={_leaf.id === selectedId}
           focused={_leaf.id === focusedId}
           isDragged={_leaf.id === drag.id}
+          systemFont={font}
           notifyParentFocused={setElementOptionsFocus.bind(null, _leaf.id)}
           notifyChangeFontSize={notifyElementFontSize.bind(null, _leaf.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, _leaf)}

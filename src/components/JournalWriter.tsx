@@ -2,11 +2,11 @@
 import JournalWriterCanvas from '@/components/JournalWriterCanvas';
 import JournalWriterOptions from './JournalWriterOptions';
 import useFont, { Font } from '@/hooks/useFont';
-import useElements from '@/hooks/useLeaves';
+import useLeaves from '@/hooks/useLeaves';
 
 export default function JournalWriter({}) {
   const {font, setFont, fontSize, loadedFonts, maxWidth, fontTb} = useFont();
-  const {leaves, leafTb} = useElements();
+  const {leaves, leafTb} = useLeaves();
 
   const OPTIONS_PADDING = 20;
 

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1440.75pt"
+   height="960.75pt"
+   viewBox="0 0 1440.75 960.75"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="layer1"
+     transform="translate(0.375,0.375)">
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round"
+       d="M 360,0 V 423.32868 960"
+       id="path1" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round"
+       d="M 720,0 V 960"
+       id="path2" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round"
+       d="M 1080,0 V 960"
+       id="path3" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round"
+       d="M 0,320 H 1440"
+       id="path4" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round"
+       d="M 0,640 H 1440"
+       id="path5" />
+    <path
+       style="fill:none;fill-rule:nonzero;stroke:#000000;stroke-width:30;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none"
+       d="m 0,16.5 c 0,0 40.111111,0.561483 40,80 -0.20057,143.39732 0,543.5 0,543.5"
+       id="path6" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       d="m 40,543.5 c 0,0 -2.700651,-208.5 140,-208.5 138.94967,0 140,114.52491 140,208.5 0,91.05988 40,80 40,80"
+       id="path7" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       d="m 395,480 c 0,-73.02648 64.38965,-146.5 145,-146.5 80.61035,0 145,73.47352 145,146.5 0,73.02648 -64.38965,143.5 -145,143.5 -80.61035,0 -145,-70.47352 -145,-143.5 z"
+       id="path8" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       d="m 720,160 h 360"
+       id="path9" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       d="M 900,0 V 640"
+       id="path10" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       d="m 900,320 v 480 c 0,80.2773 -83.09103,143.5 -180,143.5 -87.3499,0 -141.53014,-75.34837 -90,-143.5 38.91248,-51.46404 91.29985,-71.05975 180,-80 101.62925,-10.2434 180,-44.8018 180,-80"
+       id="path11" />
+    <circle
+       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:60.567;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       id="path12"
+       cx="900"
+       cy="160"
+       r="30" />
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="m 1093.5,480 c -0.3787,-73.92429 72.0762,-146.02795 146,-146.5 76.2405,-0.48684 144.0657,64.60501 144,146.5 -0.062,76.6301 -70.9346,143.74628 -144,143.5 -73.2681,-0.24696 -145.6246,-70.23243 -146,-143.5 z"
+       id="path13" />
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:30;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="m 1440,623.5 c 0,0 -40,0.9267 -40,-80 0,-47.05154 0,-163.5 0,-163.5"
+       id="path15" />
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:30;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       d="M 1400.0593,478.02295 1400,380"
+       id="path16" />
+  </g>
+</svg>

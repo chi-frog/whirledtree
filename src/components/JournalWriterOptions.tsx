@@ -81,6 +81,8 @@ export default function JournalWriterOptions({left, top, font, fontSize,
     [getWidth, getHeight, getOpacity, getCornerRadiusPercentage],
     [expanded, focusedOption, fontDims]);
 
+    console.log('rendered');
+
   const optionsRef = useRef<SVGSVGElement>(null);
 
   const handleMouseEnter = () => setExpanded(true);

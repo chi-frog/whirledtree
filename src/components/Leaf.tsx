@@ -4,7 +4,7 @@ import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } 
 import '../app/journalWriter.css';
 import Cursor from './Cursor';
 import { Leaf as LeafType } from '@/hooks/useLeaves';
-import { FontTb } from '@/hooks/useFont';
+import { Font, FontTb } from '@/hooks/useFont';
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -37,6 +37,7 @@ type LeafProps = {
   selected:boolean,
   focused:boolean,
   isDragged:boolean,
+  systemFont:Font,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
@@ -46,7 +47,7 @@ type LeafProps = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragged, notifyParentFocused, notifyChangeFontSize,
+export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragged, systemFont, notifyParentFocused, notifyChangeFontSize,
                   handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : LeafProps) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
   const [textHeight, setTextHeight] = useState<number[]>([leaf.fontSize, leaf.fontSize, leaf.fontSize]);
@@ -139,6 +140,8 @@ export default function Leaf({leaf, fontTb, ref, map, selected, focused, isDragg
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       expanded={optionsExpanded}
+      systemFont={systemFont}
+      fontTb={fontTb}
       fontSize={leaf.fontSize}
       parentMouseEnter={handleMouseOptionsEnter}
       parentMouseLeave={handleMouseOptionsLeave}

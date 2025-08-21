@@ -1,23 +1,26 @@
-import { useLayoutEffect, useRef, useState } from "react";
+'use client'
+
+import { MouseEvent, useLayoutEffect, useRef, useState } from "react";
+import TextBox from "./svg/TextBox";
+import { Dimension, Font, FontTb } from "@/hooks/useFont";
 
 type LeafInputProps = {
-  id:number,
-  x:number,
-  y:number,
   width:number,
   height:number,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   parentWidth:number,
   parentHeight:number,
+  systemFont:Font,
   fontSize:number,
+  fontTb:FontTb,
   leafFontSize:number,
 }
 
-export default function ElementInput({
-    id, x, y, width, height, notifyParentFocused,
+export default function LeafInput({
+    width, height, notifyParentFocused,
     notifyChangeFontSize, parentWidth, parentHeight,
-    fontSize, leafFontSize} : LeafInputProps) {
+    systemFont, fontSize, fontTb, leafFontSize} : LeafInputProps) {
   const [focused, setFocused] = useState(false);
   const ref = useRef<SVGSVGElement>(null);
 
@@ -47,14 +50,14 @@ export default function ElementInput({
       notifyChangeFontSize(isNaN(fontSizeParsed) ? 0 : fontSizeParsed);
   }
 
-  const handleMouseDown = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+  const handleMouseDown:React.MouseEventHandler<SVGSVGElement> = (e) => {
     e.stopPropagation();
     setFocused(true);
   }
 
-  const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+  const handleMouseUp:React.MouseEventHandler<SVGSVGElement> = (e) => {
     e.stopPropagation();
-  }
+};
 
   const handleBlur = () => {
     setFocused(false);
@@ -69,7 +72,7 @@ export default function ElementInput({
   }
 
   useLayoutEffect(() => {
-    if (focused && ref)
+    if (focused && ref.current)
       ref.current?.focus();
   }, [focused]);
 
@@ -82,15 +85,18 @@ export default function ElementInput({
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
-      onMouseDown={(e) => handleMouseDown(e)}
+      onMouseDown={handleMouseDown}
       onMouseUp={(e) => handleMouseUp(e)}
       onKeyDown={(e) => handleKeyDown(e)}
       style={{
         outline: focused ? "1px solid yellow" : "none",
-        overflow: "scroll",
         cursor: "text",
-      }}
-    >
+      }}>
+    <TextBox x={0} y={0} padding={{
+        x: 5,
+        y: 2
+      }} cornerRadiusPercentage={0} text={""}
+      font={systemFont} fontSize={fontSize} fontTb={fontTb} />
     <rect
       width={width}
       height={height}

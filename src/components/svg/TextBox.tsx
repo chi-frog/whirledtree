@@ -14,7 +14,7 @@ type Props = {
   font:Font,
   fontSize:number,
   fontTb:FontTb,
-  onMouseDown:MouseEventHandler<SVGRectElement>,
+  onMouseDown?:MouseEventHandler<SVGRectElement>,
 };
 const TextBox: React.FC<Props> = ({
     x, y, height, padding, cornerRadiusPercentage,
