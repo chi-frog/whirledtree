@@ -1,10 +1,12 @@
 'use client'
 
-import { MouseEvent, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import TextBox from "./svg/TextBox";
-import { Dimension, Font, FontTb } from "@/hooks/useFont";
+import { Font, FontTb } from "@/hooks/useFont";
+import { Leaf } from "@/hooks/useLeaves";
 
-type LeafInputProps = {
+type Props = {
+  leaf:Leaf,
   width:number,
   height:number,
   notifyParentFocused?:Function,
@@ -12,21 +14,20 @@ type LeafInputProps = {
   parentWidth:number,
   parentHeight:number,
   systemFont:Font,
-  fontSize:number,
+  systemFontSize:number,
   fontTb:FontTb,
-  leafFontSize:number,
 }
 
-export default function LeafInput({
-    width, height, notifyParentFocused,
+export default function LeafFontSizeInput({
+    leaf, width, height, notifyParentFocused,
     notifyChangeFontSize, parentWidth, parentHeight,
-    systemFont, fontSize, fontTb, leafFontSize} : LeafInputProps) {
+    systemFont, systemFontSize, fontTb} : Props) {
   const [focused, setFocused] = useState(false);
   const ref = useRef<SVGSVGElement>(null);
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/;
-    let newFontSize = "" + leafFontSize;
+    let newFontSize = "" + leaf.fontSize;
 
     if (numberRegex.test(e.key)) {
       newFontSize = newFontSize + e.key;
@@ -92,25 +93,9 @@ export default function LeafInput({
         outline: focused ? "1px solid yellow" : "none",
         cursor: "text",
       }}>
-    <TextBox x={0} y={0} padding={{
-        x: 5,
-        y: 2
-      }} cornerRadiusPercentage={0} text={""}
-      font={systemFont} fontSize={fontSize} fontTb={fontTb} />
-    <rect
-      width={width}
-      height={height}
-      rx={5}
-      fill="white">
-    </rect>
-    <text
-      x={'50%'}
-      y={'50%'}
-      dominantBaseline={'middle'}
-      textAnchor={'middle'}
-      fontSize={fontSize}>
-      {""+leafFontSize}
-    </text>
+    <TextBox x={0} y={0} padding={{x: 5, y: 2}} cornerRadiusX={5}
+      text={"" + leaf.fontSize}
+      font={systemFont} fontSize={systemFontSize} fontTb={fontTb} />
     </svg>
   );
 }

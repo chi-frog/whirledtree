@@ -1,9 +1,13 @@
 import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
-import LeafInput from '@/components/LeafInput';
+import LeafInput from '@/components/LeafFontSizeInput';
 import useAnimation from "@/hooks/useAnimation";
 import { Font, FontTb } from "@/hooks/useFont";
+import { Leaf } from "@/hooks/useLeaves";
+import LeafOptionsTabs from "./LeafOptionsTabs";
+import LeafFontSizeInput from "@/components/LeafFontSizeInput";
 
 type LeafOptionsProps = {
+  leaf:Leaf,
   x:number,
   y:number,
   textHeight:number,
@@ -11,13 +15,13 @@ type LeafOptionsProps = {
   notifyChangeFontSize?:Function,
   expanded:boolean,
   systemFont:Font,
-  fontSize:number,
+  systemFontSize:number,
   fontTb:FontTb,
   parentMouseEnter:MouseEventHandler<SVGSVGElement>,
   parentMouseLeave:MouseEventHandler<SVGSVGElement>,
 }
 
-const options = {
+const _ = {
   unexpanded: {
     size:10,
     opacity:0.7,
@@ -29,8 +33,26 @@ const options = {
     opacity:1,
     cornerRadiusPercentage:0.1,
   },
+  border: {
+    padding: {
+      x: 5,
+      y: 5,
+    }
+  },
   text: {
     size:16,
+    padding: {
+      x: 5,
+      y: 2,
+    }
+  },
+  arrow: {
+    horizontal: {
+      padding: {
+        x: 2,
+        y: 2,
+      }
+    }
   },
   spacing: {
     x:5,
@@ -38,11 +60,60 @@ const options = {
 }
 
 export default function LeafOptions({
-    x, y, textHeight, notifyParentFocused, notifyChangeFontSize,
-    expanded, systemFont, fontSize, fontTb, parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
-  const [hovered, setHovered] = useState<string>("");
+    leaf, x, y, textHeight, notifyParentFocused, notifyChangeFontSize,
+    expanded, systemFont, systemFontSize, fontTb, parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
+  const displays = {
+    fontSize:"fontSize",
+  }
+
+  const [displayed, setDisplayed] = useState<string[]>([displays.fontSize]);
+  const isDisplayFontSize = (displayed.includes(displays.fontSize));
+  //const displayFontSize = () => setDisplayed(["fontSize"]);
+
+  let svgWidth = 0, svgHeight = 0;
+  let fontSizeInputWidth = 0, fontSizeInputHeight = 0;
+
+  if (isDisplayFontSize) {
+    const arrowDims = fontTb.getDims("<", systemFont, systemFontSize);
+    const textDims = fontTb.getDims("" + leaf.fontSize, systemFont, systemFontSize);
+    const tabsHeight = textDims.height*0.5;
+    const arrowWidth = _.arrow.horizontal.padding.x*2 + arrowDims.width;
+    const textWidth = textDims.width + _.text.padding.x*2;
+    const textHeight = textDims.height + _.text.padding.y*2;
+    
+    fontSizeInputWidth = arrowWidth*2 + textWidth;
+    fontSizeInputHeight = textHeight;
+    svgWidth = _.border.padding.x*2 + fontSizeInputWidth;
+    svgHeight = _.border.padding.y*2 + fontSizeInputHeight + tabsHeight;
+
+    console.log('(' + x + ',' + y + ') w:' + svgWidth + ' h:' + svgHeight);
+    console.log('inputWidth:' + fontSizeInputWidth + ' inputHeight:' + fontSizeInputHeight);
+  }
+
+
+  return (<svg x={x} y={y} width={svgWidth} height={svgHeight}>
+    <LeafOptionsTabs />
+    {(displayed[0] === "fontSize") &&
+      <LeafFontSizeInput
+        leaf={leaf}
+        width={fontSizeInputWidth}
+        height={fontSizeInputHeight}
+        notifyParentFocused={notifyParentFocused}
+        notifyChangeFontSize={notifyChangeFontSize}
+        parentWidth={0}
+        parentHeight={0}
+        systemFont={systemFont}
+        systemFontSize={systemFontSize}
+        fontTb={fontTb}/>}
+    </svg>);
+
+  /*const [hovered, setHovered] = useState<string>("");
+
+  const dims = fontTb.getDims("" + leaf.fontSize, systemFont, systemFontSize, x, y);
+
+  console.log('dims!', dims);
   
-  const getWidth = () => expanded ? options.expanded.width : options.unexpanded.size;
+  const getWidth = () => expanded ? dims.width + options. : options.unexpanded.size;
   const getHeight = () => expanded ? options.expanded.height : options.unexpanded.size;
   const getOpacity = () => expanded ? options.expanded.opacity : options.unexpanded.opacity;
   const getCornerRadiusPercentage = () => expanded ? 0.1 : 0.5;
@@ -69,7 +140,7 @@ export default function LeafOptions({
 
   const handleArrowPressed = (e:React.MouseEvent<SVGSVGElement, MouseEvent>, left:boolean) => {
     e.stopPropagation();
-    if (notifyChangeFontSize) notifyChangeFontSize(left ? fontSize-1 : fontSize+1);
+    if (notifyChangeFontSize) notifyChangeFontSize(left ? leaf.fontSize-1 : leaf.fontSize+1);
   }
 
   return (
@@ -166,6 +237,7 @@ export default function LeafOptions({
     }
     {expanded &&
     <LeafInput
+      leaf={leaf}
       width={height-5}
       height={height-10}
       notifyParentFocused={notifyParentFocused}
@@ -173,11 +245,10 @@ export default function LeafOptions({
       parentWidth={width}
       parentHeight={height}
       systemFont={systemFont}
-      fontSize={options.text.size}
+      systemFontSize={systemFontSize}
       fontTb={fontTb}
-      leafFontSize={fontSize}
       />
     }
     </svg>
-  );
+  );*/
 }

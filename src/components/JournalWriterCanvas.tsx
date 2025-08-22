@@ -127,6 +127,7 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
         const id = leafTb.create({x, y, font, fontSize});
         setSelectedId(id);
         setFocusedId(id);
+        console.log('created (' + x + "," + y + ")");
       }
     }
 
@@ -233,13 +234,13 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
         <Leaf
           key={_leaf.id}
           leaf={_leaf}
-          fontTb={fontTb}
           ref={getRef.bind(null, _leaf.id)}
           map={getMap()}
           selected={_leaf.id === selectedId}
           focused={_leaf.id === focusedId}
-          isDragged={_leaf.id === drag.id}
           systemFont={font}
+          systemFontSize={fontSize}
+          fontTb={fontTb}
           notifyParentFocused={setElementOptionsFocus.bind(null, _leaf.id)}
           notifyChangeFontSize={notifyElementFontSize.bind(null, _leaf.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, _leaf)}

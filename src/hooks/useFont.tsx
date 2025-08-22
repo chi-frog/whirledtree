@@ -10,7 +10,7 @@ export type Dimension = {
 }
 
 export type FontTb = {
-  getDims:(content:string, font:Font, fontSize:number)=>Dimension
+  getDims:(content:string, font:Font, fontSize:number, x?:number, y?:number)=>Dimension
 }
 
 export type Font = {

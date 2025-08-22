@@ -1,6 +1,6 @@
 'use client'
 
-import { Dimension, Font, FontTb } from '@/hooks/useFont';
+import { Font, FontTb } from '@/hooks/useFont';
 import * as React from 'react';
 import { MouseEventHandler } from 'react';
 
@@ -9,7 +9,9 @@ type Props = {
   y:number,
   height?:number,
   padding:{x:number, y:number},
-  cornerRadiusPercentage:number,
+  cornerRadiusX?:number,
+  cornerRadiusY?:number,
+  cornerRadiusPercentage?:number,
   text:string,
   font:Font,
   fontSize:number,
@@ -17,7 +19,8 @@ type Props = {
   onMouseDown?:MouseEventHandler<SVGRectElement>,
 };
 const TextBox: React.FC<Props> = ({
-    x, y, height, padding, cornerRadiusPercentage,
+    x, y, height, padding,
+    cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
     text, font, fontSize, fontTb,
     onMouseDown}) => {  
   const dims = fontTb.getDims(text, font, fontSize);
@@ -32,8 +35,12 @@ const TextBox: React.FC<Props> = ({
         y={y}
         width={dims.width + padding.x*2}
         height={height + padding.y*2}
-        rx={dims.width*cornerRadiusPercentage}
-        ry={dims.height*cornerRadiusPercentage}
+        rx={(cornerRadiusPercentage) ? (dims.width*cornerRadiusPercentage) :
+            (cornerRadiusX) ? cornerRadiusX : 0
+        }
+        ry={(cornerRadiusPercentage) ? (dims.height*cornerRadiusPercentage) :
+            (cornerRadiusY) ? cornerRadiusY : 0
+        }
         stroke={"black"}
         fill={'white'}
         onMouseDown={onMouseDown}/>
