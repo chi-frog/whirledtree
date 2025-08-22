@@ -4,12 +4,13 @@ import { Leaf } from "@/hooks/useLeaves";
 import { FocusEventHandler, KeyboardEventHandler, MouseEventHandler } from "react";
 import Cursor from "./Cursor";
 import { Dimension } from "@/hooks/useFont";
+import TextBox from "./svg/TextBox";
 
 const _ = {
   cursor: {
     padding: {
-      x:1,
-      y:1,
+      x:2,
+      y:2,
     }
   },
   text: {
@@ -46,16 +47,38 @@ const LeafContent:React.FC<Props> = ({
     handleMouseDown, handleMouseUp, handleOnBlur,
     handleKeyDown, handleKeyUp}:Props) => {
 
-  const svgY = leaf.y - textDims.textHeight - textDims.textHeightGap;
+  const dims = (textDims.height) ? textDims : cursorDims;
+
+  const svgY = leaf.y - dims.textHeight - dims.textHeightGap- _.text.padding.y;
+  const svgWidth = textDims.width + cursorDims.width + _.cursor.padding.x*2;
+  const svgHeight = dims.height + _.text.padding.y*2;
 
   return (<svg
       x={leaf.x}
       y={svgY}
-      width={textDims.width + cursorDims.width + _.text.padding.x*2 + _.cursor.padding.x*2}
-      height={textDims.height + _.text.padding.y*2}>
+      width={svgWidth}
+      height={svgHeight}>
+    <defs>
+        <radialGradient id="focusedFill" cx="100%" cy="50%" r="100%">
+          <stop offset="0%" stopColor="rgba(211, 175, 55, 0)" />
+          <stop offset="5px" stopColor="rgba(211, 175, 55, 0)" />
+          <stop offset="15px" stopColor="rgba(211, 175, 55, 1)" />
+          <stop offset="25px" stopColor="rgba(211, 175, 55, 0)" />
+        </radialGradient>
+      </defs>
+    <rect
+      width={svgWidth}
+      height={svgHeight}
+      rx={5}
+      fill={(focused) ? 'rgba(211, 175, 55, 0.1)' : (selected) ? 'rgba(0, 255, 0, 0.1)' : 'none'}
+      stroke={(focused) ? 'rgba(211, 175, 55, 0.5)' : (selected) ? 'rgba(0, 255, 0, 0.5)' : 'none'}
+      /*stroke={(focused) ? "gold" :
+              (selected) ? "blue" :
+              "none"}*/
+    />
     <text
-      x={2}
-      y={leaf.y - svgY + 2}
+      x={_.cursor.padding.x}
+      y={leaf.y - svgY}
       data-elementid={leaf.id}
       ref={ref} tabIndex={0} 
       fontSize={leaf.fontSize}
@@ -67,9 +90,8 @@ const LeafContent:React.FC<Props> = ({
       style={{
         fontFamily: leaf.font.name,
         whiteSpace: "break-spaces",
-        outline: (focused) ? "1px solid gold" : 
-                 (selected) ? "1px solid blue" : "none",
         userSelect: "none",
+        outline: "none",
       }}>
       <tspan>
         {leaf.content}
@@ -78,9 +100,9 @@ const LeafContent:React.FC<Props> = ({
     {focused &&
       <Cursor
         x={textDims.width + _.cursor.padding.x}
-        y={0}
+        y={_.cursor.padding.y}
         width={cursorDims.width}
-        height={cursorDims.height}/>
+        height={dims.height}/>
     }
   </svg>);
 }

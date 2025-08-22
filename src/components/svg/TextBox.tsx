@@ -1,6 +1,6 @@
 'use client'
 
-import { Font, FontTb } from '@/hooks/useFont';
+import { Dimension, Font, FontTb } from '@/hooks/useFont';
 import * as React from 'react';
 import { MouseEventHandler } from 'react';
 
@@ -13,17 +13,21 @@ type Props = {
   cornerRadiusY?:number,
   cornerRadiusPercentage?:number,
   text:string,
+  dims?:Dimension,
   font:Font,
-  fontSize:number,
-  fontTb:FontTb,
+  fontSize?:number,
+  fontTb?:FontTb,
   onMouseDown?:MouseEventHandler<SVGRectElement>,
 };
 const TextBox: React.FC<Props> = ({
     x, y, height, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
-    text, font, fontSize, fontTb,
-    onMouseDown}) => {  
-  const dims = fontTb.getDims(text, font, fontSize);
+    text, dims, font, fontSize, fontTb,
+    onMouseDown}) => {
+  if (!dims && fontTb && fontSize)
+    dims = fontTb.getDims(text, font, fontSize);
+  else
+    dims = {width:0, height:0, textHeight:0, textHeightGap:0}
 
   if (!height) height = dims.height;
 
