@@ -69,7 +69,7 @@ export default function Leaf({
     <LeafOptions
       leaf={leaf}
       x={leaf.x}
-      y={leaf.y - Math.max(textDims.height, cursorDims.height)}
+      y={leaf.y}
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       expanded={optionsExpanded}

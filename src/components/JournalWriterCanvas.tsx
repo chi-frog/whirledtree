@@ -101,6 +101,9 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
     const y = e.clientY;
 
     setMouseDownPoint({x, y});
+
+    // Clean up any empty leaves
+    leafTb.removeEmpty();
   }
 
   const handleMouseUp = (e:React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -156,12 +159,9 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
     setMouseoverRegion(getMouseoverRegion(e.clientX, e.clientY, focusedId));
   }
 
-  const handleOnBlur = (content:string, id:number) => {
-    if (content === "")
-      leafTb.remove(id);
-    if (id === focusedId) {
+  const handleOnBlur = (id:number) => {
+    if (id === focusedId)
       setFocusedId(0);
-    }
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -207,9 +207,9 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
   }
 
   const notifyLeafFontSize = (id:number, fontSize:number) => {
-    console.log('notiifying', fontSize);
     leafTb.updateField(id, 'fontSize', (_fontSize:number) => fontSize);
-  };
+  console.log('notify');
+  }
   return (
     <svg id="canvas"
       className="bg-rose-50 w-screen h-screen"
@@ -246,7 +246,7 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
           notifyChangeFontSize={notifyLeafFontSize.bind(null, _leaf.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, _leaf)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, _leaf.id)}
-          parentOnBlur={handleOnBlur.bind(null, _leaf.content, _leaf.id)}
+          parentOnBlur={handleOnBlur.bind(null, _leaf.id)}
           handleKeyDown={handleKeyDown}/>
       )}
     </svg>

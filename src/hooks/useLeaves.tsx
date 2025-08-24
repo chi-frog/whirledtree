@@ -20,6 +20,7 @@ export type leafTb = {
   updateField:Function,
   updateFields:Function,
   remove:Function,
+  removeEmpty:Function,
   bringToFront:Function,
   transformContent:Function,
 }
@@ -75,9 +76,12 @@ function useLeaves() {
           return _leaf}));
 
   const remove = (id:number) =>
-    setLeaves((_Leafs) =>
-      _Leafs.filter((_Leaf) =>
-        (_Leaf.id !== id)));
+    setLeaves((_leaves) =>
+      _leaves.filter((_leaf) =>
+        (_leaf.id !== id)));
+
+  const removeEmpty = () =>
+    setLeaves((_leaves) => _leaves.filter((_leaf) => _leaf.content === ""));
 
   const bringToFront = (id:number) =>
     setLeaves((_leaves:Leaf[]) => {
@@ -102,6 +106,7 @@ function useLeaves() {
     updateField,
     updateFields,
     remove,
+    removeEmpty,
     bringToFront,
     transformContent,
   }

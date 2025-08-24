@@ -89,7 +89,7 @@ export default function LeafOptions({
 
   return (<svg
       x={x - svgWidth - _.padding.x}
-      y={y}
+      y={y - svgHeight}
       width={svgWidth}
       height={svgHeight}>
     <rect
