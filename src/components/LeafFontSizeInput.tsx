@@ -74,12 +74,14 @@ export default function LeafFontSizeInput({
 
   const leftArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     if (notifyChangeFontSize)
       notifyChangeFontSize(leaf.fontSize-1)
   };
 
   const rightArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     if (notifyChangeFontSize)
       notifyChangeFontSize(leaf.fontSize+1)
   };
@@ -102,10 +104,14 @@ export default function LeafFontSizeInput({
 
     <TextBox x={1} y={1} padding={{x: 2, y: 2}} cornerRadiusX={3}
       font={systemFont} fontSize={systemFontSize} fontTb={fontTb}>
-      <tspan
+      <tspan style={{
+        userSelect: "none",
+        }}
         onMouseDown={leftArrowPressed}>{'< '}</tspan>
       <tspan>{"" + leaf.fontSize}</tspan>
-      <tspan
+      <tspan style={{
+        userSelect: "none",
+        }}
         onMouseDown={rightArrowPressed}>{' >'}</tspan>
     </TextBox>
     </svg>
