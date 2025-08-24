@@ -1,12 +1,13 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { MouseEventHandler, useLayoutEffect, useRef, useState } from "react";
 import TextBox from "./svg/TextBox";
 import { Font, FontTb } from "@/hooks/useFont";
 import { Leaf } from "@/hooks/useLeaves";
 
 type Props = {
   leaf:Leaf,
+  x:number,
   y:number,
   width:number,
   height:number,
@@ -18,7 +19,7 @@ type Props = {
 }
 
 export default function LeafFontSizeInput({
-    leaf, y, width, height, notifyParentFocused,
+    leaf, x, y, width, height, notifyParentFocused,
     notifyChangeFontSize,
     systemFont, systemFontSize, fontTb} : Props) {
   const [focused, setFocused] = useState(false);
@@ -50,11 +51,6 @@ export default function LeafFontSizeInput({
       notifyChangeFontSize(isNaN(fontSizeParsed) ? 0 : fontSizeParsed);
   }
 
-  const handleMouseDown:React.MouseEventHandler<SVGSVGElement> = (e) => {
-    e.stopPropagation();
-    setFocused(true);
-  }
-
   const handleMouseUp:React.MouseEventHandler<SVGSVGElement> = (e) => {
     e.stopPropagation();
 };
@@ -76,25 +72,42 @@ export default function LeafFontSizeInput({
       ref.current?.focus();
   }, [focused]);
 
+  const leftArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
+    e.stopPropagation();
+    if (notifyChangeFontSize)
+      notifyChangeFontSize(leaf.fontSize-1)
+  };
+
+  const rightArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
+    e.stopPropagation();
+    if (notifyChangeFontSize)
+      notifyChangeFontSize(leaf.fontSize+1)
+  };
+
   return (
     <svg
-      x={0}
-      y={y}
-      width={width}
-      height={height}
+      x={x-1}
+      y={y-1}
+      width={width+2}
+      height={height+2}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
-      onMouseDown={handleMouseDown}
       onMouseUp={(e) => handleMouseUp(e)}
       onKeyDown={(e) => handleKeyDown(e)}
       style={{
         outline: focused ? "1px solid yellow" : "none",
         cursor: "text",
       }}>
-    <TextBox x={0} y={0} padding={{x: 5, y: 2}} cornerRadiusX={5}
-      text={"" + leaf.fontSize}
-      font={systemFont} fontSize={systemFontSize} fontTb={fontTb} />
+
+    <TextBox x={1} y={1} padding={{x: 2, y: 2}} cornerRadiusX={3}
+      font={systemFont} fontSize={systemFontSize} fontTb={fontTb}>
+      <tspan
+        onMouseDown={leftArrowPressed}>{'< '}</tspan>
+      <tspan>{"" + leaf.fontSize}</tspan>
+      <tspan
+        onMouseDown={rightArrowPressed}>{' >'}</tspan>
+    </TextBox>
     </svg>
   );
 }

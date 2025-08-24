@@ -72,25 +72,18 @@ export default function LeafOptions({
   const displayFontSize = () => setDisplayed([displays.fontSize]);
 
   let svgWidth = 0, svgHeight = 0;
-  let tabsWidth = 0, tabsHeight = 0;
+  let tabsHeight = 0;
   let fontSizeInputWidth = 0, fontSizeInputHeight = 0;
 
   if (isDisplayFontSize) {
-    const arrowDims = fontTb.getDims("<", systemFont, systemFontSize);
-    const textDims = fontTb.getDims("" + leaf.fontSize, systemFont, systemFontSize);
-    const arrowWidth = _.arrow.horizontal.padding.x*2 + arrowDims.width;
-    const textWidth = textDims.width + _.text.padding.x*2;
-    const textHeight = textDims.height + _.text.padding.y*2;
+    const textDims = fontTb.getDims("< " + leaf.fontSize + " >", systemFont, systemFontSize);
     
-    fontSizeInputWidth = arrowWidth*2 + textWidth;
-    fontSizeInputHeight = textHeight;
-    tabsHeight = textHeight*0.5;
+    fontSizeInputWidth = textDims.width + _.arrow.horizontal.padding.x*2;
+    fontSizeInputHeight = textDims.height + _.text.padding.y*2;
+    tabsHeight = fontSizeInputHeight*0.5;
 
     svgWidth = _.border.padding.x*2 + fontSizeInputWidth;
     svgHeight = _.border.padding.y*2 + fontSizeInputHeight + tabsHeight;
-
-    console.log('(' + x + ',' + y + ') w:' + svgWidth + ' h:' + svgHeight);
-    console.log('inputWidth:' + fontSizeInputWidth + ' inputHeight:' + fontSizeInputHeight);
   }
 
 
@@ -114,7 +107,8 @@ export default function LeafOptions({
     {(displayed[0] === displays.fontSize) &&
       <LeafFontSizeInput
         leaf={leaf}
-        y={tabsHeight}
+        x={svgWidth*0.5 - fontSizeInputWidth/2}
+        y={tabsHeight + (svgHeight-tabsHeight)/2 - fontSizeInputHeight/2}
         width={fontSizeInputWidth}
         height={fontSizeInputHeight}
         notifyParentFocused={notifyParentFocused}

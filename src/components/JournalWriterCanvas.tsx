@@ -206,9 +206,10 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
     }
   }
 
-  const notifyElementFontSize = (id:number, fontSize:number) =>
+  const notifyLeafFontSize = (id:number, fontSize:number) => {
+    console.log('notiifying', fontSize);
     leafTb.updateField(id, 'fontSize', (_fontSize:number) => fontSize);
-
+  };
   return (
     <svg id="canvas"
       className="bg-rose-50 w-screen h-screen"
@@ -242,7 +243,7 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
           systemFontSize={fontSize}
           fontTb={fontTb}
           notifyParentFocused={setElementOptionsFocus.bind(null, _leaf.id)}
-          notifyChangeFontSize={notifyElementFontSize.bind(null, _leaf.id)}
+          notifyChangeFontSize={notifyLeafFontSize.bind(null, _leaf.id)}
           handleMouseDown={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseDownElement(e, _leaf)}
           handleMouseUp={(e:React.MouseEvent<SVGTextElement, MouseEvent>) => handleMouseUpElement(e, _leaf.id)}
           parentOnBlur={handleOnBlur.bind(null, _leaf.content, _leaf.id)}

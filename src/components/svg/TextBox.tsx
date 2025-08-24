@@ -12,24 +12,37 @@ type Props = {
   cornerRadiusX?:number,
   cornerRadiusY?:number,
   cornerRadiusPercentage?:number,
-  text:string,
+  text?:string,
   dims?:Dimension,
   font:Font,
   fontSize?:number,
   fontTb?:FontTb,
   onMouseDown?:MouseEventHandler<SVGRectElement>,
+  children?:React.ReactNode,
 };
 const TextBox: React.FC<Props> = ({
     x, y, height, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
     text, dims, font, fontSize, fontTb,
-    onMouseDown}) => {
-  if (!dims && fontTb && fontSize)
-    dims = fontTb.getDims(text, font, fontSize);
-  else
+    onMouseDown, children}) => {
+
+  if (!text) text = "";    
+  if (!dims && fontTb && fontSize) {
+    let content = text;
+
+    if (Array.isArray(children)) {
+      children.forEach((_child) => {
+        content += _child.props.children;
+      });
+    }
+
+    dims = fontTb.getDims(content, font, fontSize);
+  } else if (!dims)
     dims = {width:0, height:0, textHeight:0, textHeightGap:0}
 
   if (!height) height = dims.height;
+
+  console.log('c', children);
 
   return (
     <>
@@ -40,12 +53,14 @@ const TextBox: React.FC<Props> = ({
         width={dims.width + padding.x*2}
         height={height + padding.y*2}
         rx={(cornerRadiusPercentage) ? (dims.width*cornerRadiusPercentage) :
-            (cornerRadiusX) ? cornerRadiusX : 0
-        }
-        ry={(cornerRadiusPercentage) ? (dims.height*cornerRadiusPercentage) :
+            (cornerRadiusX) ? cornerRadiusX :
             (cornerRadiusY) ? cornerRadiusY : 0
         }
-        stroke={"black"}
+        ry={(cornerRadiusPercentage) ? (dims.height*cornerRadiusPercentage) :
+            (cornerRadiusY) ? cornerRadiusY :
+            (cornerRadiusX) ? cornerRadiusX : 0
+        }
+        stroke={"none"}
         fill={'white'}
         onMouseDown={onMouseDown}/>
       <text
@@ -54,10 +69,10 @@ const TextBox: React.FC<Props> = ({
         y={y + (dims.height + padding.y*2)/2 + dims.height/2 - dims.textHeightGap}
         fontSize={fontSize}
         style={{
-          pointerEvents:'none',
           fontFamily:font.name,
         }}>
         {text}
+        {children}
       </text>
     </>
   )
