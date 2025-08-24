@@ -7,20 +7,19 @@ import { Leaf } from "@/hooks/useLeaves";
 
 type Props = {
   leaf:Leaf,
+  y:number,
   width:number,
   height:number,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
-  parentWidth:number,
-  parentHeight:number,
   systemFont:Font,
   systemFontSize:number,
   fontTb:FontTb,
 }
 
 export default function LeafFontSizeInput({
-    leaf, width, height, notifyParentFocused,
-    notifyChangeFontSize, parentWidth, parentHeight,
+    leaf, y, width, height, notifyParentFocused,
+    notifyChangeFontSize,
     systemFont, systemFontSize, fontTb} : Props) {
   const [focused, setFocused] = useState(false);
   const ref = useRef<SVGSVGElement>(null);
@@ -79,8 +78,8 @@ export default function LeafFontSizeInput({
 
   return (
     <svg
-      x={parentWidth/2 - width/2}
-      y={parentHeight/2 - height/2}
+      x={0}
+      y={y}
       width={width}
       height={height}
       ref={ref} tabIndex={0}

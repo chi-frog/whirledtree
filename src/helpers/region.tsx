@@ -53,6 +53,7 @@ export const getRegion = (x:number,y:number,rect:any) => {
   
       // This will be a tspan - we want the text
       const domText = domElements[0].parentElement;
+      console.log('domText:', domText);
   
       if (!domText)
         return REGION.NONE;

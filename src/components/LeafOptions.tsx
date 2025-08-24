@@ -1,16 +1,14 @@
 import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
-import LeafInput from '@/components/LeafFontSizeInput';
+import LeafFontSizeInput from '@/components/LeafFontSizeInput';
 import useAnimation from "@/hooks/useAnimation";
 import { Font, FontTb } from "@/hooks/useFont";
 import { Leaf } from "@/hooks/useLeaves";
 import LeafOptionsTabs from "./LeafOptionsTabs";
-import LeafFontSizeInput from "@/components/LeafFontSizeInput";
 
 type LeafOptionsProps = {
   leaf:Leaf,
   x:number,
   y:number,
-  textHeight:number,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   expanded:boolean,
@@ -22,6 +20,9 @@ type LeafOptionsProps = {
 }
 
 const _ = {
+  padding: {
+    x: 5,
+  },
   unexpanded: {
     size:10,
     opacity:0.7,
@@ -60,7 +61,7 @@ const _ = {
 }
 
 export default function LeafOptions({
-    leaf, x, y, textHeight, notifyParentFocused, notifyChangeFontSize,
+    leaf, x, y, notifyParentFocused, notifyChangeFontSize,
     expanded, systemFont, systemFontSize, fontTb, parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
   const displays = {
     fontSize:"fontSize",
@@ -68,21 +69,23 @@ export default function LeafOptions({
 
   const [displayed, setDisplayed] = useState<string[]>([displays.fontSize]);
   const isDisplayFontSize = (displayed.includes(displays.fontSize));
-  //const displayFontSize = () => setDisplayed(["fontSize"]);
+  const displayFontSize = () => setDisplayed([displays.fontSize]);
 
   let svgWidth = 0, svgHeight = 0;
+  let tabsWidth = 0, tabsHeight = 0;
   let fontSizeInputWidth = 0, fontSizeInputHeight = 0;
 
   if (isDisplayFontSize) {
     const arrowDims = fontTb.getDims("<", systemFont, systemFontSize);
     const textDims = fontTb.getDims("" + leaf.fontSize, systemFont, systemFontSize);
-    const tabsHeight = textDims.height*0.5;
     const arrowWidth = _.arrow.horizontal.padding.x*2 + arrowDims.width;
     const textWidth = textDims.width + _.text.padding.x*2;
     const textHeight = textDims.height + _.text.padding.y*2;
     
     fontSizeInputWidth = arrowWidth*2 + textWidth;
     fontSizeInputHeight = textHeight;
+    tabsHeight = textHeight*0.5;
+
     svgWidth = _.border.padding.x*2 + fontSizeInputWidth;
     svgHeight = _.border.padding.y*2 + fontSizeInputHeight + tabsHeight;
 
@@ -91,17 +94,31 @@ export default function LeafOptions({
   }
 
 
-  return (<svg x={x} y={y} width={svgWidth} height={svgHeight}>
-    <LeafOptionsTabs />
-    {(displayed[0] === "fontSize") &&
+  return (<svg
+      x={x - svgWidth - _.padding.x}
+      y={y}
+      width={svgWidth}
+      height={svgHeight}>
+    <rect
+      width={svgWidth}
+      height={svgHeight}
+      rx={5}
+      fill='#ADD8E6' />
+    <LeafOptionsTabs 
+      width={svgWidth}
+      height={tabsHeight}
+      systemFont={systemFont}
+      systemFontSize={systemFontSize}
+      fontTb={fontTb}
+      />
+    {(displayed[0] === displays.fontSize) &&
       <LeafFontSizeInput
         leaf={leaf}
+        y={tabsHeight}
         width={fontSizeInputWidth}
         height={fontSizeInputHeight}
         notifyParentFocused={notifyParentFocused}
         notifyChangeFontSize={notifyChangeFontSize}
-        parentWidth={0}
-        parentHeight={0}
         systemFont={systemFont}
         systemFontSize={systemFontSize}
         fontTb={fontTb}/>}

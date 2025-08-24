@@ -58,23 +58,12 @@ const LeafContent:React.FC<Props> = ({
       y={svgY}
       width={svgWidth}
       height={svgHeight}>
-    <defs>
-        <radialGradient id="focusedFill" cx="100%" cy="50%" r="100%">
-          <stop offset="0%" stopColor="rgba(211, 175, 55, 0)" />
-          <stop offset="5px" stopColor="rgba(211, 175, 55, 0)" />
-          <stop offset="15px" stopColor="rgba(211, 175, 55, 1)" />
-          <stop offset="25px" stopColor="rgba(211, 175, 55, 0)" />
-        </radialGradient>
-      </defs>
     <rect
       width={svgWidth}
       height={svgHeight}
       rx={5}
       fill={(focused) ? 'rgba(211, 175, 55, 0.1)' : (selected) ? 'rgba(0, 255, 0, 0.1)' : 'none'}
       stroke={(focused) ? 'rgba(211, 175, 55, 0.5)' : (selected) ? 'rgba(0, 255, 0, 0.5)' : 'none'}
-      /*stroke={(focused) ? "gold" :
-              (selected) ? "blue" :
-              "none"}*/
     />
     <text
       x={_.cursor.padding.x}

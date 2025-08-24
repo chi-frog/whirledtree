@@ -65,12 +65,11 @@ export default function Leaf({
       handleOnBlur={handleOnBlur}
       handleKeyDown={handleKeyDown}
       handleKeyUp={handleKeyUp} />
-    {selected && null
-    /*<LeafOptions
+    {selected &&
+    <LeafOptions
       leaf={leaf}
       x={leaf.x}
-      y={leaf.y}
-      textHeight={textDims.textHeight}
+      y={leaf.y - Math.max(textDims.height, cursorDims.height)}
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       expanded={optionsExpanded}
@@ -79,7 +78,7 @@ export default function Leaf({
       fontTb={fontTb}
       parentMouseEnter={handleMouseOptionsEnter}
       parentMouseLeave={handleMouseOptionsLeave}
-      />*/
+      />
     }
     </g>);
 }
