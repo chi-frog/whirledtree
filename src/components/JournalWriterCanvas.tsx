@@ -208,7 +208,7 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
 
   const notifyLeafFontSize = (id:number, fontSize:number) => {
     leafTb.updateField(id, 'fontSize', (_fontSize:number) => fontSize);
-  console.log('notify');
+    getMap().get(id).focus();
   }
   return (
     <svg id="canvas"

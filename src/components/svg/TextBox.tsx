@@ -7,6 +7,7 @@ import { MouseEventHandler } from 'react';
 type Props = {
   x:number,
   y:number,
+  width?:number,
   height?:number,
   padding:{x:number, y:number},
   cornerRadiusX?:number,
@@ -21,7 +22,7 @@ type Props = {
   children?:React.ReactNode,
 };
 const TextBox: React.FC<Props> = ({
-    x, y, height, padding,
+    x, y, width, height, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
     text, dims, font, fontSize, fontTb,
     onMouseDown, children}) => {
@@ -40,9 +41,8 @@ const TextBox: React.FC<Props> = ({
   } else if (!dims)
     dims = {width:0, height:0, textHeight:0, textHeightGap:0}
 
+  if (!width) width = dims.width;
   if (!height) height = dims.height;
-
-  console.log('c', children);
 
   return (
     <>
@@ -50,7 +50,7 @@ const TextBox: React.FC<Props> = ({
         className="hover:fill-gray-200 hover:cursor-pointer hover:stroke-yellow-600"
         x={x}
         y={y}
-        width={dims.width + padding.x*2}
+        width={width + padding.x*2}
         height={height + padding.y*2}
         rx={(cornerRadiusPercentage) ? (dims.width*cornerRadiusPercentage) :
             (cornerRadiusX) ? cornerRadiusX :
@@ -65,8 +65,8 @@ const TextBox: React.FC<Props> = ({
         onMouseDown={onMouseDown}/>
       <text
         className="cursor-pointer"
-        x={x + (dims.width + padding.x*2)/2 - dims.width/2}
-        y={y + (dims.height + padding.y*2)/2 + dims.height/2 - dims.textHeightGap}
+        x={x + (width + padding.x*2)/2 - dims.width/2}
+        y={y + (height + padding.y*2)/2 + dims.height/2 - dims.textHeightGap}
         fontSize={fontSize}
         style={{
           fontFamily:font.name,

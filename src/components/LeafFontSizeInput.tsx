@@ -5,6 +5,12 @@ import TextBox from "./svg/TextBox";
 import { Font, FontTb } from "@/hooks/useFont";
 import { Leaf } from "@/hooks/useLeaves";
 
+const _ = {
+  font: {
+    maxSize: 1638,
+  }
+}
+
 type Props = {
   leaf:Leaf,
   x:number,
@@ -32,7 +38,7 @@ export default function LeafFontSizeInput({
     if (numberRegex.test(e.key)) {
       newFontSize = newFontSize + e.key;
 
-      if (parseInt(newFontSize) > 1638) return;
+      if (parseInt(newFontSize) > _.font.maxSize) return;
     } else {
       // Here we enable certain functionality
       switch (e.key) {
@@ -86,34 +92,66 @@ export default function LeafFontSizeInput({
       notifyChangeFontSize(leaf.fontSize+1)
   };
 
-  return (
-    <svg
-      x={x-1}
-      y={y-1}
-      width={width+2}
-      height={height+2}
+  const inputPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
+    e.stopPropagation();
+  }
+
+  console.log('w', width);
+
+  const rightArrowDims = fontTb.getDims(" >", systemFont, systemFontSize);
+  const textDims = fontTb.getDims("" + leaf.fontSize, systemFont, systemFontSize);
+
+  return (<svg
+      x={x-2}
+      y={y-2}
+      width={width+4}
+      height={height+4}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
       onMouseUp={(e) => handleMouseUp(e)}
       onKeyDown={(e) => handleKeyDown(e)}
       style={{
-        outline: focused ? "1px solid yellow" : "none",
-        cursor: "text",
+        outline: "none",
       }}>
-
-    <TextBox x={1} y={1} padding={{x: 2, y: 2}} cornerRadiusX={3}
+    <TextBox
+      x={2} y={2} width={width-4} padding={{x: 2, y: 2}}
+      cornerRadiusX={3}
       font={systemFont} fontSize={systemFontSize} fontTb={fontTb}>
       <tspan style={{
         userSelect: "none",
         }}
         onMouseDown={leftArrowPressed}>{'< '}</tspan>
-      <tspan>{"" + leaf.fontSize}</tspan>
+      <tspan
+        onMouseDown={inputPressed}>{"" + leaf.fontSize}</tspan>
       <tspan style={{
         userSelect: "none",
         }}
         onMouseDown={rightArrowPressed}>{' >'}</tspan>
     </TextBox>
-    </svg>
-  );
+    <rect
+      x={2} y={2} width={width} height={height}
+      rx={3}
+      fill="white" />
+    <text
+      className="cursor-pointer"
+      x={4} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
+      onMouseDown={leftArrowPressed}
+      >
+      {"< "}
+    </text>
+    <text
+      className="cursor-pointer"
+      x={width - rightArrowDims.width} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
+      onMouseDown={rightArrowPressed}
+      >
+      {" >"}
+    </text>
+    <text
+      className="cursor-text"
+      x={4 + width/2 - textDims.width/2} y={height/2 + textDims.height/2}
+      onMouseDown={inputPressed}>
+      {leaf.fontSize}
+    </text>
+  </svg>);
 }
