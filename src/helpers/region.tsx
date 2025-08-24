@@ -52,13 +52,17 @@ export const getRegion = (x:number,y:number,rect:any) => {
         return REGION.NONE;
   
       // This will be a tspan - we want the text
-      const domText = domElements[0].parentElement;
-      console.log('domText:', domText);
+      const tspan = domElements.find((_element) => _element.dataset.elementid);
+
+      if (!tspan)
+        return REGION.NONE;
+
+      const domText = tspan.parentElement;
   
       if (!domText)
         return REGION.NONE;
   
-      if (domText.getAttribute('data-elementid') === "" + focusedId)
+      if (domText.dataset.elementid === "" + focusedId)
         return REGION.BODY_FOCUSED;
     
       return getRegion(x, y, domElements[0].getBoundingClientRect());

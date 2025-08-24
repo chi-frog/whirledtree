@@ -82,7 +82,7 @@ const LeafContent:React.FC<Props> = ({
         userSelect: "none",
         outline: "none",
       }}>
-      <tspan>
+      <tspan data-elementid={leaf.id}>
         {leaf.content}
       </tspan>
     </text>
