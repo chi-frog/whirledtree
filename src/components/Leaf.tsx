@@ -36,7 +36,8 @@ export default function Leaf({
   const textDims = fontTb.getDims(leaf.content, leaf.font, leaf.fontSize);
 
   useEffect(() => {
-    map.get(leaf.id).focus();
+    if (focused)
+      map.get(leaf.id).focus();
   }, [focused])
 
   const handleOnBlur = () => {

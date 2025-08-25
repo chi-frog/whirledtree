@@ -29,16 +29,20 @@ export default function LeafFontSizeInput({
     notifyChangeFontSize,
     systemFont, systemFontSize, fontTb} : Props) {
   const [focused, setFocused] = useState(false);
+  const [fontSize, setFontSize] = useState('' + leaf.fontSize);
   const ref = useRef<SVGSVGElement>(null);
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/;
-    let newFontSize = "" + leaf.fontSize;
+    let newFontSize = fontSize;
 
     if (numberRegex.test(e.key)) {
       newFontSize = newFontSize + e.key;
+      const newFontSizeParsed = parseInt(newFontSize);
 
-      if (parseInt(newFontSize) > _.font.maxSize) return;
+      if ((newFontSizeParsed > _.font.maxSize) ||
+          (newFontSizeParsed < 4)) return;
+
     } else {
       // Here we enable certain functionality
       switch (e.key) {
@@ -48,13 +52,15 @@ export default function LeafFontSizeInput({
         case "Delete":
           newFontSize = "";
           break;
+        case "Enter":
+          const newFontSizeParsed = parseInt(newFontSize);
+          if(notifyChangeFontSize)
+            notifyChangeFontSize(isNaN(newFontSizeParsed) ? 0 : newFontSizeParsed);
         default: return;
       }
     }
 
-    const fontSizeParsed = parseInt(newFontSize);
-    if(notifyChangeFontSize)
-      notifyChangeFontSize(isNaN(fontSizeParsed) ? 0 : fontSizeParsed);
+    setFontSize(newFontSize);
   }
 
   const handleMouseUp:React.MouseEventHandler<SVGSVGElement> = (e) => {
@@ -74,13 +80,19 @@ export default function LeafFontSizeInput({
   }
 
   useLayoutEffect(() => {
-    if (focused && ref.current)
+    if (focused && ref.current) {
+      console.log('focused in FontSizeInput');
       ref.current?.focus();
+    }
   }, [focused]);
 
   const leftArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
     e.preventDefault();
+
+    if ((leaf.fontSize <= 4)) return;
+
+    setFontSize('' + (leaf.fontSize-1));
     if (notifyChangeFontSize)
       notifyChangeFontSize(leaf.fontSize-1)
   };
@@ -88,18 +100,20 @@ export default function LeafFontSizeInput({
   const rightArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
     e.preventDefault();
+
+    if ((leaf.fontSize > _.font.maxSize)) return;
+
+    setFontSize('' + (leaf.fontSize+1));
     if (notifyChangeFontSize)
       notifyChangeFontSize(leaf.fontSize+1)
   };
 
   const inputPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
+    console.log('pressed here');
   }
 
-  console.log('w', width);
-
   const rightArrowDims = fontTb.getDims(" >", systemFont, systemFontSize);
-  const textDims = fontTb.getDims("" + leaf.fontSize, systemFont, systemFontSize);
 
   return (<svg
       x={x-2}
@@ -114,25 +128,10 @@ export default function LeafFontSizeInput({
       style={{
         outline: "none",
       }}>
-    <TextBox
-      x={2} y={2} width={width-4} padding={{x: 2, y: 2}}
-      cornerRadiusX={3}
-      font={systemFont} fontSize={systemFontSize} fontTb={fontTb}>
-      <tspan style={{
-        userSelect: "none",
-        }}
-        onMouseDown={leftArrowPressed}>{'< '}</tspan>
-      <tspan
-        onMouseDown={inputPressed}>{"" + leaf.fontSize}</tspan>
-      <tspan style={{
-        userSelect: "none",
-        }}
-        onMouseDown={rightArrowPressed}>{' >'}</tspan>
-    </TextBox>
     <rect
       x={2} y={2} width={width} height={height}
       rx={3}
-      fill="white" />
+      fill={focused ? 'rgba(211, 175, 55, 0.2)' : "white"} />
     <text
       className="cursor-pointer"
       x={4} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
@@ -149,9 +148,11 @@ export default function LeafFontSizeInput({
     </text>
     <text
       className="cursor-text"
-      x={4 + width/2 - textDims.width/2} y={height/2 + textDims.height/2}
+      x={width/2 + 2} y={height/2 + 4}
+      textAnchor={'middle'}
+      dominantBaseline={'middle'}
       onMouseDown={inputPressed}>
-      {leaf.fontSize}
+      {fontSize}
     </text>
   </svg>);
 }

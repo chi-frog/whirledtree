@@ -108,6 +108,7 @@ export default function JournalWriterOptions({left, top, font, fontSize,
   }
 
   const handleFocus = () => {
+    console.log('focused in options');
     optionsRef.current?.focus();
   }
 

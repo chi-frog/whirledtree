@@ -162,8 +162,9 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
   }
 
   const handleOnBlur = (id:number) => {
-    if (id === focusedId)
-      setFocusedId(0);
+    if (id === focusedId) {
+      console.log('here');
+      setFocusedId(0); }
   }
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
@@ -212,9 +213,9 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
   }
 
   const notifyLeafFontSize = (id:number, fontSize:number) => {
+    console.log('notify');
     leafTb.updateField(id, 'fontSize', (_fontSize:number) => fontSize);
     getMap().get(id).focus();
-    //setFocusedId(id);
   }
 
   return (

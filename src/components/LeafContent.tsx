@@ -50,7 +50,8 @@ const LeafContent:React.FC<Props> = ({
   const dims = (textDims.height) ? textDims : cursorDims;
 
   const svgY = leaf.y - dims.textHeight - dims.textHeightGap- _.text.padding.y;
-  const svgWidth = textDims.width + cursorDims.width + _.cursor.padding.x*2;
+  let svgWidth = textDims.width + cursorDims.width + _.cursor.padding.x*2;
+  if (selected && !focused) svgWidth -= cursorDims.width;
   const svgHeight = dims.height + _.text.padding.y*2;
 
   return (<svg
