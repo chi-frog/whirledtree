@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SVG Tspan Baseline Demo</title>
+</head>
+<body>
+<svg width="800" height="200" style="background:#f9f9f9; border:1px solid #ccc">
+
+  <!-- Reference line -->
+  <line x1="20" y1="100" x2="780" y2="100" stroke="gray" stroke-dasharray="4" />
+
+  <!-- Label -->
+  <text x="10" y="30" font-size="16" fill="black">Alignment-baseline comparison (line at y=100):</text>
+
+  <!-- Main text with tspans -->
+  <text x="40" y="100" font-size="28">
+    <tspan fill="black" dominant-baseline="baseline">baseline abc</tspan>
+    <tspan dx="20" fill="red" dominant-baseline="middle">middle abc</tspan>
+    <tspan dx="20" fill="blue" dominant-baseline="hanging">hanging abc</tspan>
+    <tspan dx="20" fill="green" dominant-baseline="text-before-edge">before-edge abc</tspan>
+    <tspan dx="20" fill="purple" dominant-baseline="text-after-edge">after-edge abc</tspan>
+  </text>
+
+</svg>
+</body>
+</html>

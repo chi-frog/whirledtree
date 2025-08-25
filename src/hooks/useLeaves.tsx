@@ -81,7 +81,7 @@ function useLeaves() {
         (_leaf.id !== id)));
 
   const removeEmpty = () =>
-    setLeaves((_leaves) => _leaves.filter((_leaf) => _leaf.content === ""));
+    setLeaves((_leaves) => _leaves.filter((_leaf) => _leaf.content !== ""));
 
   const bringToFront = (id:number) =>
     setLeaves((_leaves:Leaf[]) => {

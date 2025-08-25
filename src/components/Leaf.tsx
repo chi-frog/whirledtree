@@ -2,7 +2,6 @@
 import LeafOptions from '@/components/LeafOptions';
 import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import '../app/journalWriter.css';
-import Cursor from './Cursor';
 import { Leaf as LeafType } from '@/hooks/useLeaves';
 import { Font, FontTb } from '@/hooks/useFont';
 import LeafContent from './LeafContent';
@@ -52,7 +51,7 @@ export default function Leaf({
       setOptionsExpanded(false);
   }
   
-  return (<g>
+  return (<>
     <LeafContent
       leaf={leaf}
       ref={ref}
@@ -80,5 +79,5 @@ export default function Leaf({
       parentMouseLeave={handleMouseOptionsLeave}
       />
     }
-    </g>);
+    </>);
 }

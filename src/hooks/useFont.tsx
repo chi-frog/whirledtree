@@ -113,24 +113,26 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   function getTextBBox(content:string, font:Font, fontSize:number, x?:number, y?:number) {
-    let fontSizeTest = document.createElementNS(SVG_NS, "text");
-    fontSizeTest.setAttribute('font-size', "" + fontSize);
-    fontSizeTest.setAttribute("font-family", font.name);
-    fontSizeTest.setAttribute('style', "visibility:hidden;");
-    if (x) fontSizeTest.setAttribute('x', "" + x);
-    if (y) fontSizeTest.setAttribute('y', "" + y);
-    fontSizeTest.textContent = content;
+    let el = document.createElementNS(SVG_NS, "text");
+    el.setAttribute('font-size', "" + fontSize);
+    el.setAttribute("font-family", font.name);
+    el.setAttribute('style', 'visibility:hidden;');
+    el.setAttribute('style', 'whitespace:preserve')
+    if (x) el.setAttribute('x', '' + x);
+    if (y) el.setAttribute('y', '' + y);
+    el.textContent = content;
     let canvas = document.querySelector("#canvas");
-    let bboxTest;
+    let bbox;
 
     if (canvas) {
-      canvas.appendChild(fontSizeTest);
-      bboxTest = fontSizeTest.getBBox();
-      fontSizeTest.remove();
+      canvas.appendChild(el);
+      bbox = el.getBBox();
+      bbox.width = Math.max(bbox.width, el.getComputedTextLength());
+      el.remove();
     } else
-      bboxTest = {x:0, y:0, width:0, height:0};
+      bbox = {x:0, y:0, width:0, height:0};
 
-    return bboxTest;
+    return bbox;
   }
 
   const fontTb:FontTb = {

@@ -82,7 +82,9 @@ const LeafContent:React.FC<Props> = ({
         userSelect: "none",
         outline: "none",
       }}>
-      <tspan data-elementid={leaf.id}>
+      <tspan data-elementid={leaf.id} style={{
+          whiteSpace: "break-spaces"
+        }}>
         {leaf.content}
       </tspan>
     </text>
