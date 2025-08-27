@@ -1,7 +1,6 @@
 import { Font, FontTb } from "@/hooks/useFont";
-import { useEffect, useRef, useState } from "react";
-import { options } from "./JournalWriterOptions";
-import TextBox from "./svg/TextBox";
+import { options } from "./Options";
+import TextBox from "../svg/TextBox";
 import useAnimation from "@/hooks/useAnimation";
 
 type fontOptionProps = {

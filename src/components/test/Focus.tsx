@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 export default function Focus({}) {
   const layer0 = useRef<any>(null);

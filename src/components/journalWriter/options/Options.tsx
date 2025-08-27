@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
 import { Font, FontTb } from "@/hooks/useFont";
 import useAnimation from "@/hooks/useAnimation";
-import TextBox from "./svg/TextBox";
+import TextBox from "../svg/TextBox";
 
 export const options = {
   unexpanded: {
@@ -32,7 +32,7 @@ export const options = {
   },
 }
 
-type journalWriterOptionsProps = {
+type Props = {
   left:number,
   top:number,
   font:Font,
@@ -43,8 +43,8 @@ type journalWriterOptionsProps = {
   notifySetFont:Function,
 }
 
-export default function JournalWriterOptions({left, top, font, fontSize,
-  availableFonts, maxFontWidth, fontTb, notifySetFont} : journalWriterOptionsProps) {
+export default function Options({left, top, font, fontSize,
+  availableFonts, maxFontWidth, fontTb, notifySetFont} : Props) {
   const [expanded, setExpanded] = useState<boolean>(false);
   const [focusedOption, setFocusedOption] = useState<string>("");
   
@@ -81,8 +81,6 @@ export default function JournalWriterOptions({left, top, font, fontSize,
     [getWidth, getHeight, getOpacity, getCornerRadiusPercentage],
     [expanded, focusedOption, fontDims]);
 
-    console.log('rendered');
-
   const optionsRef = useRef<SVGSVGElement>(null);
 
   const handleMouseEnter = () => setExpanded(true);
@@ -108,7 +106,6 @@ export default function JournalWriterOptions({left, top, font, fontSize,
   }
 
   const handleFocus = () => {
-    console.log('focused in options');
     optionsRef.current?.focus();
   }
 

@@ -1,10 +1,9 @@
 'use client'
-import LeafOptions from '@/components/LeafOptions';
-import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
-import '../app/journalWriter.css';
+import Options from '@/components/journalWriter/leaf/options/Options';
+import { KeyboardEventHandler, MouseEventHandler, useEffect, useState } from 'react';
 import { Leaf as LeafType } from '@/hooks/useLeaves';
 import { Font, FontTb } from '@/hooks/useFont';
-import LeafContent from './LeafContent';
+import Content from './Content';
 
 type Props = {
   leaf:LeafType,
@@ -53,7 +52,7 @@ export default function Leaf({
   }
   
   return (<>
-    <LeafContent
+    <Content
       leaf={leaf}
       ref={ref}
       selected={selected}
@@ -66,7 +65,7 @@ export default function Leaf({
       handleKeyDown={handleKeyDown}
       handleKeyUp={handleKeyUp} />
     {selected &&
-    <LeafOptions
+    <Options
       leaf={leaf}
       x={leaf.x}
       y={leaf.y}

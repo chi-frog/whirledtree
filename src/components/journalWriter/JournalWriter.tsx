@@ -1,8 +1,8 @@
 'use client';
-import JournalWriterCanvas from '@/components/JournalWriterCanvas';
-import JournalWriterOptions from './JournalWriterOptions';
+import Canvas from './Canvas';
 import useFont, { Font } from '@/hooks/useFont';
 import useLeaves from '@/hooks/useLeaves';
+import Options from './options/Options';
 
 export default function JournalWriter({}) {
   const {font, setFont, fontSize, loadedFonts, maxWidth, fontTb} = useFont();
@@ -16,14 +16,14 @@ export default function JournalWriter({}) {
   
   return (
     <>
-      <JournalWriterCanvas
+      <Canvas
         leaves={leaves}
         leafTb={leafTb}
         font={font}
         fontSize={fontSize}
         fontTb={fontTb}
         />
-      <JournalWriterOptions
+      <Options
         left={OPTIONS_PADDING}
         top={OPTIONS_PADDING}
         font={font}

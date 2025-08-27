@@ -1,7 +1,7 @@
 'use client'
 
 import { MouseEventHandler, useLayoutEffect, useRef, useState } from "react";
-import TextBox from "./svg/TextBox";
+import TextBox from "../journalWriter/svg/TextBox";
 import { Font, FontTb } from "@/hooks/useFont";
 import { Leaf } from "@/hooks/useLeaves";
 
@@ -81,7 +81,6 @@ export default function LeafFontSizeInput({
 
   useLayoutEffect(() => {
     if (focused && ref.current) {
-      console.log('focused in FontSizeInput');
       ref.current?.focus();
     }
   }, [focused]);
@@ -110,7 +109,6 @@ export default function LeafFontSizeInput({
 
   const inputPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
-    console.log('pressed here');
   }
 
   const rightArrowDims = fontTb.getDims(" >", systemFont, systemFontSize);

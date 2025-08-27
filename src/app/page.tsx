@@ -1,4 +1,4 @@
-import JournalWriter from "@/components/JournalWriter";
+import JournalWriter from "@/components/journalWriter/JournalWriter";
 import Focus from "@/components/test/Focus";
 
 export default function Home() {

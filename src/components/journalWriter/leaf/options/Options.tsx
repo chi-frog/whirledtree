@@ -1,9 +1,9 @@
-import { MouseEvent, MouseEventHandler, useEffect, useRef, useState } from "react";
-import LeafFontSizeInput from '@/components/LeafFontSizeInput';
+import { MouseEventHandler, useState } from "react";
+import FontSizeTab from '@/components/journalWriter/leaf/options/FontSizeTab';
 import useAnimation from "@/hooks/useAnimation";
 import { Font, FontTb } from "@/hooks/useFont";
 import { Leaf } from "@/hooks/useLeaves";
-import LeafOptionsTabs from "./LeafOptionsTabs";
+import Tabs from "./Tabs";
 
 type LeafOptionsProps = {
   leaf:Leaf,
@@ -103,7 +103,7 @@ export default function LeafOptions({
       height={svgHeight}
       rx={5}
       fill='#ADD8E6' />
-    <LeafOptionsTabs 
+    <Tabs 
       width={svgWidth}
       height={tabsHeight}
       systemFont={systemFont}
@@ -111,7 +111,7 @@ export default function LeafOptions({
       fontTb={fontTb}
       />
     {(displayed[0] === displays.fontSize) &&
-      <LeafFontSizeInput
+      <FontSizeTab
         leaf={leaf}
         x={svgWidth*0.5 - fontSizeInputWidth/2}
         y={tabsHeight + (svgHeight-tabsHeight)/2 - (fontSizeInputHeight)/2}

@@ -2,9 +2,9 @@
 
 import { Leaf } from "@/hooks/useLeaves";
 import { FocusEventHandler, KeyboardEventHandler, MouseEventHandler } from "react";
-import Cursor from "./Cursor";
+import Cursor from "../Cursor";
 import { Dimension } from "@/hooks/useFont";
-import TextBox from "./svg/TextBox";
+import TextBox from "../svg/TextBox";
 
 const _ = {
   cursor: {
