@@ -42,7 +42,8 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
   const [drag, setDrag] = useState<drag>(dragDefault);
   const {getMap, getRef} = useRefMap();
 
-  const mouseDownPointExists = () => (mouseDownPoint.x && mouseDownPoint.y);
+  const mouseDownPointExists:()=>boolean = () =>
+    (mouseDownPoint.x !== -1 && mouseDownPoint.y !== -1);
   const clearMouseDownPoint = () => setMouseDownPoint({x:-1, y:-1});
   const isFocused = (leaf:LeafType) => (focusedId === leaf.id);
 
@@ -60,14 +61,12 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
         (e.detail > 2))
       return;
 
+    if (isFocused(leaf)) return;
+
     const x = e.clientX;
     const y = e.clientY;
 
-    setMouseDownPoint({x, y});
-
-    if (isFocused(leaf)) return;
-
-    setDrag({active:true, id:leaf.id, region:mouseoverRegion, offsetX:(e.clientX-leaf.x), offsetY:(e.clientY-leaf.y)});
+    setDrag({active:true, id:leaf.id, region:mouseoverRegion, offsetX:(x-leaf.x), offsetY:(y-leaf.y)});
   }
 
   const handleMouseUpLeaf:(e: React.MouseEvent<SVGTextElement, MouseEvent>, id: number) => void =
@@ -88,10 +87,19 @@ export default function JournalWriterCanvas({leaves, leafTb, font, fontSize, fon
       setSelectedId((e.detail !== 2) ? id : 0);
       setFocusedId((e.detail !== 2) ? id : 0);
       setMouseoverRegion((e.detail !== 2) ? getMouseoverRegion(x, y, id) : getMouseoverRegion(x, y, 0));
+    
+    } else if (drag.active) {
+      console.log('focusid', focusedId);
+      console.log('selctid', selectedId);
+      console.log('id', id);
+      setFocusedId(selectedId);
+      console.log('getMouseoverRegion(x, y, id)', getMouseoverRegion(x, y, id));
+      setMouseoverRegion(getMouseoverRegion(x, y, 0));
     }
 
     clearMouseDownPoint();
     setDrag(dragDefault);
+    leafTb.removeEmpty();
   }
 
   const handleMouseDown:React.MouseEventHandler = (e) => {
