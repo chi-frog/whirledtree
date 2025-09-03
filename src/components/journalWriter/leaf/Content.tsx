@@ -59,12 +59,24 @@ const LeafContent:React.FC<Props> = ({
       y={svgY}
       width={svgWidth}
       height={svgHeight}>
+    <defs>
+        <filter id="shadow" x="-20" y="-20" height="150" width="150">
+            <feOffset result="offset" in="SourceAlpha" dx="-10" dy="-10" />
+            <feGaussianBlur result="blur" in="offset" stdDeviation="5" />
+            <feBlend in="SourceGraphic" in2="blur" mode="normal" />
+        </filter>
+        <linearGradient id="focusedGrad">
+          <stop offset="80%" stopColor="rgba(211, 175, 55, 0)"/>
+          <stop offset="100%" stopColor="rgba(211, 175, 55, 0.2)"/>
+        </linearGradient>
+    </defs>
     <rect
       width={svgWidth}
       height={svgHeight}
       rx={5}
-      fill={(focused) ? 'rgba(211, 175, 55, 0.1)' : (selected) ? 'rgba(0, 255, 0, 0.1)' : 'none'}
-      stroke={(focused) ? 'rgba(211, 175, 55, 0.5)' : (selected) ? 'rgba(0, 255, 0, 0.5)' : 'none'}
+      filter='url(#shadow)'
+      fill={(focused) ? 'url(#focusedGrad)' : (selected) ? 'rgba(0, 255, 0, 0.1)' : 'none'}
+      //stroke={(focused) ? 'rgba(211, 175, 55, 0.5)' : (selected) ? 'rgba(0, 255, 0, 0.5)' : 'none'}
     />
     <text
       x={_.cursor.padding.x}

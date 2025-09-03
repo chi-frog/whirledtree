@@ -99,8 +99,9 @@ export default function LeafOptions({
       width={svgWidth}
       height={svgHeight}>
     <rect
+      y={tabsHeight}
       width={svgWidth}
-      height={svgHeight}
+      height={fontSizeInputHeight + _.border.padding.y*2}
       rx={5}
       fill='#ADD8E6' />
     <Tabs 

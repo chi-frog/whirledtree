@@ -1,13 +1,13 @@
 'use client'
 
-type leafSVGProps = {
+type Props = {
   x:number,
   y:number,
   width:number,
   height:number,
 }
 
-export default function LeafSVG({x, y, width, height} : leafSVGProps) {
+export default function LeafSVG({x, y, width, height} : Props) {
   return (
     <svg
       x={x}
