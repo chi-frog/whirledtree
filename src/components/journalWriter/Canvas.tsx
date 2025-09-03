@@ -221,6 +221,7 @@ export default function Canvas({leaves, leafTb, font, fontSize, fontTb} : Props)
   const notifyLeafFontSize = (id:number, fontSize:number) => {
     leafTb.updateField(id, 'fontSize', (_fontSize:number) => fontSize);
     getMap().get(id).focus();
+    setFocusedId(id);
   }
 
   return (

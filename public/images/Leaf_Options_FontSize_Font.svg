@@ -2,13 +2,16 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="480pt"
-   height="480pt"
-   viewBox="0 0 480 480"
+   width="120pt"
+   height="120pt"
+   viewBox="0 0 120 120"
    version="1.1"
    id="svg1"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
    sodipodi:docname="Leaf_Options_FontSize_Font.svg"
+   inkscape:export-filename="Leaf_Options_FontP"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -26,7 +29,7 @@
      showgrid="true"
      inkscape:zoom="0.85040304"
      inkscape:cx="355.12573"
-     inkscape:cy="299.26986"
+     inkscape:cy="298.09395"
      inkscape:window-width="1600"
      inkscape:window-height="877"
      inkscape:window-x="-8"
@@ -56,14 +59,15 @@
      id="layer1">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:480px;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;letter-spacing:0px;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.999997;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
-       x="108.47798"
-       y="366.00293"
-       id="text1"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:155.508px;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;letter-spacing:0px;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.323975;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       x="15.08777"
+       y="106.2147"
+       id="text1"
+       transform="scale(1.0768167,0.92866317)"><tspan
          sodipodi:role="line"
          id="tspan1"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:480px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;fill-opacity:1;stroke-width:1"
-         x="108.47798"
-         y="366.00293">a</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:155.508px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;fill-opacity:1;stroke-width:0.323976"
+         x="15.08777"
+         y="106.2147">a</tspan></text>
   </g>
 </svg>

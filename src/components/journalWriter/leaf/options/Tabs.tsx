@@ -3,6 +3,8 @@
 import { Font, FontTb } from "@/hooks/useFont";
 import { useState } from "react";
 import ChangeFontSize from "./svg/ChangeFontSize";
+import ChangeFont from "./svg/ChangeFont";
+import ChangeFontSpecial from "./svg/ChangeFontSpecial";
 
 const _ = {
   padding: {
@@ -31,6 +33,7 @@ const Tabs:React.FC<Props> = ({
 
   const tabs = (<>
     <rect
+      className={selectedTab !== 0 ? "hover:fill-green-200" : ""}
       x={_.padding.x}
       y={-1}
       width={tabWidth}
@@ -40,6 +43,7 @@ const Tabs:React.FC<Props> = ({
       strokeWidth='1'/>
     <ChangeFontSize x={_.padding.x + 2} y={2} width={tabWidth-4} height={height - 4}/>
     <rect
+      className={selectedTab !== 1 ? "hover:fill-green-200" : ""}
       x={_.padding.x + tabWidth}
       y={-1}
       width={tabWidth}
@@ -47,14 +51,18 @@ const Tabs:React.FC<Props> = ({
       fill='#ADD8E6'
       stroke='oklch(96.9% 0.015 12.422)'
       strokeWidth='1'/>
+    <ChangeFont x={_.padding.x + tabWidth + 2} y={2} width={tabWidth-4} height={height - 4}/>
     <rect
+      className={selectedTab !== 2 ? "hover:fill-green-200" : ""}
       x={_.padding.x + tabWidth*2}
       y={-1}
       width={tabWidth}
       height={height}
       fill='#ADD8E6'
       stroke='oklch(96.9% 0.015 12.422)'
-      strokeWidth='1'/></>);
+      strokeWidth='1'/>
+    <ChangeFontSpecial x={_.padding.x + tabWidth*2 + 2} y={2} width={tabWidth-4} height={height - 4}/>
+    </>);
 
   return (<svg width={width} height={height}>
     <defs>

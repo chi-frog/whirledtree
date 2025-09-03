@@ -14,9 +14,9 @@ const ChangeFont:React.FC<Props> = ({
     y={y}
     width={width}
     height={height}
-    href="/images/Leaf_Options_FontP.svg"
+    href="/images/Leaf_Options_FontSpecialP.svg"
     style={{
-      pointerEvents:'none'
+      'pointerEvents':'none'
     }}/>);
 }
 
