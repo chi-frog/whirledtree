@@ -33,7 +33,7 @@ const Tabs:React.FC<Props> = ({
 
   const tabs = (<>
     <rect
-      className={selectedTab !== 0 ? "hover:fill-green-200" : ""}
+      className={selectedTab !== 0 ? "hover:fill-green-200 cursor-pointer" : ""}
       x={_.padding.x}
       y={-1}
       width={tabWidth}
@@ -43,7 +43,7 @@ const Tabs:React.FC<Props> = ({
       strokeWidth='1'/>
     <ChangeFontSize x={_.padding.x + 2} y={2} width={tabWidth-4} height={height - 4}/>
     <rect
-      className={selectedTab !== 1 ? "hover:fill-green-200" : ""}
+      className={selectedTab !== 1 ? "hover:fill-green-200 cursor-pointer" : ""}
       x={_.padding.x + tabWidth}
       y={-1}
       width={tabWidth}
@@ -53,7 +53,7 @@ const Tabs:React.FC<Props> = ({
       strokeWidth='1'/>
     <ChangeFont x={_.padding.x + tabWidth + 2} y={2} width={tabWidth-4} height={height - 4}/>
     <rect
-      className={selectedTab !== 2 ? "hover:fill-green-200" : ""}
+      className={selectedTab !== 2 ? "hover:fill-green-200 cursor-pointer" : ""}
       x={_.padding.x + tabWidth*2}
       y={-1}
       width={tabWidth}

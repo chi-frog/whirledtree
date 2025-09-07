@@ -7,6 +7,7 @@ import { Leaf } from "@/hooks/useLeaves";
 const _ = {
   font: {
     maxSize: 1638,
+    minSize: 4,
   }
 }
 
@@ -30,6 +31,8 @@ export default function LeafFontSizeInput({
   const [focused, setFocused] = useState(false);
   const [fontSize, setFontSize] = useState('' + leaf.fontSize);
   const ref = useRef<SVGSVGElement>(null);
+  const fontSizeOutOfBounds = ((val:number) =>
+    (val > _.font.maxSize) || (val < _.font.minSize))(parseInt(fontSize));
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/;
@@ -37,10 +40,6 @@ export default function LeafFontSizeInput({
 
     if (numberRegex.test(e.key)) {
       newFontSize = newFontSize + e.key;
-      const newFontSizeParsed = parseInt(newFontSize);
-
-      if ((newFontSizeParsed > _.font.maxSize) ||
-          (newFontSizeParsed < 4)) return;
 
     } else {
       // Here we enable certain functionality
@@ -52,7 +51,18 @@ export default function LeafFontSizeInput({
           newFontSize = "";
           break;
         case "Enter":
-          const newFontSizeParsed = parseInt(newFontSize);
+          let newFontSizeParsed = parseInt(newFontSize);
+
+          if (newFontSizeParsed > _.font.maxSize) {
+            newFontSizeParsed = _.font.maxSize;
+            setFontSize('' + _.font.maxSize);
+
+          } else if (newFontSizeParsed < _.font.minSize) {
+            newFontSizeParsed = _.font.minSize;
+            setFontSize('' + _.font.minSize);
+          }
+
+          console.log('nfp', newFontSizeParsed);
           if(notifyChangeFontSize)
             notifyChangeFontSize(isNaN(newFontSizeParsed) ? 0 : newFontSizeParsed);
         default: return;
@@ -79,10 +89,9 @@ export default function LeafFontSizeInput({
   }
 
   useLayoutEffect(() => {
-    if (focused && ref.current) {
-      ref.current?.focus();
-    }
-  }, [focused]);
+    if (focused && ref.current)
+      ref.current.focus();
+  }, [focused, ref.current]);
 
   const leftArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
@@ -90,9 +99,9 @@ export default function LeafFontSizeInput({
 
     if ((leaf.fontSize <= 4)) return;
 
-    setFontSize('' + (leaf.fontSize-1));
+    setFontSize('' + (leaf.fontSize - 1));
     if (notifyChangeFontSize)
-      notifyChangeFontSize(leaf.fontSize-1)
+      notifyChangeFontSize(leaf.fontSize - 1)
   };
 
   const rightArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
@@ -101,9 +110,9 @@ export default function LeafFontSizeInput({
 
     if ((leaf.fontSize > _.font.maxSize)) return;
 
-    setFontSize('' + (leaf.fontSize+1));
+    setFontSize('' + (leaf.fontSize + 1));
     if (notifyChangeFontSize)
-      notifyChangeFontSize(leaf.fontSize+1)
+      notifyChangeFontSize(leaf.fontSize + 1);
   };
 
   const inputPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
@@ -111,12 +120,12 @@ export default function LeafFontSizeInput({
   }
 
   const rightArrowDims = fontTb.getDims(" >", systemFont, systemFontSize);
-
+  
   return (<svg
-      x={x-2}
-      y={y-2}
-      width={width+4}
-      height={height+4}
+      x={x - 2}
+      y={y - 2}
+      width={width + 4}
+      height={height + 4}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
@@ -126,19 +135,24 @@ export default function LeafFontSizeInput({
         outline: "none",
       }}>
     <rect
+      className={focused ? fontSizeOutOfBounds ? "fill-red-200" :
+                                                 "fill-green-300" :
+                           "fill-white"}
       x={2} y={2} width={width} height={height}
       rx={3}
-      fill={focused ? 'rgba(211, 175, 55, 0.2)' : "white"} />
+      />
     <text
-      className="cursor-pointer"
+      className="cursor-pointer hover:stroke-green-300"
       x={4} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
+      strokeWidth={2}
       onMouseDown={leftArrowPressed}
       >
       {"< "}
     </text>
     <text
-      className="cursor-pointer"
+      className="cursor-pointer hover:stroke-green-300"
       x={width - rightArrowDims.width} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
+      strokeWidth={2}
       onMouseDown={rightArrowPressed}
       >
       {" >"}

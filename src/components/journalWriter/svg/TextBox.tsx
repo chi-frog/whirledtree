@@ -70,6 +70,7 @@ const TextBox: React.FC<Props> = ({
         fontSize={fontSize}
         style={{
           fontFamily:font.name,
+          pointerEvents:'none'
         }}>
         {text}
         {children}
