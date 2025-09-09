@@ -18,11 +18,11 @@ type Props = {
   height:number,
   systemFont:Font,
   systemFontSize:number,
-  fontTb:FontTb,
+  systemFontTb:FontTb,
 }
 
 const Tabs:React.FC<Props> = ({
-    width, height, systemFont, systemFontSize, fontTb
+    width, height, systemFont, systemFontSize, systemFontTb
     }:Props) => {
   const [selectedTab, setSelectedTab] = useState<number>(0);
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
-import { Font, FontTb } from "@/hooks/useFont";
+import { Dimension, Font, FontTb } from "@/hooks/useFont";
 import useAnimation from "@/hooks/useAnimation";
 import TextBox from "../svg/TextBox";
 
@@ -35,20 +35,27 @@ export const options = {
 type Props = {
   left:number,
   top:number,
-  font:Font,
-  fontSize:number,
+  leafFont:Font,
+  systemFont:Font,
+  systemFontSize:number,
+  systemFontTb:FontTb,
   availableFonts:Font[],
   maxFontWidth:number,
-  fontTb:FontTb,
   notifySetFont:Function,
 }
 
-export default function Options({left, top, font, fontSize,
-  availableFonts, maxFontWidth, fontTb, notifySetFont} : Props) {
+export default function Options({
+    left, top,
+    leafFont,
+    systemFont, systemFontSize, systemFontTb,
+    availableFonts, maxFontWidth, notifySetFont} : Props) {
   const [expanded, setExpanded] = useState<boolean>(false);
   const [focusedOption, setFocusedOption] = useState<string>("");
+  const [fontDims, setFontDims] = useState<Dimension>({width:0, height:0, textHeight:0, textHeightGap:0})
   
-  const fontDims = font.getDims(fontSize);
+  useEffect(() => {
+    setFontDims(systemFontTb.getDims(leafFont.name, systemFont, systemFontSize));
+  }, [leafFont.name, systemFont, systemFontSize]);
 
   const fontLabelWidth = fontDims.width;
   const fontLabelHeight = fontDims.height;
@@ -157,10 +164,10 @@ export default function Options({left, top, font, fontSize,
           y={options.border.padding}
           padding={options.text.padding}
           cornerRadiusPercentage={cornerRadiusPercentage}
-          text={font.name}
-          font={font}
-          fontSize={fontSize}
-          fontTb={fontTb}
+          text={leafFont.name}
+          font={systemFont}
+          fontSize={systemFontSize}
+          fontTb={systemFontTb}
           onMouseDown={fontHandleMouseDown} />}
       {expanded && (focusedOption === "font") &&
       <rect
@@ -176,11 +183,11 @@ export default function Options({left, top, font, fontSize,
         focused={focusedOption === "font"}
         x={fontLabelWidth + options.text.padding.x*2 + options.border.padding*2}
         y={0}
-        font={font}
-        fontSize={fontSize}
+        systemFont={systemFont}
+        systemFontSize={systemFontSize}
+        systemFontTb={systemFontTb}
         availableFonts={availableFonts}
         maxFontWidth={maxFontWidth}
-        fontTb={fontTb}
         notifyMouseLeave={handleOptionLeave}
         notifySetFont={notifySetFont}/>
       }

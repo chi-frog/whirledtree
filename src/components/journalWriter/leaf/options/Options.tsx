@@ -5,7 +5,7 @@ import { Font, FontTb } from "@/hooks/useFont";
 import { Leaf } from "@/hooks/useLeaves";
 import Tabs from "./Tabs";
 
-type LeafOptionsProps = {
+type Props = {
   leaf:Leaf,
   x:number,
   y:number,
@@ -14,7 +14,7 @@ type LeafOptionsProps = {
   expanded:boolean,
   systemFont:Font,
   systemFontSize:number,
-  fontTb:FontTb,
+  systemFontTb:FontTb,
   parentMouseEnter:MouseEventHandler<SVGSVGElement>,
   parentMouseLeave:MouseEventHandler<SVGSVGElement>,
 }
@@ -66,8 +66,8 @@ const _ = {
 export default function LeafOptions({
     leaf, x, y,
     notifyParentFocused, notifyChangeFontSize,
-    expanded, systemFont, systemFontSize, fontTb,
-    parentMouseEnter, parentMouseLeave} : LeafOptionsProps) {
+    expanded, systemFont, systemFontSize, systemFontTb,
+    parentMouseEnter, parentMouseLeave} : Props) {
   const displays = {
     fontSize:"fontSize",
   }
@@ -82,7 +82,7 @@ export default function LeafOptions({
 
   if (isDisplayFontSize) {
     // Use max font size so we don't have to change the size
-    const textDims = fontTb.getDims("< " + _.font.maxSize + " >", systemFont, systemFontSize);
+    const textDims = systemFontTb.getDims("< " + _.font.maxSize + " >", systemFont, systemFontSize);
 
     fontSizeInputWidth = textDims.width + _.arrow.horizontal.padding.x*2;
     fontSizeInputHeight = textDims.height + _.text.padding.y*2;
@@ -109,7 +109,7 @@ export default function LeafOptions({
       height={tabsHeight}
       systemFont={systemFont}
       systemFontSize={systemFontSize}
-      fontTb={fontTb}
+      systemFontTb={systemFontTb}
       />
     {(displayed[0] === displays.fontSize) &&
       <FontSizeTab
@@ -122,6 +122,6 @@ export default function LeafOptions({
         notifyChangeFontSize={notifyChangeFontSize}
         systemFont={systemFont}
         systemFontSize={systemFontSize}
-        fontTb={fontTb}/>}
+        systemFontTb={systemFontTb}/>}
     </svg>);
 }

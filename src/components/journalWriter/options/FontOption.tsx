@@ -3,25 +3,26 @@ import { options } from "./Options";
 import TextBox from "../svg/TextBox";
 import useAnimation from "@/hooks/useAnimation";
 
-type fontOptionProps = {
+type Props = {
   focused:boolean,
   x:number,
   y:number,
-  font:Font,
-  fontSize:number,
+  systemFont:Font,
+  systemFontSize:number,
+  systemFontTb:FontTb,
   availableFonts:Font[],
   maxFontWidth:number,
-  fontTb:FontTb,
   notifyMouseLeave:Function,
   notifySetFont:Function,
 }
 
 export default function FontOption({
   focused, x, y,
-  font, fontSize, availableFonts, maxFontWidth, fontTb,
-  notifyMouseLeave, notifySetFont} : fontOptionProps) {
+  systemFont, systemFontSize, systemFontTb,
+  availableFonts, maxFontWidth,
+  notifyMouseLeave, notifySetFont} : Props) {
 
-  let fontDims = font.getDims(fontSize);
+  let fontDims = systemFont.getDims(systemFontSize);
 
   const getWidth = () =>
     (focused) ?
@@ -35,7 +36,7 @@ export default function FontOption({
 
   const [width, height] = useAnimation(
     [getWidth, getHeight],
-    [focused, font]);
+    [focused, systemFont]);
 
   const handleMouseDown = (e:React.MouseEvent<SVGRectElement, MouseEvent>, font:Font) => {
     e.stopPropagation();
@@ -63,8 +64,8 @@ export default function FontOption({
             cornerRadiusPercentage={0.1}
             text={_font.name}
             font={_font}
-            fontSize={fontSize}
-            fontTb={fontTb}
+            fontSize={systemFontSize}
+            fontTb={systemFontTb}
             onMouseDown={(e) => handleMouseDown(e, _font)} />
         </g>
       )});

@@ -11,9 +11,10 @@ type Props = {
   map?:any,
   selected:boolean,
   focused:boolean,
+  leafFontTb:FontTb,
   systemFont:Font,
   systemFontSize:number,
-  fontTb:FontTb,
+  systemFontTb:FontTb,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
@@ -26,13 +27,13 @@ type Props = {
 export default function Leaf({
     leaf, ref, map,
     selected, focused,
-    systemFont, systemFontSize, fontTb,
+    leafFontTb,
+    systemFont, systemFontSize, systemFontTb,
     notifyParentFocused, notifyChangeFontSize,
     handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : Props) {
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
-  
-  const cursorDims = fontTb.getDims("I", leaf.font, leaf.fontSize);
-  const textDims = fontTb.getDims(leaf.content, leaf.font, leaf.fontSize);
+  const cursorDims = leafFontTb.getDims("I", leaf.font, leaf.fontSize);
+  const textDims = leafFontTb.getDims(leaf.content, leaf.font, leaf.fontSize);
 
   useEffect(() => {
     if (focused)
@@ -74,7 +75,7 @@ export default function Leaf({
       expanded={optionsExpanded}
       systemFont={systemFont}
       systemFontSize={systemFontSize}
-      fontTb={fontTb}
+      systemFontTb={systemFontTb}
       parentMouseEnter={handleMouseOptionsEnter}
       parentMouseLeave={handleMouseOptionsLeave}
       />

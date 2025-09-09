@@ -31,12 +31,18 @@ const dragDefault = {
 type Props = {
   leaves:LeafType[],
   leafTb:leafTb,
-  font:Font,
-  fontSize:number,
-  fontTb:FontTb,
+  leafFont:Font,
+  leafFontSize:number,
+  leafFontTb:FontTb,
+  systemFont:Font,
+  systemFontSize:number,
+  systemFontTb:FontTb,
 }
 
-export default function Canvas({leaves, leafTb, font, fontSize, fontTb} : Props) {
+export default function Canvas({
+    leaves, leafTb,
+    leafFont, leafFontSize, leafFontTb,
+    systemFont, systemFontSize, systemFontTb} : Props) {
   const [mouseDownPoint, setMouseDownPoint] = useState<{x:number, y:number}>({x:-1, y:-1});
   const [selectedId, setSelectedId] = useState<number>(0);
   const [focusedId, setFocusedId] = useState<number>(0);
@@ -91,7 +97,6 @@ export default function Canvas({leaves, leafTb, font, fontSize, fontTb} : Props)
       setMouseoverRegion((e.detail !== 2) ? getMouseoverRegion(x, y, id) : getMouseoverRegion(x, y, 0));
     
     } else if (drag.state === 2) {
-      console.log('here');
       setFocusedId(selectedId);
       setMouseoverRegion(getMouseoverRegion(x, y, 0));
     }
@@ -123,10 +128,10 @@ export default function Canvas({leaves, leafTb, font, fontSize, fontTb} : Props)
         (!mouseDownPointExists()))
       return;
 
-    if (drag.state) {
-      setDrag(dragDefault);
+    if (drag.state)
+      setDrag(dragDefault)
 
-    } else if (detail == 2) {
+    else if (detail == 2) {
       e.preventDefault();
       setSelectedId(0);
       setFocusedId(0);
@@ -136,7 +141,7 @@ export default function Canvas({leaves, leafTb, font, fontSize, fontTb} : Props)
       let y = e.clientY;
 
       if (Math.sqrt(Math.pow(y-mouseDownPoint.y, 2) + Math.pow(x-mouseDownPoint.x, 2)) <= 5) {
-        const id = leafTb.create({x, y, font, fontSize});
+        const id = leafTb.create({x, y, font:leafFont, fontSize:leafFontSize});
         setSelectedId(id);
         setFocusedId(id);
       }
@@ -168,10 +173,8 @@ export default function Canvas({leaves, leafTb, font, fontSize, fontTb} : Props)
     setMouseoverRegion(getMouseoverRegion(e.clientX, e.clientY, focusedId));
   }
 
-  const handleOnBlur = (id:number) => {
-    if (id === focusedId) {
-      setFocusedId(0); }
-  }
+  const handleOnBlur = (id:number) =>
+    (id === focusedId) && setFocusedId(0)
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGTextElement>) => {
     switch(e.key) {
@@ -253,9 +256,10 @@ export default function Canvas({leaves, leafTb, font, fontSize, fontTb} : Props)
           map={getMap()}
           selected={_leaf.id === selectedId}
           focused={_leaf.id === focusedId}
-          systemFont={font}
-          systemFontSize={fontSize}
-          fontTb={fontTb}
+          leafFontTb={leafFontTb}
+          systemFont={systemFont}
+          systemFontSize={systemFontSize}
+          systemFontTb={systemFontTb}
           notifyParentFocused={setLeafOptionsFocus.bind(null, _leaf.id)}
           notifyChangeFontSize={notifyLeafFontSize.bind(null, _leaf.id)}
           handleMouseDown={(e) => handleMouseDownLeaf(e, _leaf)}

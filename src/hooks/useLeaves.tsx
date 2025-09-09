@@ -31,7 +31,7 @@ function useLeaves() {
   const create = ({x, y, font, fontSize, content=""} :
                   {x:number, y:number, font:Font, fontSize:number, content:string}) => {
     const id = Date.now();
-      
+    
     setLeaves((_leafs:Leaf[]) => _leafs.concat({
       id:id,
       x:x,

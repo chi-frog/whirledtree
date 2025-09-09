@@ -70,6 +70,7 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
         if (font.name === _font.name) {
           // Reset font as well.
           setFont(_font);
+          console.log('here');
         }
       });
       setLoadedFonts(loadedFonts);
@@ -113,7 +114,14 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   function getTextBBox(content:string, font:Font, fontSize:number, x?:number, y?:number) {
-    let el = document.createElementNS(SVG_NS, "text");
+    let el;
+   
+    try {
+      el = document.createElementNS(SVG_NS, "text");
+    } catch {
+      return {x:0, y:0, width:0, height:0} 
+    }
+
     el.setAttribute('font-size', "" + fontSize);
     el.setAttribute("font-family", font.name);
     el.setAttribute('style', 'visibility:hidden;');
@@ -134,6 +142,7 @@ function useFont(defaultFontName:string="Arial", defaultFontSize:number=16) {
 
     return bbox;
   }
+
 
   const fontTb:FontTb = {
     getDims: (content:string, font:Font, fontSize:number, x?:number, y?:number) => {

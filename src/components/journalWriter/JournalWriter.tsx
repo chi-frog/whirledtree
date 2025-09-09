@@ -5,33 +5,37 @@ import useLeaves from '@/hooks/useLeaves';
 import Options from './options/Options';
 
 export default function JournalWriter({}) {
-  const {font, setFont, fontSize, loadedFonts, maxWidth, fontTb} = useFont();
+  const {font:leafFont, setFont:setLeafFont, fontSize:leafFontSize, loadedFonts, maxWidth, fontTb:leafFontTb} = useFont();
+  const {font:systemFont, setFont:setSystemFont, fontSize:systemFontSize, fontTb:systemFontTb} = useFont();
   const {leaves, leafTb} = useLeaves();
 
   const OPTIONS_PADDING = 20;
 
-  const notifySetFont = (font:Font) => {
-    setFont(font);
-  }
+  const notifySetLeafFont = (font:Font) =>
+    setLeafFont(font)
   
   return (
     <>
       <Canvas
         leaves={leaves}
         leafTb={leafTb}
-        font={font}
-        fontSize={fontSize}
-        fontTb={fontTb}
+        leafFont={leafFont}
+        leafFontSize={leafFontSize}
+        leafFontTb={leafFontTb}
+        systemFont={systemFont}
+        systemFontSize={systemFontSize}
+        systemFontTb={systemFontTb}
         />
       <Options
         left={OPTIONS_PADDING}
         top={OPTIONS_PADDING}
-        font={font}
-        fontSize={fontSize}
+        leafFont={leafFont}
+        systemFont={systemFont}
+        systemFontSize={systemFontSize}
+        systemFontTb={systemFontTb}
         availableFonts={loadedFonts}
         maxFontWidth={maxWidth}
-        fontTb={fontTb}
-        notifySetFont={notifySetFont}
+        notifySetFont={notifySetLeafFont}
       />
     </>
   );

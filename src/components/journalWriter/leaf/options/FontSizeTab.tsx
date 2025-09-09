@@ -21,13 +21,13 @@ type Props = {
   notifyChangeFontSize?:Function,
   systemFont:Font,
   systemFontSize:number,
-  fontTb:FontTb,
+  systemFontTb:FontTb,
 }
 
 export default function LeafFontSizeInput({
     leaf, x, y, width, height, notifyParentFocused,
     notifyChangeFontSize,
-    systemFont, systemFontSize, fontTb} : Props) {
+    systemFont, systemFontSize, systemFontTb} : Props) {
   const [focused, setFocused] = useState(false);
   const [fontSize, setFontSize] = useState('' + leaf.fontSize);
   const ref = useRef<SVGSVGElement>(null);
@@ -119,7 +119,7 @@ export default function LeafFontSizeInput({
     e.stopPropagation();
   }
 
-  const rightArrowDims = fontTb.getDims(" >", systemFont, systemFontSize);
+  const rightArrowDims = systemFontTb.getDims(" >", systemFont, systemFontSize);
   
   return (<svg
       x={x - 2}
