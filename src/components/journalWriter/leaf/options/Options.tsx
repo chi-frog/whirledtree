@@ -1,9 +1,10 @@
-import { MouseEventHandler, useState } from "react";
+import { MouseEventHandler, useContext, useEffect, useState } from "react";
 import FontSizeTab from '@/components/journalWriter/leaf/options/FontSizeTab';
 import useAnimation from "@/hooks/useAnimation";
-import { Font, FontTb } from "@/hooks/useFont";
 import { Leaf } from "@/hooks/useLeaves";
 import Tabs from "./Tabs";
+import { calcFontDims, Dimension, emptyDimension } from "@/hooks/useFonts";
+import { useFontsContext, useSystemFontContext } from "../../JournalWriter";
 
 type Props = {
   leaf:Leaf,
@@ -12,9 +13,6 @@ type Props = {
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   expanded:boolean,
-  systemFont:Font,
-  systemFontSize:number,
-  systemFontTb:FontTb,
   parentMouseEnter:MouseEventHandler<SVGSVGElement>,
   parentMouseLeave:MouseEventHandler<SVGSVGElement>,
 }
@@ -63,15 +61,18 @@ const _ = {
   }
 }
 
-export default function LeafOptions({
+const Options:React.FC<Props> = ({
     leaf, x, y,
     notifyParentFocused, notifyChangeFontSize,
-    expanded, systemFont, systemFontSize, systemFontTb,
-    parentMouseEnter, parentMouseLeave} : Props) {
+    expanded,
+    parentMouseEnter, parentMouseLeave} : Props) => {
   const displays = {
     fontSize:"fontSize",
   }
-
+  const systemFont = useSystemFontContext();
+  const { loaded } = useFontsContext();
+  const calcTextDims = () => calcFontDims("< " + _.font.maxSize + " >", systemFont, x, y);
+  const [textDims, setTextDims] = useState<Dimension>(calcTextDims());
   const [displayed, setDisplayed] = useState<string[]>([displays.fontSize]);
   const isDisplayFontSize = (displayed.includes(displays.fontSize));
   const displayFontSize = () => setDisplayed([displays.fontSize]);
@@ -80,10 +81,15 @@ export default function LeafOptions({
   let tabsHeight = 0;
   let fontSizeInputWidth = 0, fontSizeInputHeight = 0;
 
+  useEffect(() => {
+    console.log('loaded: ', loaded);
+    if (!loaded) return;
+
+    setTextDims(calcTextDims());
+  }, [loaded, systemFont])
+
   if (isDisplayFontSize) {
     // Use max font size so we don't have to change the size
-    const textDims = systemFontTb.getDims("< " + _.font.maxSize + " >", systemFont, systemFontSize);
-
     fontSizeInputWidth = textDims.width + _.arrow.horizontal.padding.x*2;
     fontSizeInputHeight = textDims.height + _.text.padding.y*2;
     tabsHeight = fontSizeInputHeight*0.5;
@@ -107,9 +113,6 @@ export default function LeafOptions({
     <Tabs 
       width={svgWidth}
       height={tabsHeight}
-      systemFont={systemFont}
-      systemFontSize={systemFontSize}
-      systemFontTb={systemFontTb}
       />
     {(displayed[0] === displays.fontSize) &&
       <FontSizeTab
@@ -119,9 +122,8 @@ export default function LeafOptions({
         width={fontSizeInputWidth}
         height={fontSizeInputHeight}
         notifyParentFocused={notifyParentFocused}
-        notifyChangeFontSize={notifyChangeFontSize}
-        systemFont={systemFont}
-        systemFontSize={systemFontSize}
-        systemFontTb={systemFontTb}/>}
+        notifyChangeFontSize={notifyChangeFontSize}/>}
     </svg>);
 }
+
+export default Options;

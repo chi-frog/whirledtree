@@ -1,10 +1,11 @@
 'use client';
-import React, { useState, } from 'react';
+import React, { useContext, useState, } from 'react';
 import { Leaf as LeafType, leafTb } from '@/hooks/useLeaves';
 import Leaf from './leaf/Leaf';
 import useRefMap from '@/hooks/useRefMap';
 import { REGION, getMouseoverRegion } from '@/helpers/region';
-import { Font, FontTb } from '@/hooks/useFont';
+import { Font } from '@/hooks/useFonts';
+import { useFontsContext, useSystemFontContext } from './JournalWriter';
 
 type pEnum = {
   text:string,
@@ -32,17 +33,15 @@ type Props = {
   leaves:LeafType[],
   leafTb:leafTb,
   leafFont:Font,
-  leafFontSize:number,
-  leafFontTb:FontTb,
-  systemFont:Font,
-  systemFontSize:number,
-  systemFontTb:FontTb,
 }
 
 export default function Canvas({
     leaves, leafTb,
-    leafFont, leafFontSize, leafFontTb,
-    systemFont, systemFontSize, systemFontTb} : Props) {
+    leafFont, } : Props) {
+
+  const systemFont = useSystemFontContext();
+  const fonts = useFontsContext();
+
   const [mouseDownPoint, setMouseDownPoint] = useState<{x:number, y:number}>({x:-1, y:-1});
   const [selectedId, setSelectedId] = useState<number>(0);
   const [focusedId, setFocusedId] = useState<number>(0);
@@ -66,10 +65,9 @@ export default function Canvas({
     e.stopPropagation();
 
     if ((e.button !== 0) ||
-        (e.detail > 2))
+        (e.detail > 2) ||
+        (isFocused(leaf)))
       return;
-
-    if (isFocused(leaf)) return;
 
     const x = e.clientX;
     const y = e.clientY;
@@ -141,7 +139,7 @@ export default function Canvas({
       let y = e.clientY;
 
       if (Math.sqrt(Math.pow(y-mouseDownPoint.y, 2) + Math.pow(x-mouseDownPoint.x, 2)) <= 5) {
-        const id = leafTb.create({x, y, font:leafFont, fontSize:leafFontSize});
+        const id = leafTb.create({x, y, font:leafFont});
         setSelectedId(id);
         setFocusedId(id);
       }
@@ -157,7 +155,8 @@ export default function Canvas({
     switch(drag.region) {
       case REGION.BODY:
         leafTb.updateFields(drag.id, ['x', 'y'], [()=>x-drag.offsetX, ()=>y-drag.offsetY]);
-        if (drag.state === 1) setDrag({...drag, state:2})
+        if (drag.state === 1)
+          setDrag({...drag, state:2})
         break;
       case REGION.TOP_SIDE:
         break;
@@ -219,10 +218,12 @@ export default function Canvas({
     } else {
       console.log('this should not happen lol');
     }
+
+    console.log('leaves', leaves);
   }
 
   const notifyLeafFontSize = (id:number, fontSize:number) => {
-    leafTb.updateField(id, 'fontSize', (_fontSize:number) => fontSize);
+    leafTb.updateField(id, 'font', (_font:Font) => ({..._font, size:fontSize}));
     getMap().get(id).focus();
     setFocusedId(id);
   }
@@ -256,10 +257,6 @@ export default function Canvas({
           map={getMap()}
           selected={_leaf.id === selectedId}
           focused={_leaf.id === focusedId}
-          leafFontTb={leafFontTb}
-          systemFont={systemFont}
-          systemFontSize={systemFontSize}
-          systemFontTb={systemFontTb}
           notifyParentFocused={setLeafOptionsFocus.bind(null, _leaf.id)}
           notifyChangeFontSize={notifyLeafFontSize.bind(null, _leaf.id)}
           handleMouseDown={(e) => handleMouseDownLeaf(e, _leaf)}

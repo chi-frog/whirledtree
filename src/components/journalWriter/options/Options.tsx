@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import FontOption from "./FontOption"
-import { Dimension, Font, FontTb } from "@/hooks/useFont";
+import { calcFontDims, calcMaxFontsWidth, Dimension, Font } from "@/hooks/useFonts";
 import useAnimation from "@/hooks/useAnimation";
 import TextBox from "../svg/TextBox";
+import { useFontsContext, useSystemFontContext } from "../JournalWriter";
 
 export const options = {
   unexpanded: {
@@ -36,26 +37,30 @@ type Props = {
   left:number,
   top:number,
   leafFont:Font,
-  systemFont:Font,
-  systemFontSize:number,
-  systemFontTb:FontTb,
-  availableFonts:Font[],
-  maxFontWidth:number,
   notifySetFont:Function,
 }
 
 export default function Options({
     left, top,
-    leafFont,
-    systemFont, systemFontSize, systemFontTb,
-    availableFonts, maxFontWidth, notifySetFont} : Props) {
+    leafFont, notifySetFont} : Props) {
+  const systemFont = useSystemFontContext();
+  const fonts = useFontsContext();
   const [expanded, setExpanded] = useState<boolean>(false);
   const [focusedOption, setFocusedOption] = useState<string>("");
   const [fontDims, setFontDims] = useState<Dimension>({width:0, height:0, textHeight:0, textHeightGap:0})
-  
+  const [maxFontWidth, setMaxFontWidth] = useState<number>(0);
+
   useEffect(() => {
-    setFontDims(systemFontTb.getDims(leafFont.name, systemFont, systemFontSize));
-  }, [leafFont.name, systemFont, systemFontSize]);
+    if (!fonts.loaded) return;
+
+    const cf = calcMaxFontsWidth((_font:Font)=>_font.name, fonts.all)
+    console.log('maxFDontWidth', cf);
+    setMaxFontWidth(calcMaxFontsWidth((_font:Font)=>_font.name, fonts.all));
+  }, [fonts.loaded]);
+
+  useEffect(() => {
+    setFontDims(calcFontDims(leafFont.name, systemFont));
+  }, [leafFont.name, systemFont]);
 
   const fontLabelWidth = fontDims.width;
   const fontLabelHeight = fontDims.height;
@@ -166,8 +171,6 @@ export default function Options({
           cornerRadiusPercentage={cornerRadiusPercentage}
           text={leafFont.name}
           font={systemFont}
-          fontSize={systemFontSize}
-          fontTb={systemFontTb}
           onMouseDown={fontHandleMouseDown} />}
       {expanded && (focusedOption === "font") &&
       <rect
@@ -183,10 +186,6 @@ export default function Options({
         focused={focusedOption === "font"}
         x={fontLabelWidth + options.text.padding.x*2 + options.border.padding*2}
         y={0}
-        systemFont={systemFont}
-        systemFontSize={systemFontSize}
-        systemFontTb={systemFontTb}
-        availableFonts={availableFonts}
         maxFontWidth={maxFontWidth}
         notifyMouseLeave={handleOptionLeave}
         notifySetFont={notifySetFont}/>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Dimension, Font, FontTb } from '@/hooks/useFont';
+import { calcFontDims, Dimension, Font } from '@/hooks/useFonts';
 import * as React from 'react';
 import { MouseEventHandler } from 'react';
 
@@ -16,19 +16,17 @@ type Props = {
   text?:string,
   dims?:Dimension,
   font:Font,
-  fontSize?:number,
-  fontTb?:FontTb,
   onMouseDown?:MouseEventHandler<SVGRectElement>,
   children?:React.ReactNode,
 };
 const TextBox: React.FC<Props> = ({
     x, y, width, height, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
-    text, dims, font, fontSize, fontTb,
+    text, dims, font,
     onMouseDown, children}) => {
 
   if (!text) text = "";    
-  if (!dims && fontTb && fontSize) {
+  if (!dims) {
     let content = text;
 
     if (Array.isArray(children)) {
@@ -37,9 +35,8 @@ const TextBox: React.FC<Props> = ({
       });
     }
 
-    dims = fontTb.getDims(content, font, fontSize);
-  } else if (!dims)
-    dims = {width:0, height:0, textHeight:0, textHeightGap:0}
+    dims = calcFontDims(content, font);
+  }
 
   if (!width) width = dims.width;
   if (!height) height = dims.height;
@@ -67,7 +64,7 @@ const TextBox: React.FC<Props> = ({
         className="cursor-pointer"
         x={x + (width + padding.x*2)/2 - dims.width/2}
         y={y + (height + padding.y*2)/2 + dims.height/2 - dims.textHeightGap}
-        fontSize={fontSize}
+        fontSize={font.size}
         style={{
           fontFamily:font.name,
           pointerEvents:'none'

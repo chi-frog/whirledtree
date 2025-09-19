@@ -2,7 +2,7 @@
 
 import { MouseEventHandler, useLayoutEffect, useRef, useState } from "react";
 import TextBox from "../journalWriter/svg/TextBox";
-import { Font, FontTb } from "@/hooks/useFont";
+import { Font, FontTb } from "@/hooks/useFonts";
 import { Leaf } from "@/hooks/useLeaves";
 
 const _ = {

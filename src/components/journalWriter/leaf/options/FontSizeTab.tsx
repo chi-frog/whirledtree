@@ -1,8 +1,9 @@
 'use client'
 
-import { MouseEventHandler, useLayoutEffect, useRef, useState } from "react";
-import { Font, FontTb } from "@/hooks/useFont";
+import { MouseEventHandler, useContext, useLayoutEffect, useRef, useState } from "react";
+import { calcFontDims, Font } from "@/hooks/useFonts";
 import { Leaf } from "@/hooks/useLeaves";
+import { useSystemFontContext } from "../../JournalWriter";
 
 const _ = {
   font: {
@@ -19,23 +20,20 @@ type Props = {
   height:number,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
-  systemFont:Font,
-  systemFontSize:number,
-  systemFontTb:FontTb,
 }
 
-export default function LeafFontSizeInput({
+const FontSizeTab:React.FC<Props> = ({
     leaf, x, y, width, height, notifyParentFocused,
-    notifyChangeFontSize,
-    systemFont, systemFontSize, systemFontTb} : Props) {
+    notifyChangeFontSize} : Props) => {
+  const systemFont = useSystemFontContext();
   const [focused, setFocused] = useState(false);
-  const [fontSize, setFontSize] = useState('' + leaf.fontSize);
+  const [fontSize, setFontSize] = useState('' + leaf.font.size);
   const ref = useRef<SVGSVGElement>(null);
   const fontSizeOutOfBounds = ((val:number) =>
     (val > _.font.maxSize) || (val < _.font.minSize))(parseInt(fontSize));
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
-    const numberRegex = /^\d+$/;
+    const numberRegex = /^\d+$/; // A number
     let newFontSize = fontSize;
 
     if (numberRegex.test(e.key)) {
@@ -97,29 +95,29 @@ export default function LeafFontSizeInput({
     e.stopPropagation();
     e.preventDefault();
 
-    if ((leaf.fontSize <= 4)) return;
+    if ((leaf.font.size <= 4)) return;
 
-    setFontSize('' + (leaf.fontSize - 1));
+    setFontSize('' + (leaf.font.size - 1));
     if (notifyChangeFontSize)
-      notifyChangeFontSize(leaf.fontSize - 1)
+      notifyChangeFontSize(leaf.font.size - 1)
   };
 
   const rightArrowPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
     e.preventDefault();
 
-    if ((leaf.fontSize > _.font.maxSize)) return;
+    if ((leaf.font.size > _.font.maxSize)) return;
 
-    setFontSize('' + (leaf.fontSize + 1));
+    setFontSize('' + (leaf.font.size + 1));
     if (notifyChangeFontSize)
-      notifyChangeFontSize(leaf.fontSize + 1);
+      notifyChangeFontSize(leaf.font.size + 1);
   };
 
   const inputPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
   }
 
-  const rightArrowDims = systemFontTb.getDims(" >", systemFont, systemFontSize);
+  const rightArrowDims = calcFontDims(" >", systemFont);
   
   return (<svg
       x={x - 2}
@@ -167,3 +165,5 @@ export default function LeafFontSizeInput({
     </text>
   </svg>);
 }
+
+export default FontSizeTab;

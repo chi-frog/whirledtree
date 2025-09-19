@@ -1,6 +1,5 @@
 'use client'
 
-import { Font, FontTb } from "@/hooks/useFont";
 import { useState } from "react";
 import ChangeFontSize from "./svg/ChangeFontSize";
 import ChangeFont from "./svg/ChangeFont";
@@ -16,13 +15,10 @@ const _ = {
 type Props = {
   width:number,
   height:number,
-  systemFont:Font,
-  systemFontSize:number,
-  systemFontTb:FontTb,
 }
 
 const Tabs:React.FC<Props> = ({
-    width, height, systemFont, systemFontSize, systemFontTb
+    width, height
     }:Props) => {
   const [selectedTab, setSelectedTab] = useState<number>(0);
 

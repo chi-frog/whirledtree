@@ -1,42 +1,65 @@
 'use client';
 import Canvas from './Canvas';
-import useFont, { Font } from '@/hooks/useFont';
+import useFonts, { Font, Fonts, nullFont } from '@/hooks/useFonts';
 import useLeaves from '@/hooks/useLeaves';
 import Options from './options/Options';
+import { createContext, useContext, useState } from 'react';
+
+const _ = {
+  options: {
+    padding: {
+      x: 20,
+      y: 20,
+    }
+  }
+}
+
+const SystemFontContext = createContext<Font>(nullFont);
+const FontsContext = createContext<Fonts|undefined>(undefined);
+
+export const useSystemFontContext = () => {
+  const ctx = useContext(SystemFontContext);
+
+  if (ctx === undefined)
+    throw new Error("useSystemFontContext not available");
+
+  return ctx;
+}
+
+export const useFontsContext = () => {
+  const ctx = useContext(FontsContext);
+
+  if (ctx === undefined)
+    throw new Error("useFontsContext not available");
+
+  return ctx;
+}
 
 export default function JournalWriter({}) {
-  const {font:leafFont, setFont:setLeafFont, fontSize:leafFontSize, loadedFonts, maxWidth, fontTb:leafFontTb} = useFont();
-  const {font:systemFont, setFont:setSystemFont, fontSize:systemFontSize, fontTb:systemFontTb} = useFont();
+  const fonts = useFonts();
   const {leaves, leafTb} = useLeaves();
 
-  const OPTIONS_PADDING = 20;
+  const [leafFont, setLeafFont] = useState<Font>(fonts.find());
+  const [systemFont, setSystemFont] = useState<Font>(fonts.find());
+
+
 
   const notifySetLeafFont = (font:Font) =>
-    setLeafFont(font)
+    setLeafFont(font);
   
   return (
-    <>
+    <SystemFontContext value={systemFont}>
+    <FontsContext value={fonts}>
       <Canvas
         leaves={leaves}
         leafTb={leafTb}
-        leafFont={leafFont}
-        leafFontSize={leafFontSize}
-        leafFontTb={leafFontTb}
-        systemFont={systemFont}
-        systemFontSize={systemFontSize}
-        systemFontTb={systemFontTb}
-        />
+        leafFont={leafFont} />
       <Options
-        left={OPTIONS_PADDING}
-        top={OPTIONS_PADDING}
+        left={_.options.padding.x}
+        top={_.options.padding.y}
         leafFont={leafFont}
-        systemFont={systemFont}
-        systemFontSize={systemFontSize}
-        systemFontTb={systemFontTb}
-        availableFonts={loadedFonts}
-        maxFontWidth={maxWidth}
-        notifySetFont={notifySetLeafFont}
-      />
-    </>
+        notifySetFont={notifySetLeafFont} />
+    </FontsContext>
+    </SystemFontContext>
   );
 }
