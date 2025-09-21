@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from "react";
-import { Font } from "./useFont";
+import { Font } from "./useFonts";
 
 export type Leaf = {
   id:number,
   x:number,
   y:number,
   font:Font,
-  fontSize:number,
   content:string,
   optionsFocused:boolean,
 }
@@ -28,8 +27,8 @@ export type leafTb = {
 function useLeaves() {
   const [leaves, setLeaves] = useState<Leaf[]>([]);
   
-  const create = ({x, y, font, fontSize, content=""} :
-                  {x:number, y:number, font:Font, fontSize:number, content:string}) => {
+  const create = ({x, y, font, content=""} :
+                  {x:number, y:number, font:Font, content:string}) => {
     const id = Date.now();
     
     setLeaves((_leafs:Leaf[]) => _leafs.concat({
@@ -37,7 +36,6 @@ function useLeaves() {
       x:x,
       y:y,
       font:font,
-      fontSize:fontSize,
       content:content,
       optionsFocused:false,}));
 

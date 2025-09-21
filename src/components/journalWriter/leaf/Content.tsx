@@ -3,8 +3,10 @@
 import { Leaf } from "@/hooks/useLeaves";
 import { FocusEventHandler, KeyboardEventHandler, MouseEventHandler } from "react";
 import Cursor from "../Cursor";
-import { Dimension } from "@/hooks/useFont";
-import TextBox from "../svg/TextBox";
+import { Dimension } from "@/hooks/useFonts";
+
+//NOTES: When you go to another app and come back, the element stays focused
+//       but its not marked correctly.
 
 const _ = {
   cursor: {
@@ -74,7 +76,6 @@ const LeafContent:React.FC<Props> = ({
       width={svgWidth}
       height={svgHeight}
       rx={5}
-      filter='url(#shadow)'
       fill={(focused) ? 'url(#focusedGrad)' : (selected) ? 'rgba(0, 255, 0, 0.1)' : 'none'}
       //stroke={(focused) ? 'rgba(211, 175, 55, 0.5)' : (selected) ? 'rgba(0, 255, 0, 0.5)' : 'none'}
     />
@@ -83,7 +84,7 @@ const LeafContent:React.FC<Props> = ({
       y={leaf.y - svgY}
       data-elementid={leaf.id}
       ref={ref} tabIndex={0} 
-      fontSize={leaf.fontSize}
+      fontSize={leaf.font.size}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onBlur={handleOnBlur}

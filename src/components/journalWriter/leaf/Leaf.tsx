@@ -2,8 +2,9 @@
 import Options from '@/components/journalWriter/leaf/options/Options';
 import { KeyboardEventHandler, MouseEventHandler, useEffect, useState } from 'react';
 import { Leaf as LeafType } from '@/hooks/useLeaves';
-import { Font, FontTb } from '@/hooks/useFont';
+import { calcFontDims, Dimension } from '@/hooks/useFonts';
 import Content from './Content';
+import { useFontsContext } from '../JournalWriter';
 
 type Props = {
   leaf:LeafType,
@@ -11,10 +12,6 @@ type Props = {
   map?:any,
   selected:boolean,
   focused:boolean,
-  leafFontTb:FontTb,
-  systemFont:Font,
-  systemFontSize:number,
-  systemFontTb:FontTb,
   notifyParentFocused?:Function,
   notifyChangeFontSize?:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
@@ -24,16 +21,29 @@ type Props = {
   handleKeyUp?:KeyboardEventHandler<SVGTextElement>,
 }
 
-export default function Leaf({
+const Leaf:React.FC<Props> = ({
     leaf, ref, map,
     selected, focused,
-    leafFontTb,
-    systemFont, systemFontSize, systemFontTb,
     notifyParentFocused, notifyChangeFontSize,
-    handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : Props) {
+    handleMouseDown, handleMouseUp, parentOnBlur, handleKeyDown, handleKeyUp} : Props) => {
+  const {find, all, loaded} = useFontsContext();
   const [optionsExpanded, setOptionsExpanded] = useState<boolean>(false);
-  const cursorDims = leafFontTb.getDims("I", leaf.font, leaf.fontSize);
-  const textDims = leafFontTb.getDims(leaf.content, leaf.font, leaf.fontSize);
+  const calcCursorDims = () => calcFontDims("I", leaf.font);
+  const [cursorDims, setCursorDims] = useState<Dimension>(calcCursorDims())
+  const calcTextDims = () => calcFontDims(leaf.content, leaf.font);
+  const [textDims, setTextDims] = useState<Dimension>(calcTextDims());
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    setCursorDims(calcCursorDims());
+  }, [loaded, leaf.font]);
+
+  useEffect(() => {
+    if(!loaded) return;
+
+    setTextDims(calcTextDims());
+  }, [loaded, leaf]);
 
   useEffect(() => {
     if (focused)
@@ -73,12 +83,11 @@ export default function Leaf({
       notifyParentFocused={notifyParentFocused}
       notifyChangeFontSize={notifyChangeFontSize}
       expanded={optionsExpanded}
-      systemFont={systemFont}
-      systemFontSize={systemFontSize}
-      systemFontTb={systemFontTb}
       parentMouseEnter={handleMouseOptionsEnter}
       parentMouseLeave={handleMouseOptionsLeave}
       />
     }
     </>);
 }
+
+export default Leaf;

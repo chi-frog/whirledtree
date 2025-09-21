@@ -1,28 +1,32 @@
-import { Font, FontTb } from "@/hooks/useFont";
+import { calcFontDims, Dimension, Font } from "@/hooks/useFonts";
 import { options } from "./Options";
 import TextBox from "../svg/TextBox";
 import useAnimation from "@/hooks/useAnimation";
+import { useSystemFontContext, useFontsContext } from "../JournalWriter";
+import { useEffect, useState } from "react";
 
 type Props = {
   focused:boolean,
   x:number,
   y:number,
-  systemFont:Font,
-  systemFontSize:number,
-  systemFontTb:FontTb,
-  availableFonts:Font[],
   maxFontWidth:number,
   notifyMouseLeave:Function,
   notifySetFont:Function,
 }
 
-export default function FontOption({
-  focused, x, y,
-  systemFont, systemFontSize, systemFontTb,
-  availableFonts, maxFontWidth,
-  notifyMouseLeave, notifySetFont} : Props) {
+const FontOption:React.FC<Props> = ({
+    focused, x, y, maxFontWidth,
+    notifyMouseLeave, notifySetFont} : Props) => {
+  const systemFont = useSystemFontContext();
+  const fonts = useFontsContext();
+  const _calcFontDims = () => calcFontDims("" + systemFont.name, systemFont);
+  const [fontDims, setFontDims] = useState<Dimension>(_calcFontDims());
 
-  let fontDims = systemFont.getDims(systemFontSize);
+  useEffect(() => {
+    if (!fonts.loaded) return;
+
+    setFontDims(_calcFontDims());
+  }, [fonts.loaded]);
 
   const getWidth = () =>
     (focused) ?
@@ -52,7 +56,7 @@ export default function FontOption({
 
   const sysFontHeight = fontDims.height;
   const fontsJSX =
-    availableFonts.map((_font:Font, _index:number) => {
+    fonts.all.map((_font:Font, _index:number) => {
       return (
         <g
           key={_font.name}>
@@ -64,8 +68,6 @@ export default function FontOption({
             cornerRadiusPercentage={0.1}
             text={_font.name}
             font={_font}
-            fontSize={systemFontSize}
-            fontTb={systemFontTb}
             onMouseDown={(e) => handleMouseDown(e, _font)} />
         </g>
       )});
@@ -94,3 +96,5 @@ export default function FontOption({
     </>
   );
 }
+
+export default FontOption;
