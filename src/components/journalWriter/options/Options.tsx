@@ -53,10 +53,8 @@ export default function Options({
   useEffect(() => {
     if (!fonts.loaded) return;
 
-    const cf = calcMaxFontsWidth((_font:Font)=>_font.name, fonts.all)
-    console.log('maxFDontWidth', cf);
     setMaxFontWidth(calcMaxFontsWidth((_font:Font)=>_font.name, fonts.all));
-  }, [fonts.loaded]);
+  }, [fonts.loaded, fonts.all]);
 
   useEffect(() => {
     setFontDims(calcFontDims(leafFont.name, systemFont));

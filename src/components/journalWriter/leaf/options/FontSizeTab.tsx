@@ -60,7 +60,6 @@ const FontSizeTab:React.FC<Props> = ({
             setFontSize('' + _.font.minSize);
           }
 
-          console.log('nfp', newFontSizeParsed);
           if(notifyChangeFontSize)
             notifyChangeFontSize(isNaN(newFontSizeParsed) ? 0 : newFontSizeParsed);
         default: return;

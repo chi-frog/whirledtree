@@ -1,21 +1,10 @@
-import { MouseEventHandler, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import FontSizeTab from '@/components/journalWriter/leaf/options/FontSizeTab';
 import useAnimation from "@/hooks/useAnimation";
 import { Leaf } from "@/hooks/useLeaves";
 import Tabs from "./Tabs";
-import { calcFontDims, Dimension, emptyDimension } from "@/hooks/useFonts";
+import { calcFontDims, Dimension } from "@/hooks/useFonts";
 import { useFontsContext, useSystemFontContext } from "../../JournalWriter";
-
-type Props = {
-  leaf:Leaf,
-  x:number,
-  y:number,
-  notifyParentFocused?:Function,
-  notifyChangeFontSize?:Function,
-  expanded:boolean,
-  parentMouseEnter:MouseEventHandler<SVGSVGElement>,
-  parentMouseLeave:MouseEventHandler<SVGSVGElement>,
-}
 
 const _ = {
   padding: {
@@ -59,6 +48,17 @@ const _ = {
   font: {
     maxSize: 1638
   }
+};
+
+type Props = {
+  leaf:Leaf,
+  x:number,
+  y:number,
+  notifyParentFocused?:Function,
+  notifyChangeFontSize?:Function,
+  expanded:boolean,
+  parentMouseEnter:()=>any,
+  parentMouseLeave:()=>any,
 }
 
 const Options:React.FC<Props> = ({
@@ -77,50 +77,84 @@ const Options:React.FC<Props> = ({
   const isDisplayFontSize = (displayed.includes(displays.fontSize));
   const displayFontSize = () => setDisplayed([displays.fontSize]);
 
-  let svgWidth = 0, svgHeight = 0;
+  let svgX = 0, svgY = 0, svgWidth = 0, svgHeight = 0;
+  let rectHeight = 0, cornerRadiusX = 0, cornerRadiusY = 0;
   let tabsHeight = 0;
-  let fontSizeInputWidth = 0, fontSizeInputHeight = 0;
+  let tabX = 0, tabY = 0, getTabWidth:()=>number, getTabHeight:()=>number;
 
   useEffect(() => {
-    console.log('loaded: ', loaded);
     if (!loaded) return;
 
     setTextDims(calcTextDims());
-  }, [loaded, systemFont])
+  }, [loaded, systemFont]);
 
-  if (isDisplayFontSize) {
-    // Use max font size so we don't have to change the size
-    fontSizeInputWidth = textDims.width + _.arrow.horizontal.padding.x*2;
-    fontSizeInputHeight = textDims.height + _.text.padding.y*2;
-    tabsHeight = fontSizeInputHeight*0.5;
+  const handleMouseEnter = () => parentMouseEnter();
+  const handleMouseLeave = () => parentMouseLeave();
 
-    svgWidth = _.border.padding.x*2 + fontSizeInputWidth;
-    svgHeight = _.border.padding.y*2 + fontSizeInputHeight + tabsHeight;
-  }
+  getTabWidth = () =>
+    (!expanded) ? _.unexpanded.size :
+                  textDims.width + _.arrow.horizontal.padding.x*2;
+  getTabHeight = () =>
+    (!expanded) ?
+      _.unexpanded.size :
+      textDims.height + _.text.padding.y*2;
 
+  const [tabWidth, tabHeight] = useAnimation(
+    [getTabWidth, getTabHeight],
+    [expanded]);
+
+  tabsHeight =
+    (!expanded) ?
+      0 :
+      Math.min(tabHeight*0.5, 50);
+
+  svgWidth = _.border.padding.x*2 + tabWidth;
+  svgHeight = _.border.padding.y*2 + tabHeight + tabsHeight;
+  rectHeight = tabHeight + _.border.padding.y*2;
+
+  svgX = x - svgWidth - _.padding.x;
+  svgY = y - svgHeight;
+  tabX = svgWidth*0.5 - tabWidth/2;
+  tabY = tabsHeight + (svgHeight-tabsHeight)/2 - tabHeight/2;
+  
+  cornerRadiusX =
+    (!expanded) ?
+      svgWidth*_.unexpanded.cornerRadiusPercentage :
+      svgWidth*_.expanded.cornerRadiusPercentage;
+  cornerRadiusY =
+    (!expanded) ?
+      rectHeight*_.unexpanded.cornerRadiusPercentage :
+      rectHeight*_.expanded.cornerRadiusPercentage;
 
   return (<svg
-      x={x - svgWidth - _.padding.x}
-      y={y - svgHeight}
+      x={svgX}
+      y={svgY}
       width={svgWidth}
-      height={svgHeight}>
+      height={svgHeight}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      >
     <rect
       y={tabsHeight}
       width={svgWidth}
-      height={fontSizeInputHeight + _.border.padding.y*2}
-      rx={5}
+      height={rectHeight}
+      rx={cornerRadiusX}
+      ry={cornerRadiusY}
       fill='#ADD8E6' />
+    {(expanded) &&
     <Tabs 
       width={svgWidth}
       height={tabsHeight}
       />
+    }
     {(displayed[0] === displays.fontSize) &&
+     (expanded) &&
       <FontSizeTab
         leaf={leaf}
-        x={svgWidth*0.5 - fontSizeInputWidth/2}
-        y={tabsHeight + (svgHeight-tabsHeight)/2 - (fontSizeInputHeight)/2}
-        width={fontSizeInputWidth}
-        height={fontSizeInputHeight}
+        x={tabX}
+        y={tabY}
+        width={tabWidth}
+        height={tabHeight}
         notifyParentFocused={notifyParentFocused}
         notifyChangeFontSize={notifyChangeFontSize}/>}
     </svg>);

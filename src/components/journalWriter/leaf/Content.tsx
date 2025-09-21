@@ -5,6 +5,9 @@ import { FocusEventHandler, KeyboardEventHandler, MouseEventHandler } from "reac
 import Cursor from "../Cursor";
 import { Dimension } from "@/hooks/useFonts";
 
+//NOTES: When you go to another app and come back, the element stays focused
+//       but its not marked correctly.
+
 const _ = {
   cursor: {
     padding: {
