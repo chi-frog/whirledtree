@@ -1,9 +1,9 @@
 'use client'
 
-import { MouseEventHandler, useContext, useLayoutEffect, useRef, useState } from "react";
-import { calcFontDims, Font } from "@/hooks/useFonts";
+import { MouseEventHandler, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { calcFontDims, Dimension, Font } from "@/hooks/useFonts";
 import { Leaf } from "@/hooks/useLeaves";
-import { useSystemFontContext } from "../../JournalWriter";
+import { useFontsContext, useSystemFontContext } from "../../JournalWriter";
 
 const _ = {
   font: {
@@ -26,11 +26,19 @@ const FontSizeTab:React.FC<Props> = ({
     leaf, x, y, width, height, notifyParentFocused,
     notifyChangeFontSize} : Props) => {
   const systemFont = useSystemFontContext();
+  const { loaded } = useFontsContext();
   const [focused, setFocused] = useState(false);
   const [fontSize, setFontSize] = useState('' + leaf.font.size);
+  const [rightArrowDims, setRightArrowDims] = useState<Dimension>(calcFontDims(" >", systemFont));
   const ref = useRef<SVGSVGElement>(null);
   const fontSizeOutOfBounds = ((val:number) =>
     (val > _.font.maxSize) || (val < _.font.minSize))(parseInt(fontSize));
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    setRightArrowDims(calcFontDims(" >", systemFont));
+  }, [loaded, systemFont]);
 
   const handleKeyDown = (e:React.KeyboardEvent<SVGSVGElement>) => {
     const numberRegex = /^\d+$/; // A number
@@ -115,14 +123,12 @@ const FontSizeTab:React.FC<Props> = ({
   const inputPressed:MouseEventHandler<SVGTSpanElement> = (e) => {
     e.stopPropagation();
   }
-
-  const rightArrowDims = calcFontDims(" >", systemFont);
   
   return (<svg
-      x={x - 2}
-      y={y - 2}
-      width={width + 4}
-      height={height + 4}
+      x={x}
+      y={y}
+      width={width}
+      height={height}
       ref={ref} tabIndex={0}
       onBlur={handleBlur}
       onFocus={handleFocus}
@@ -135,12 +141,12 @@ const FontSizeTab:React.FC<Props> = ({
       className={focused ? fontSizeOutOfBounds ? "fill-red-200" :
                                                  "fill-green-300" :
                            "fill-white"}
-      x={2} y={2} width={width} height={height}
+      x={0} y={0} width={width} height={height}
       rx={3}
       />
     <text
       className="cursor-pointer hover:stroke-green-300"
-      x={4} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
+      x={0} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
       strokeWidth={2}
       onMouseDown={leftArrowPressed}
       >

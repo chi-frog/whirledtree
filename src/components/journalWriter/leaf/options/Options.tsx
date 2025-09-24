@@ -1,54 +1,58 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import FontSizeTab from '@/components/journalWriter/leaf/options/FontSizeTab';
 import useAnimation from "@/hooks/useAnimation";
 import { Leaf } from "@/hooks/useLeaves";
 import Tabs from "./Tabs";
-import { calcFontDims, Dimension } from "@/hooks/useFonts";
-import { useFontsContext, useSystemFontContext } from "../../JournalWriter";
 
-const _ = {
+let _:any = {};
+
+_.padding = {
+  x: 5,
+  y: 0,};
+
+_.tab = {
+  width: 100,
+  height: 20,
   padding: {
-    x: 5,
-  },
-  unexpanded: {
-    size:10,
-    opacity:0.7,
-    cornerRadiusPercentage:0.5,
-  },
-  expanded: {
-    width:80,
-    height:40,
-    opacity:1,
-    cornerRadiusPercentage:0.1,
-  },
-  border: {
-    padding: {
-      x: 5,
-      y: 5,
-    }
-  },
-  text: {
-    size:16,
-    padding: {
-      x: 5,
-      y: 2,
-    }
-  },
-  arrow: {
-    horizontal: {
-      padding: {
-        x: 2,
-        y: 2,
-      }
-    }
-  },
-  spacing: {
     x:5,
-  },
-  font: {
-    maxSize: 1638
-  }
-};
+    y:5,},
+  opacity: 1,
+  cornerRadiusPercentage:0.1};
+
+_.tab.offset = {
+  x: _.tab.padding.x,
+  y: _.tab.padding.y,};
+
+_.nav = {
+  width: _.tab.width + _.tab.padding.x*2,
+  height: 20,};
+
+_.svg = {
+  width: _.tab.padding.x*2 + _.tab.width,
+  height: _.tab.padding.y*2 + _.tab.height + _.nav.height,};
+
+_.svg.offset = {
+    x: _.padding.x + _.svg.width,
+    y: _.padding.y + _.svg.height,};
+
+_.unexpanded = {
+  width: 10,
+  height: 10,
+  opacity: 0.7,
+  cornerRadiusPercentage:0.5,};
+
+_.unexpanded.offset = {
+    x: _.padding.x + _.unexpanded.width,
+    y: _.padding.y + _.unexpanded.height,};
+
+_.arrow = {
+  horizontal: {
+    padding: {
+      x:2,
+      y:2,},},};
+
+_.font = {
+  maxSize: 1638,};
 
 type Props = {
   leaf:Leaf,
@@ -69,62 +73,66 @@ const Options:React.FC<Props> = ({
   const displays = {
     fontSize:"fontSize",
   }
-  const systemFont = useSystemFontContext();
-  const { loaded } = useFontsContext();
-  const calcTextDims = () => calcFontDims("< " + _.font.maxSize + " >", systemFont, x, y);
-  const [textDims, setTextDims] = useState<Dimension>(calcTextDims());
   const [displayed, setDisplayed] = useState<string[]>([displays.fontSize]);
   const isDisplayFontSize = (displayed.includes(displays.fontSize));
   const displayFontSize = () => setDisplayed([displays.fontSize]);
 
-  let svgX = 0, svgY = 0, svgWidth = 0, svgHeight = 0;
-  let rectHeight = 0, cornerRadiusX = 0, cornerRadiusY = 0;
-  let tabsHeight = 0;
-  let tabX = 0, tabY = 0, getTabWidth:()=>number, getTabHeight:()=>number;
-
-  useEffect(() => {
-    if (!loaded) return;
-
-    setTextDims(calcTextDims());
-  }, [loaded, systemFont]);
-
   const handleMouseEnter = () => parentMouseEnter();
   const handleMouseLeave = () => parentMouseLeave();
 
-  getTabWidth = () =>
-    (!expanded) ? _.unexpanded.size :
-                  textDims.width + _.arrow.horizontal.padding.x*2;
-  getTabHeight = () =>
+  const getRectWidth = () =>
     (!expanded) ?
-      _.unexpanded.size :
-      textDims.height + _.text.padding.y*2;
+      _.unexpanded.width :
+      _.svg.width;
+  const getRectHeight = () =>
+    (!expanded) ?
+      _.unexpanded.height :
+      _.tab.height + _.tab.padding.y*2;
 
-  const [tabWidth, tabHeight] = useAnimation(
-    [getTabWidth, getTabHeight],
-    [expanded]);
+  const getTabWidth = () =>
+    (!expanded) ?
+      _.unexpanded.width :
+      _.tab.width;
+  const getTabHeight = () =>
+    (!expanded) ?
+      _.unexpanded.height :
+      _.tab.height;
 
-  tabsHeight =
+  const getNavWidth = () =>
     (!expanded) ?
       0 :
-      Math.min(tabHeight*0.5, 50);
-
-  svgWidth = _.border.padding.x*2 + tabWidth;
-  svgHeight = _.border.padding.y*2 + tabHeight + tabsHeight;
-  rectHeight = tabHeight + _.border.padding.y*2;
-
-  svgX = x - svgWidth - _.padding.x;
-  svgY = y - svgHeight;
-  tabX = svgWidth*0.5 - tabWidth/2;
-  tabY = tabsHeight + (svgHeight-tabsHeight)/2 - tabHeight/2;
-  
-  cornerRadiusX =
+      _.nav.width;
+  const getNavHeight = () =>
     (!expanded) ?
-      svgWidth*_.unexpanded.cornerRadiusPercentage :
-      svgWidth*_.expanded.cornerRadiusPercentage;
-  cornerRadiusY =
-    (!expanded) ?
-      rectHeight*_.unexpanded.cornerRadiusPercentage :
-      rectHeight*_.expanded.cornerRadiusPercentage;
+      0 :
+      _.nav.height;
+
+  const [rectWidth, rectHeight,
+         tabWidth, tabHeight,
+         navWidth, navHeight] = useAnimation(
+    [getRectWidth, getRectHeight,
+     getTabWidth,  getTabHeight,
+     getNavWidth,  getNavHeight],
+    [expanded]);
+
+  const rectX = _.svg.width - rectWidth;
+  const rectY = _.svg.height - rectHeight;
+  const rectCornerRadius = (!expanded) ?
+    _.unexpanded.width*_.unexpanded.cornerRadiusPercentage :
+    tabHeight*_.tab.cornerRadiusPercentage;
+
+  const tabX = _.svg.width - tabWidth - _.tab.padding.x;
+  const tabY = _.svg.height - tabHeight - _.tab.padding.y;
+
+  const tabsX = _.svg.width - navWidth;
+  const tabsY = _.nav.height - navHeight;
+
+  console.log('x:' + tabsX + " y:" + tabsY);
+
+  const svgX = x - _.svg.offset.x;
+  const svgY = y - _.svg.offset.y;
+  const svgWidth = _.svg.width;
+  const svgHeight = _.svg.height;
 
   return (<svg
       x={svgX}
@@ -132,19 +140,21 @@ const Options:React.FC<Props> = ({
       width={svgWidth}
       height={svgHeight}
       onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      >
+      onMouseLeave={handleMouseLeave}>
     <rect
-      y={tabsHeight}
-      width={svgWidth}
+      x={rectX}
+      y={rectY}
+      width={rectWidth}
       height={rectHeight}
-      rx={cornerRadiusX}
-      ry={cornerRadiusY}
-      fill='#ADD8E6' />
+      rx={rectCornerRadius}
+      fill='#ADD8E6'
+      onMouseDown={(e)=>e.stopPropagation()}/>
     {(expanded) &&
-    <Tabs 
-      width={svgWidth}
-      height={tabsHeight}
+    <Tabs
+      x={tabsX}
+      y={tabsY}
+      width={navWidth}
+      height={navHeight}
       />
     }
     {(displayed[0] === displays.fontSize) &&
