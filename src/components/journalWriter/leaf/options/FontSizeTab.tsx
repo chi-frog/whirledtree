@@ -113,6 +113,8 @@ const FontSizeTab:React.FC<Props> = ({
     e.stopPropagation();
     e.preventDefault();
 
+    console.log('pressed');
+
     if ((leaf.font.size > _.font.maxSize)) return;
 
     setFontSize('' + (leaf.font.size + 1));
@@ -146,7 +148,7 @@ const FontSizeTab:React.FC<Props> = ({
       />
     <text
       className="cursor-pointer hover:stroke-green-300"
-      x={0} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
+      x={0} y={height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
       strokeWidth={2}
       onMouseDown={leftArrowPressed}
       >
@@ -154,7 +156,7 @@ const FontSizeTab:React.FC<Props> = ({
     </text>
     <text
       className="cursor-pointer hover:stroke-green-300"
-      x={width - rightArrowDims.width} y={2 + height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
+      x={width - rightArrowDims.width} y={height/2 + rightArrowDims.height/2 - rightArrowDims.textHeightGap}
       strokeWidth={2}
       onMouseDown={rightArrowPressed}
       >
@@ -162,7 +164,7 @@ const FontSizeTab:React.FC<Props> = ({
     </text>
     <text
       className="cursor-text"
-      x={width/2 + 2} y={height/2 + 4}
+      x={width/2} y={2.5 + height/2}
       textAnchor={'middle'}
       dominantBaseline={'middle'}
       onMouseDown={inputPressed}>

@@ -11,7 +11,7 @@ _.padding = {
   y: 0,};
 
 _.tab = {
-  width: 100,
+  width: 60,
   height: 20,
   padding: {
     x:5,
@@ -25,7 +25,7 @@ _.tab.offset = {
 
 _.nav = {
   width: _.tab.width + _.tab.padding.x*2,
-  height: 20,};
+  height: 15,};
 
 _.svg = {
   width: _.tab.padding.x*2 + _.tab.width,
