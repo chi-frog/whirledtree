@@ -1,6 +1,6 @@
 'use client'
 import Options from '@/components/journalWriter/leaf/options/Options';
-import { KeyboardEventHandler, MouseEventHandler, useEffect, useState } from 'react';
+import { KeyboardEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { Leaf as LeafType } from '@/hooks/useLeaves';
 import { calcFontDims, Dimension } from '@/hooks/useFonts';
 import Content from './Content';
@@ -13,7 +13,7 @@ type Props = {
   selected:boolean,
   focused:boolean,
   notifyParentFocused?:Function,
-  notifyChangeFontSize?:Function,
+  notifyChangeFontSize:Function,
   handleMouseDown?:MouseEventHandler<SVGTextElement>,
   handleMouseUp?:MouseEventHandler<SVGTextElement>,
   parentOnBlur?:Function,
@@ -48,18 +48,31 @@ const Leaf:React.FC<Props> = ({
   useEffect(() => {
     if (focused)
       map.get(leaf.id).focus();
-  }, [focused])
+  }, [focused]);
 
   const handleOnBlur = () => {
     if (parentOnBlur)
       parentOnBlur();
   };
 
-  const handleMouseOptionsEnter = () => setOptionsExpanded(true);
+  const handleMouseOptionsEnter = () => {
+    setOptionsExpanded(true);
+    isOutside.current = false;
+  };
+
+  const isOutside = useRef<boolean>(false);
 
   const handleMouseOptionsLeave = () => {
     if (!leaf.optionsFocused)
       setOptionsExpanded(false);
+    else
+      isOutside.current = true;
+  }
+
+  const handleChangeFontSize = (size:number) => {
+    if (isOutside.current)
+      setOptionsExpanded(false);
+    notifyChangeFontSize(size);
   }
   
   return (<>
@@ -81,7 +94,7 @@ const Leaf:React.FC<Props> = ({
       x={leaf.x}
       y={leaf.y}
       notifyParentFocused={notifyParentFocused}
-      notifyChangeFontSize={notifyChangeFontSize}
+      notifyChangeFontSize={handleChangeFontSize}
       expanded={optionsExpanded}
       parentMouseEnter={handleMouseOptionsEnter}
       parentMouseLeave={handleMouseOptionsLeave}
