@@ -127,8 +127,6 @@ const Options:React.FC<Props> = ({
   const tabsX = _.svg.width - navWidth;
   const tabsY = _.nav.height - navHeight;
 
-  console.log('x:' + tabsX + " y:" + tabsY);
-
   const svgX = x - _.svg.offset.x;
   const svgY = y - _.svg.offset.y;
   const svgWidth = _.svg.width;
