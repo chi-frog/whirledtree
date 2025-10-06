@@ -1,6 +1,6 @@
 'use client';
 import Canvas from './Canvas';
-import useFonts, { Font, Fonts, nullFont } from '@/hooks/useFonts';
+import useFonts, { Font, Fonts, defaultFont } from '@/hooks/useFonts';
 import useLeaves from '@/hooks/useLeaves';
 import Options from './options/Options';
 import { createContext, useContext, useState } from 'react';
@@ -14,7 +14,7 @@ const _ = {
   }
 }
 
-const SystemFontContext = createContext<Font>(nullFont);
+const SystemFontContext = createContext<Font>(defaultFont);
 const FontsContext = createContext<Fonts|undefined>(undefined);
 
 export const useSystemFontContext = () => {

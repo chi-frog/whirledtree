@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react";
+import TextBox from "../journalWriter/svg/TextBox";
+import { Font } from "@/hooks/useFonts";
 
 type Node = {
   content:string,
@@ -13,24 +15,16 @@ type Props = {
   y:number,
   width:number,
   height:number,
+  font:Font,
+  labels:string[],
+  onClickHandlers:Function[],
 }
-
-const defaultNodes:Node[] = [
-  {content:'yellow', color:'#ffff00', hoverColor:'#888800'},
-  {content:'orange', color:'#ffaf00', hoverColor:'#884800'},
-  {content:'red', color:'#ff0000', hoverColor:'#880000'},
-  {content:'blue', color:'#0000ff', hoverColor:'#000088'},
-  {content:'green', color:'#00ff00', hoverColor:'#008800'},
-  {content:'purple', color:'#ff00ff', hoverColor:'#880088'},
-  {content:'brown', color:'#964b00', hoverColor:'#432500'},
-];
 
 const _ = {
   visibleNodeCount:5,
 }
 
-const Scroller:React.FC<Props> = ({x, y, width, height}:Props) => {
-  const [nodes, setNodes] = useState<Node[]>(defaultNodes);
+const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHandlers}:Props) => {
   const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
   const [scrollPosition, setScrollPosition] = useState<number>(0);
   const [scrollingOffset, setScrollingOffset] = useState<number>(0);
@@ -39,10 +33,24 @@ const Scroller:React.FC<Props> = ({x, y, width, height}:Props) => {
   const [scrollOverflow, setScrollOverflow] = useState<number>(0);
   const animationRef = useRef(0);
 
-  const nodeWidth = (width - 20);
-  const nodeHeight = (height/_.visibleNodeCount);
-  const totalHeight = nodeHeight*nodes.length;
-  const scrollerHeight = (height/totalHeight)*height;
+  const nodesHeight = (height > 10) ? height - 10 : 0;
+  const nodeWidth = width - 15;
+  const nodeHeight = (nodesHeight/_.visibleNodeCount);
+  const totalHeight = nodeHeight*labels.length;
+  const leftoverHeight = totalHeight - nodesHeight;
+  const heightRatio = (totalHeight === 0) ? 0 : (nodesHeight/totalHeight);
+  const heightRatioRev = (nodesHeight === 0) ? 0 : (totalHeight/nodesHeight);
+  const scrollerHeight = heightRatio*nodesHeight;
+
+  console.log('height', height);
+  console.log('nodesHeight', nodesHeight);
+  console.log('nodeHeight', nodeHeight);
+
+  console.log('nodeWidth', nodeWidth);
+  console.log('totalHeight', totalHeight);
+  console.log('heightRatio', heightRatio);
+  console.log('leftoverHeight', leftoverHeight);
+
 
   useEffect(() => {
     if (scrollOverflow === 0) return;
@@ -82,10 +90,12 @@ const Scroller:React.FC<Props> = ({x, y, width, height}:Props) => {
     setScrolling(false);
 
     if (scrollPosition < 0) setScrollOverflow(scrollPosition);
-    if (scrollPosition > (totalHeight - height)) setScrollOverflow(scrollPosition - (totalHeight - height));
+    if (scrollPosition > leftoverHeight) setScrollOverflow(scrollPosition - leftoverHeight);
   }
 
-  const onMouseEnter = (index:number) => setHoveredIndex(index);
+  const onMouseEnter = (index:number) => {
+    setHoveredIndex(index);
+  };
 
   const onMouseLeave = () => {
     if (hoveredIndex !== -1) setHoveredIndex(-1);
@@ -104,25 +114,28 @@ const Scroller:React.FC<Props> = ({x, y, width, height}:Props) => {
 
     const position = (e.clientY - scrollingOffset);
 
-    setScrollPosition(scrollingStart + (totalHeight/height)*position);
+    setScrollPosition(scrollingStart + heightRatioRev*position);
   }
 
-  const nodesJSX = nodes.map((_node, _index) => (
-      <rect className='cursor-pointer'
-        key={_index}
-        x={5}
-        y={_index*nodeHeight - scrollPosition}
-        width={nodeWidth}
-        height={nodeHeight}
-        filter={(hoveredIndex === _index) ? 'brightness(85%)' : ''}
-        fill={_node.color}
-        onMouseEnter={() => onMouseEnter(_index)}
-        onMouseLeave={onMouseLeave}
-        onMouseDown={() => nodeOnMouseDown(_index)}/>
-    ));
+  const nodesJSX = labels.map((_label, _index) => (
+    <TextBox
+      key={_index}
+      x={5}
+      y={5 + _index*nodeHeight - scrollPosition}
+      width={nodeWidth}
+      height={nodeHeight}
+      padding={{x:0, y:0}}
+      text={_label}
+      font={font}
+      onMouseEnter={() => {onMouseEnter(_index)}}
+      onMouseLeave={onMouseLeave}
+      onMouseDown={() => {nodeOnMouseDown(_index)}}/>
+  ));
 
-  const lowerShadowHeight = 10 - 10*scrollPosition/(totalHeight-height);
-  const upperShadowHeight = 10*scrollPosition/(totalHeight - height);
+  const lowerShadowHeight = (leftoverHeight === 0) ? 0 :
+    10 - 10*scrollPosition/leftoverHeight;
+  const upperShadowHeight = (leftoverHeight === 0) ? 0 :
+    10*scrollPosition/leftoverHeight;
 
   return (<svg className="w-screen h-screen"> <svg x={x} y={y} width={width} height={height}>
     <defs>
@@ -134,39 +147,41 @@ const Scroller:React.FC<Props> = ({x, y, width, height}:Props) => {
         <stop offset="0" stopColor="black" />
         <stop offset="1" stopColor="white" />
       </linearGradient>
-      <mask id="both" x="0" y="0" width={width} height={height} maskUnits="userSpaceOnUse">
-        <rect x="0" y="0" width={width} height={upperShadowHeight} fill="url(#upper)" />
-        <rect x="0" y={upperShadowHeight} width={width} height={height-upperShadowHeight-lowerShadowHeight} fill="white" />
-        <rect x="0" y={height-lowerShadowHeight} width={width} height={lowerShadowHeight} fill="url(#lower)" />
+      <mask id="both" x="0" y="5" width={width} height={nodesHeight} maskUnits="userSpaceOnUse">
+        <rect x="0" y="5" width={width} height={upperShadowHeight} fill="url(#upper)" />
+        <rect x="0" y={5 + upperShadowHeight} width={width} height={nodesHeight-upperShadowHeight-lowerShadowHeight} fill="white" />
+        <rect x="0" y={5 + nodesHeight-lowerShadowHeight} width={width} height={lowerShadowHeight} fill="url(#lower)" />
       </mask>
-      <mask id="bottom" x="0" y="0" width={width} height={height} maskUnits="userSpaceOnUse">
-        <rect x="0" y="0" width={width} height={height-lowerShadowHeight} fill="white" />
-        <rect x="0" y={height-lowerShadowHeight} width={width} height={lowerShadowHeight} fill="url(#lower)" />
+      <mask id="bottom" x="0" y="5" width={width} height={nodesHeight} maskUnits="userSpaceOnUse">
+        <rect x="0" y="5" width={width} height={nodesHeight-lowerShadowHeight} fill="white" />
+        <rect x="0" y={5 + nodesHeight-lowerShadowHeight} width={width} height={lowerShadowHeight} fill="url(#lower)" />
       </mask>
-      <mask id="top" x="0" y="0" width={width} height={height} maskUnits="userSpaceOnUse">
-        <rect x="0" y="0" width={width} height={upperShadowHeight} fill="url(#upper)" />
-        <rect x="0" y={upperShadowHeight} width={width} height={height-upperShadowHeight} fill="white" />
+      <mask id="top" x="0" y="5" width={width} height={nodesHeight} maskUnits="userSpaceOnUse">
+        <rect x="0" y="5" width={width} height={upperShadowHeight} fill="url(#upper)" />
+        <rect x="0" y={5 + upperShadowHeight} width={width} height={nodesHeight-upperShadowHeight} fill="white" />
       </mask>
     </defs>
     <rect
       width={width}
       height={height}
-      fill='white'/>
+      rx={5}
+      fill='#ADD8E6'/>
     <g mask={(scrollPosition <= 0) ? 'url(#bottom)' :
-             (scrollPosition >= (totalHeight - height)) ? 'url(#top)' :
+             (scrollPosition >= leftoverHeight) ? 'url(#top)' :
               'url(#both)'}>
-      {...nodesJSX}
+      {...nodesJSX.filter((_node, _index) => _index !== hoveredIndex)}
     </g>
-    <rect className="cursor-pointer hover:fill-gray-400"
-      x={10 + nodeWidth}
-      y={(height/totalHeight)*scrollPosition}
+    <rect className="cursor-pointer fill-gray-300 hover:fill-gray-400"
+      x={5 + nodeWidth}
+      y={5 + heightRatio*scrollPosition}
       width={10}
+      rx={3}
       height={scrollerHeight}
-      fill='grey'
       onMouseDown={(e) => scrollerOnMouseDown(e)}
       onMouseUp={stopScrolling}
       onMouseLeave={stopScrolling}
       onMouseMove={(e) => scrollerOnMouseMove(e)}/>
+    {nodesJSX[hoveredIndex]}
   </svg></svg>);
 };
 

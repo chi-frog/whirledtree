@@ -16,6 +16,8 @@ type Props = {
   text?:string,
   dims?:Dimension,
   font:Font,
+  onMouseEnter?:MouseEventHandler<SVGRectElement>,
+  onMouseLeave?:MouseEventHandler<SVGRectElement>,
   onMouseDown?:MouseEventHandler<SVGRectElement>,
   children?:React.ReactNode,
 };
@@ -23,7 +25,8 @@ const TextBox: React.FC<Props> = ({
     x, y, width, height, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
     text, dims, font,
-    onMouseDown, children}) => {
+    onMouseEnter, onMouseLeave, onMouseDown,
+    children}) => {
 
   if (!text) text = "";    
   if (!dims) {
@@ -57,8 +60,10 @@ const TextBox: React.FC<Props> = ({
             (cornerRadiusY) ? cornerRadiusY :
             (cornerRadiusX) ? cornerRadiusX : 0
         }
-        stroke={"none"}
+        stroke={"white"}
         fill={'white'}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         onMouseDown={onMouseDown}/>
       <text
         className="cursor-pointer"

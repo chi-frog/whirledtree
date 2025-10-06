@@ -104,10 +104,9 @@ export type Fonts = {
   loaded:boolean,
 }
 
-export const nullFont = {
-  name:"",
-  size:0,
-  dims:null,
+export const defaultFont = {
+  name:"Arial",
+  size:16,
 };
 export const emptyDimension = {
   width:0,
@@ -124,12 +123,12 @@ const copyFont = (font:Font) => ({...font});
 
 const defaultFontNames = [
   "Aharoni", "Arial", "Helvetica", "Times New Roman", "Georgia",
-  "Roboto", "Times",
+  "Roboto", "Times", "Algerian", "Baskerville Old Face"
 ];
 
 export const calcFontDims:CalcFontDims =
     (content, font, x, y) => {
-  if (!font) font = nullFont;
+  if (!font) font = defaultFont;
 
   const bbox = getTextBBox(content, font, x, y);
 

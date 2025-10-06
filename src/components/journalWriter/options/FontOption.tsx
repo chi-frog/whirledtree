@@ -4,6 +4,7 @@ import TextBox from "../svg/TextBox";
 import useAnimation from "@/hooks/useAnimation";
 import { useSystemFontContext, useFontsContext } from "../JournalWriter";
 import { useEffect, useState } from "react";
+import Scroller from "@/components/test/Scroller";
 
 type Props = {
   focused:boolean,
@@ -72,6 +73,8 @@ const FontOption:React.FC<Props> = ({
         </g>
       )});
 
+  
+
   return (
     <>
     <svg
@@ -91,7 +94,14 @@ const FontOption:React.FC<Props> = ({
         rx={5}
         ry={5}
         fill='#ADD8E6' />
-      {focused && fontsJSX}
+      {focused &&
+        <Scroller x={0} y={0} width={width} height={height}
+          font={systemFont}
+          labels={fonts.all.map((_font) => _font.name)}
+          onClickHandlers={fonts.all.map((_font) => {
+            return () => console.log('_font ' + _font.name);
+          })}/>
+      }
     </svg>
     </>
   );
