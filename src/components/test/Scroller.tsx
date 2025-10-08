@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from "react";
+import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import TextBox from "../journalWriter/svg/TextBox";
 import { Font } from "@/hooks/useFonts";
 
@@ -17,7 +17,7 @@ type Props = {
   height:number,
   font:Font,
   labels:string[],
-  onClickHandlers:Function[],
+  onClickHandlers:MouseEventHandler[],
 }
 
 const _ = {
@@ -41,16 +41,6 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
   const heightRatio = (totalHeight === 0) ? 0 : (nodesHeight/totalHeight);
   const heightRatioRev = (nodesHeight === 0) ? 0 : (totalHeight/nodesHeight);
   const scrollerHeight = heightRatio*nodesHeight;
-
-  console.log('height', height);
-  console.log('nodesHeight', nodesHeight);
-  console.log('nodeHeight', nodeHeight);
-
-  console.log('nodeWidth', nodeWidth);
-  console.log('totalHeight', totalHeight);
-  console.log('heightRatio', heightRatio);
-  console.log('leftoverHeight', leftoverHeight);
-
 
   useEffect(() => {
     if (scrollOverflow === 0) return;
@@ -100,8 +90,6 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
   const onMouseLeave = () => {
     if (hoveredIndex !== -1) setHoveredIndex(-1);
   };
-
-  const nodeOnMouseDown = (index:number) => console.log('Number ' + index + ' clicked.');
   
   const scrollerOnMouseDown:React.MouseEventHandler = (e) => {
     setScrollingOffset(e.clientY);
@@ -124,12 +112,11 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
       y={5 + _index*nodeHeight - scrollPosition}
       width={nodeWidth}
       height={nodeHeight}
-      padding={{x:0, y:0}}
       text={_label}
       font={font}
       onMouseEnter={() => {onMouseEnter(_index)}}
       onMouseLeave={onMouseLeave}
-      onMouseDown={() => {nodeOnMouseDown(_index)}}/>
+      onMouseDown={onClickHandlers[_index]}/>
   ));
 
   const lowerShadowHeight = (leftoverHeight === 0) ? 0 :

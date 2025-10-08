@@ -15,10 +15,8 @@ export const options = {
     cornerRadiusPercentage:0.5,
   },
   expanded: {
-    fallback:{
-      width:80,
-      height:40,
-    },
+    width:80,
+    height:30,
     opacity:1,
     cornerRadiusPercentage:0.1,
   },
@@ -60,21 +58,15 @@ export default function Options({
     setFontDims(calcFontDims(leafFont.name, systemFont));
   }, [leafFont.name, systemFont]);
 
-  const fontLabelWidth = fontDims.width;
-  const fontLabelHeight = fontDims.height;
 
   const getWidth = () =>
     (expanded) ?
-      (fontLabelWidth) ?
-        (fontLabelWidth + options.text.padding.x*2 + options.border.padding*2) :
-        (options.expanded.fallback.width) :
+      (options.expanded.width) :
       (options.unexpanded.width);
 
   const getHeight = () =>
     (expanded) ?
-      (fontLabelHeight) ?
-        (fontLabelHeight + options.text.padding.y*2 + options.border.padding*2) :
-        (options.expanded.fallback.height) :
+      (options.expanded.height) :
       (options.unexpanded.height);
 
   const getOpacity = () =>
@@ -112,7 +104,10 @@ export default function Options({
   const fontHandleMouseDown = (e:any) => {
     e.stopPropagation();
 
-    setFocusedOption("font");
+    if (focusedOption !== "font")
+      setFocusedOption("font");
+    else
+      setFocusedOption("");
   }
 
   const handleFocus = () => {
@@ -158,13 +153,15 @@ export default function Options({
         height={height}
         fill='#ADD8E6'
         rx={width*cornerRadiusPercentage}
-        ry={height*cornerRadiusPercentage}
         opacity={opacity}
         />
       {expanded &&
         <TextBox
           x={options.border.padding}
           y={options.border.padding}
+          width={options.expanded.width - options.border.padding*2}
+          height={options.expanded.height - options.border.padding*2}
+          overflow="cut"
           padding={options.text.padding}
           cornerRadiusPercentage={cornerRadiusPercentage}
           text={leafFont.name}
@@ -172,7 +169,7 @@ export default function Options({
           onMouseDown={fontHandleMouseDown} />}
       {expanded && (focusedOption === "font") &&
       <rect
-        x={fontLabelWidth + options.text.padding.x*2 + options.border.padding*2 - 3}
+        x={options.expanded.width}
         width={6}
         height={height}
         fill='#ADD8E6'
@@ -182,7 +179,7 @@ export default function Options({
       {expanded &&
       <FontOption
         focused={focusedOption === "font"}
-        x={fontLabelWidth + options.text.padding.x*2 + options.border.padding*2}
+        x={options.expanded.width}
         y={0}
         maxFontWidth={maxFontWidth}
         notifyMouseLeave={handleOptionLeave}

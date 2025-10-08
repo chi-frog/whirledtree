@@ -43,37 +43,11 @@ const FontOption:React.FC<Props> = ({
     [getWidth, getHeight],
     [focused, systemFont]);
 
-  const handleMouseDown = (e:React.MouseEvent<SVGRectElement, MouseEvent>, font:Font) => {
-    e.stopPropagation();
-    if (e.button !== 0)
-      e.preventDefault();
-
-    notifySetFont(font);
-  }
-
-  const handleMouseLeave = () => {
+  const handleMouseLeave = () =>
     notifyMouseLeave();
-  }
 
-  const sysFontHeight = fontDims.height;
-  const fontsJSX =
-    fonts.all.map((_font:Font, _index:number) => {
-      return (
-        <g
-          key={_font.name}>
-          <TextBox
-            x={options.border.padding}
-            y={options.border.padding + (_index*(sysFontHeight + options.text.padding.y*2 + options.border.padding))}
-            height={sysFontHeight}
-            padding={options.text.padding}
-            cornerRadiusPercentage={0.1}
-            text={_font.name}
-            font={_font}
-            onMouseDown={(e) => handleMouseDown(e, _font)} />
-        </g>
-      )});
-
-  
+  const onClickHandlers = fonts.all.map((_font) =>
+    () => notifySetFont(_font));
 
   return (
     <>
@@ -87,8 +61,6 @@ const FontOption:React.FC<Props> = ({
         outline: "none",
       }}>
       <rect
-        x={0}
-        y={0}
         width={width}
         height={height}
         rx={5}
@@ -98,9 +70,7 @@ const FontOption:React.FC<Props> = ({
         <Scroller x={0} y={0} width={width} height={height}
           font={systemFont}
           labels={fonts.all.map((_font) => _font.name)}
-          onClickHandlers={fonts.all.map((_font) => {
-            return () => console.log('_font ' + _font.name);
-          })}/>
+          onClickHandlers={onClickHandlers}/>
       }
     </svg>
     </>

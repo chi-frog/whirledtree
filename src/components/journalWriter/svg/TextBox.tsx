@@ -9,7 +9,8 @@ type Props = {
   y:number,
   width?:number,
   height?:number,
-  padding:{x:number, y:number},
+  overflow?:string,
+  padding?:{x:number, y:number},
   cornerRadiusX?:number,
   cornerRadiusY?:number,
   cornerRadiusPercentage?:number,
@@ -22,12 +23,13 @@ type Props = {
   children?:React.ReactNode,
 };
 const TextBox: React.FC<Props> = ({
-    x, y, width, height, padding,
+    x, y, width, height, overflow, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
     text, dims, font,
     onMouseEnter, onMouseLeave, onMouseDown,
     children}) => {
 
+  if (!padding) padding = {x:0, y:0};
   if (!text) text = "";    
   if (!dims) {
     let content = text;
@@ -44,15 +46,18 @@ const TextBox: React.FC<Props> = ({
   if (!width) width = dims.width;
   if (!height) height = dims.height;
 
+  if (overflow === 'cut' && dims.width > width)
+    console.log('too big! dims.width:' + dims.width + ' width:' + width);
+
   return (
-    <>
+    <svg x={x - 1} y={y - 1} width={width + 2} height={height + 2}>
       <rect
+        x={1}
+        y={1}
         className="hover:fill-gray-200 hover:cursor-pointer hover:stroke-yellow-600"
-        x={x}
-        y={y}
-        width={width + padding.x*2}
-        height={height + padding.y*2}
-        rx={(cornerRadiusPercentage) ? (dims.width*cornerRadiusPercentage) :
+        width={width}
+        height={height}
+        rx={(cornerRadiusPercentage) ? (dims.height*cornerRadiusPercentage) :
             (cornerRadiusX) ? cornerRadiusX :
             (cornerRadiusY) ? cornerRadiusY : 0
         }
@@ -67,8 +72,8 @@ const TextBox: React.FC<Props> = ({
         onMouseDown={onMouseDown}/>
       <text
         className="cursor-pointer"
-        x={x + (width + padding.x*2)/2 - dims.width/2}
-        y={y + (height + padding.y*2)/2 + dims.height/2 - dims.textHeightGap}
+        x={1 + width/2 - dims.width/2}
+        y={1 + height/2 + dims.height/2 - dims.textHeightGap}
         fontSize={font.size}
         style={{
           fontFamily:font.name,
@@ -77,7 +82,7 @@ const TextBox: React.FC<Props> = ({
         {text}
         {children}
       </text>
-    </>
+    </svg>
   )
 }
 
