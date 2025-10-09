@@ -41,8 +41,8 @@ const getTextBBox = (content:string, font:Font, x?:number, y?:number) => {
   } else
     bbox = {x:0, y:0, width:0, height:0};
 
-    return bbox;
-  };
+  return bbox;
+};
 
 function isFontAvailable(font:Font): boolean {
     const fontName = font.name;

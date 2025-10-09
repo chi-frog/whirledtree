@@ -6,6 +6,7 @@ import { calcFontDims, calcMaxFontsWidth, Dimension, Font } from "@/hooks/useFon
 import useAnimation from "@/hooks/useAnimation";
 import TextBox from "../svg/TextBox";
 import { useFontsContext, useSystemFontContext } from "../JournalWriter";
+import { fitText } from "@/helpers/text";
 
 export const options = {
   unexpanded: {
@@ -132,6 +133,13 @@ export default function Options({
         (fontDims.height + options.text.padding.y*2 + options.border.padding)*5 + options.border.padding :
         0;
 
+  const fontSizeLabelText = fitText(
+    leafFont.name,
+    options.expanded.width - options.border.padding*2,
+    systemFont.name,
+    systemFont.size,
+    '#canvas');
+
   return (
     <div
       className="absolute"
@@ -164,7 +172,7 @@ export default function Options({
           overflow="cut"
           padding={options.text.padding}
           cornerRadiusPercentage={cornerRadiusPercentage}
-          text={leafFont.name}
+          text={fontSizeLabelText}
           font={systemFont}
           onMouseDown={fontHandleMouseDown} />}
       {expanded && (focusedOption === "font") &&

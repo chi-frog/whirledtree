@@ -46,8 +46,15 @@ const TextBox: React.FC<Props> = ({
   if (!width) width = dims.width;
   if (!height) height = dims.height;
 
-  if (overflow === 'cut' && dims.width > width)
-    console.log('too big! dims.width:' + dims.width + ' width:' + width);
+  const textOffsetX =
+    (overflow === 'cut' && ((dims.width + padding.x) > width)) ? padding.x :
+    width/2 - dims.width/2;
+  const textOffsetY =
+    height/2 + dims.height/2 - dims.textHeightGap;
+
+  if (overflow === 'cut' && (dims.width + padding.x) > width) {
+    
+  }
 
   return (
     <svg x={x - 1} y={y - 1} width={width + 2} height={height + 2}>
@@ -72,8 +79,8 @@ const TextBox: React.FC<Props> = ({
         onMouseDown={onMouseDown}/>
       <text
         className="cursor-pointer"
-        x={1 + width/2 - dims.width/2}
-        y={1 + height/2 + dims.height/2 - dims.textHeightGap}
+        x={1 + textOffsetX}
+        y={1 + textOffsetY}
         fontSize={font.size}
         style={{
           fontFamily:font.name,

@@ -3,6 +3,7 @@
 import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import TextBox from "../journalWriter/svg/TextBox";
 import { Font } from "@/hooks/useFonts";
+import { fitText } from "@/helpers/text";
 
 type Node = {
   content:string,
