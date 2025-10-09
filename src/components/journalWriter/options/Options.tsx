@@ -82,7 +82,7 @@ export default function Options({
 
   const [width, height, opacity, cornerRadiusPercentage] = useAnimation(
     [getWidth, getHeight, getOpacity, getCornerRadiusPercentage],
-    [expanded, focusedOption, fontDims]);
+    [expanded]);
 
   const optionsRef = useRef<SVGSVGElement>(null);
 
@@ -119,19 +119,24 @@ export default function Options({
     setFocusedOption("");
   }
 
-  const svgWidth =
+  const getSvgWidth = () =>
     (focusedOption === "") ?
-      width :
+      getWidth() :
       (focusedOption === "font") ?
-        width + maxFontWidth + options.text.padding.x*2 + options.border.padding*2 :
+        getWidth() + maxFontWidth + options.text.padding.x*2 + options.border.padding*2 :
         0;
 
-  const svgHeight =
+  const getSvgHeight = () =>
     (focusedOption === "") ?
-      height :
+      getHeight() :
       (focusedOption === "font") ?
         (fontDims.height + options.text.padding.y*2 + options.border.padding)*5 + options.border.padding :
         0;
+
+  const [svgWidth, svgHeight] = useAnimation(
+    [getSvgWidth, getSvgHeight],
+    [expanded, focusedOption]
+  );
 
   const fontSizeLabelText = fitText(
     leafFont.name,
