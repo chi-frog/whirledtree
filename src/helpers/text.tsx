@@ -48,23 +48,21 @@ export const fitText = (
     text:string,
     maxWidth:number,
     fontName:string,
-    startingFontSize?:number,
+    fontSize:number,
     svgId?:string) => {
-  if (!startingFontSize) startingFontSize = 4;
 
-  let cFontSize = startingFontSize;
-  let dims = getSVGTextBBox(text, fontName, cFontSize, svgId);
+  let dims = getSVGTextBBox(text, fontName, fontSize, svgId);
   let newString = text;
 
   if (dims.width > maxWidth) {
     let end = text.length - 1;
     newString = text.slice(0, end) + "...";
-    dims = getSVGTextBBox(newString, fontName, cFontSize, svgId);
+    dims = getSVGTextBBox(newString, fontName, fontSize, svgId);
 
     while (dims.width > maxWidth) {
       end--;
       newString = newString.slice(0, end) + "...";
-      dims = getSVGTextBBox(newString, fontName, cFontSize, svgId);
+      dims = getSVGTextBBox(newString, fontName, fontSize, svgId);
     }
   }
 

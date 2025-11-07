@@ -114,6 +114,7 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
       width={nodeWidth}
       height={nodeHeight}
       text={_label}
+      shouldFitText={true}
       font={font}
       onMouseEnter={() => {onMouseEnter(_index)}}
       onMouseLeave={onMouseLeave}

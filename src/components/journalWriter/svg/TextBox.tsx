@@ -1,5 +1,6 @@
 'use client'
 
+import { fitText } from '@/helpers/text';
 import { calcFontDims, Dimension, Font } from '@/hooks/useFonts';
 import * as React from 'react';
 import { MouseEventHandler } from 'react';
@@ -15,6 +16,7 @@ type Props = {
   cornerRadiusY?:number,
   cornerRadiusPercentage?:number,
   text?:string,
+  shouldFitText?:boolean,
   dims?:Dimension,
   font:Font,
   onMouseEnter?:MouseEventHandler<SVGRectElement>,
@@ -25,14 +27,31 @@ type Props = {
 const TextBox: React.FC<Props> = ({
     x, y, width, height, overflow, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
-    text, dims, font,
+    text, shouldFitText, dims, font,
     onMouseEnter, onMouseLeave, onMouseDown,
     children}) => {
 
   if (!padding) padding = {x:0, y:0};
-  if (!text) text = "";    
+  if (!text) text = "";
+  if (!shouldFitText) shouldFitText = false; 
+
+  let displayedText = text;
+
+  if (shouldFitText) {
+    console.log('widht:' + width + ' heih:' + height);
+    if (width === undefined || height === undefined)
+      throw new Error('width and height must be specified with shouldFitText');
+
+    if (width > 2) {
+    displayedText = fitText(
+      text,
+      width - 2,
+      font.name,
+      font.size,
+      "#canvas"); }
+  }
   if (!dims) {
-    let content = text;
+    let content = displayedText;
 
     if (Array.isArray(children)) {
       children.forEach((_child) => {
@@ -51,10 +70,6 @@ const TextBox: React.FC<Props> = ({
     width/2 - dims.width/2;
   const textOffsetY =
     height/2 + dims.height/2 - dims.textHeightGap;
-
-  if (overflow === 'cut' && (dims.width + padding.x) > width) {
-    
-  }
 
   return (
     <svg x={x - 1} y={y - 1} width={width + 2} height={height + 2}>

@@ -140,7 +140,7 @@ export default function Options({
 
   const fontSizeLabelText = fitText(
     leafFont.name,
-    options.expanded.width - options.border.padding*2,
+    options.expanded.width - options.border.padding*2 - options.text.padding.x*2,
     systemFont.name,
     systemFont.size,
     '#canvas');

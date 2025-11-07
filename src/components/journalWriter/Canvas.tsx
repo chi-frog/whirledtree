@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useState, } from 'react';
+import React, { useState, } from 'react';
 import { Leaf as LeafType, leafTb } from '@/hooks/useLeaves';
 import Leaf from './leaf/Leaf';
 import useRefMap from '@/hooks/useRefMap';
@@ -38,9 +38,6 @@ type Props = {
 export default function Canvas({
     leaves, leafTb,
     leafFont, } : Props) {
-
-  const systemFont = useSystemFontContext();
-  const fonts = useFontsContext();
 
   const [mouseDownPoint, setMouseDownPoint] = useState<{x:number, y:number}>({x:-1, y:-1});
   const [selectedId, setSelectedId] = useState<number>(0);
