@@ -59,10 +59,11 @@ export const fitText = (
     newString = text.slice(0, end) + "...";
     dims = getSVGTextBBox(newString, fontName, fontSize, svgId);
 
-    while (dims.width > maxWidth) {
+    while ((dims.width > maxWidth) && (end >= 0)) {
       end--;
       newString = newString.slice(0, end) + "...";
       dims = getSVGTextBBox(newString, fontName, fontSize, svgId);
+      console.log('dims.width:' + dims.width + " maxWidth:" + maxWidth);
     }
   }
 

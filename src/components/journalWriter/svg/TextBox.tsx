@@ -38,7 +38,6 @@ const TextBox: React.FC<Props> = ({
   let displayedText = text;
 
   if (shouldFitText) {
-    console.log('widht:' + width + ' heih:' + height);
     if (width === undefined || height === undefined)
       throw new Error('width and height must be specified with shouldFitText');
 
