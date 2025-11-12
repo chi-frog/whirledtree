@@ -63,7 +63,6 @@ export const fitText = (
       end--;
       newString = newString.slice(0, end) + "...";
       dims = getSVGTextBBox(newString, fontName, fontSize, svgId);
-      console.log('dims.width:' + dims.width + " maxWidth:" + maxWidth);
     }
   }
 

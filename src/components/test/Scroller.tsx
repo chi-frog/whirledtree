@@ -3,13 +3,7 @@
 import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import TextBox from "../journalWriter/svg/TextBox";
 import { Font } from "@/hooks/useFonts";
-import { fitText } from "@/helpers/text";
-
-type Node = {
-  content:string,
-  color:string,
-  hoverColor:string,
-}
+import { useSuperEventContext } from "@/app/page";
 
 type Props = {
   x:number,
@@ -42,6 +36,14 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
   const heightRatio = (totalHeight === 0) ? 0 : (nodesHeight/totalHeight);
   const heightRatioRev = (nodesHeight === 0) ? 0 : (totalHeight/nodesHeight);
   const scrollerHeight = heightRatio*nodesHeight;
+
+  const {subMouseMove} = useSuperEventContext();
+
+  console.log('SCROLLER RE-RENDERED');
+
+  useEffect(() => {
+    subMouseMove('scroller', () => console.log('hi from Scroller'));
+  }, []);
 
   useEffect(() => {
     if (scrollOverflow === 0) return;

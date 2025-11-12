@@ -1,6 +1,5 @@
 import { calcFontDims, Dimension, Font } from "@/hooks/useFonts";
 import { options } from "./Options";
-import TextBox from "../svg/TextBox";
 import useAnimation from "@/hooks/useAnimation";
 import { useSystemFontContext, useFontsContext } from "../JournalWriter";
 import { useEffect, useState } from "react";

@@ -5,7 +5,6 @@ import Leaf from './leaf/Leaf';
 import useRefMap from '@/hooks/useRefMap';
 import { REGION, getMouseoverRegion } from '@/helpers/region';
 import { Font } from '@/hooks/useFonts';
-import { useFontsContext, useSystemFontContext } from './JournalWriter';
 
 type pEnum = {
   text:string,
