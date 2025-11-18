@@ -17,6 +17,7 @@ type Props = {
   cornerRadiusPercentage?:number,
   text?:string,
   shouldFitText?:boolean,
+  scrolling?:boolean,
   dims?:Dimension,
   font:Font,
   onMouseEnter?:MouseEventHandler<SVGRectElement>,
@@ -27,7 +28,7 @@ type Props = {
 const TextBox: React.FC<Props> = ({
     x, y, width, height, overflow, padding,
     cornerRadiusX, cornerRadiusY, cornerRadiusPercentage,
-    text, shouldFitText, dims, font,
+    text, shouldFitText, scrolling, dims, font,
     onMouseEnter, onMouseLeave, onMouseDown,
     children}) => {
 
@@ -75,7 +76,8 @@ const TextBox: React.FC<Props> = ({
       <rect
         x={1}
         y={1}
-        className="hover:fill-gray-200 hover:cursor-pointer hover:stroke-yellow-600"
+        className={(scrolling) ? "cursor-grabbing" :
+                                 "hover:fill-gray-200 hover:cursor-pointer hover:stroke-yellow-600"}
         width={width}
         height={height}
         rx={(cornerRadiusPercentage) ? (dims.height*cornerRadiusPercentage) :

@@ -7,6 +7,7 @@ import useAnimation from "@/hooks/useAnimation";
 import TextBox from "../svg/TextBox";
 import { useFontsContext, useSystemFontContext } from "../JournalWriter";
 import { fitText } from "@/helpers/text";
+import { useScrollContext } from "@/app/page";
 
 export const options = {
   unexpanded: {
@@ -49,6 +50,8 @@ export default function Options({
   const [fontDims, setFontDims] = useState<Dimension>({width:0, height:0, textHeight:0, textHeightGap:0})
   const [maxFontWidth, setMaxFontWidth] = useState<number>(0);
 
+  const {scrolling} = useScrollContext();
+
   useEffect(() => {
     if (!fonts.loaded) return;
 
@@ -88,8 +91,9 @@ export default function Options({
 
   const handleMouseEnter = () => setExpanded(true);
   const handleMouseLeave = () => {
-    setExpanded(false)
-    setFocusedOption("")};
+    if (focusedOption === "") {
+      setExpanded(false)
+      setFocusedOption("")}};
 
   const handleOptionLeave = () => {
     //setFocusedOption("");
@@ -117,6 +121,7 @@ export default function Options({
 
   const handleBlur = () => {
     setFocusedOption("");
+    setExpanded(false);
   }
 
   const getSvgWidth = () =>
@@ -147,7 +152,7 @@ export default function Options({
 
   return (
     <div
-      className="absolute"
+      className={(scrolling) ? "absolute cursor-grabbing" : "absolute"}
       style={{
         left:left + "px",
         top:top + "px"
@@ -179,6 +184,7 @@ export default function Options({
           cornerRadiusPercentage={cornerRadiusPercentage}
           text={fontSizeLabelText}
           font={systemFont}
+          scrolling={scrolling}
           onMouseDown={fontHandleMouseDown} />}
       {expanded && (focusedOption === "font") &&
       <rect

@@ -4,62 +4,83 @@ import JournalWriter from "@/components/journalWriter/JournalWriter";
 import Focus from "@/components/test/Focus";
 import { createContext, MouseEventHandler, useContext, useState } from "react";
 
-type TaggedFunction = {
-  tag:string,
-  func:Function,
-}
-
-type SuperEventHandler = {
-  name:string,
-  funcs:TaggedFunction[],
+export type ScrollStartFunc = (e:React.MouseEvent<Element>)=>void;
+export type ScrollFunc = (e:React.MouseEvent<Element>)=>void;
+export type ScrollSubscription = {
+  tag:any,
+  onScrollStart:ScrollStartFunc,
+  onScroll:ScrollFunc,
+  onScrollEnd:ScrollFunc,
+};
+export type SubScroll = ({tag, onScroll, onScrollEnd}:ScrollSubscription)=>void;
+export type ScrollOn = (e:React.MouseEvent<Element>)=>void;
+type Scroll = {
+  subScroll:SubScroll,
+  scrollOn:ScrollOn,
+  scrolling:boolean,
 };
 
-type SuperEventContext = {
-  subMouseMove:(tag:string, func:Function)=>void,
-}
+const ScrollContext = createContext<Scroll|undefined>(undefined);
 
-const SuperEventContext = createContext<SuperEventContext|undefined>(undefined);
-
-export const useSuperEventContext = () => {
-  const ctx = useContext(SuperEventContext);
+export const useScrollContext = () => {
+  const ctx = useContext(ScrollContext);
 
   if (ctx === undefined)
-    throw new Error("useSystemFontContext not available");
+    throw new Error("useScrollContext not available");
 
   return ctx;
 }
 
 export default function Home() {
   const testing:string|null = null;
-  const [handlers, setHandlers] = useState<SuperEventHandler[]>([
-    {name:'onMouseMove', funcs:[]}
-  ]);
+  const [scrolling , setScrolling] = useState<boolean>(false);
+  const [scrollSubscriptions, setScrollSubscriptions] = useState<ScrollSubscription[]>([]);
 
-  const superEventContext:SuperEventContext = {
-    subMouseMove:(tag, func)=> {
-      setHandlers((_handlers) =>
-        _handlers.map((_handler) =>
-          (_handler.name === 'onMouseMove' &&
-           !_handler.funcs.find((_func) => _func.tag === tag)) ?
-            {..._handler, funcs:_handler.funcs.concat({tag, func})} :
-            _handler))
-    },
-  }
+  const subScroll:SubScroll = ({tag, onScrollStart, onScroll, onScrollEnd}) => {
+    if ((!tag))
+      return;
+
+    const scrollSubscription = scrollSubscriptions.find((_ss) => _ss.tag === tag);
+
+    if (scrollSubscription)
+      setScrollSubscriptions(scrollSubscriptions.filter((_ss) => _ss.tag !== tag).concat({tag, onScrollStart, onScroll, onScrollEnd}));
+    else
+      setScrollSubscriptions(scrollSubscriptions.concat({tag, onScrollStart, onScroll, onScrollEnd}));
+  };
+
+  const runStartFuncs = (e:React.MouseEvent<Element>) =>
+    scrollSubscriptions.forEach((_ss) => _ss.onScrollStart(e));
+
+  const runFuncs = (e:React.MouseEvent<Element>) =>
+    scrollSubscriptions.forEach((_ss) => _ss.onScroll(e));
+
+  const runEndFuncs = (e:React.MouseEvent<Element>) =>
+    scrollSubscriptions.forEach((_ss) => _ss.onScrollEnd(e));
+
+  const scrollOn = (e:React.MouseEvent<Element>) => {
+    setScrolling(true);
+    runStartFuncs(e);
+  };
 
   const handleMouseMove:MouseEventHandler = (e) => {
-    console.log('mouseMove SUPERVISOR (' + e.clientX + "," + e.clientY + ")");
-  
-    handlers.find((_handler) => _handler.name === 'onMouseMove')?.funcs.forEach((_func) =>
-      _func.func());
+    if(scrolling) runFuncs(e);
+  }
+
+  const handleMouseUp:MouseEventHandler = (e) => {
+    if (scrolling) {
+      runEndFuncs(e);
+      setScrolling(false);
+    }
   }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-between"
-      onMouseMoveCapture={handleMouseMove}>
-      <SuperEventContext value={superEventContext}>
+      onMouseMoveCapture={handleMouseMove}
+      onMouseUp={handleMouseUp}>
+      <ScrollContext value={{subScroll, scrollOn, scrolling}}>
       {!testing && <JournalWriter />}
       {testing === 'focus' && <Focus />}
-      </SuperEventContext>
+      </ScrollContext>
     </div>
   );
 }

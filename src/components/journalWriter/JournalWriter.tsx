@@ -42,8 +42,6 @@ export default function JournalWriter({}) {
   const [leafFont, setLeafFont] = useState<Font>(fonts.find());
   const [systemFont, setSystemFont] = useState<Font>(fonts.find());
 
-
-
   const notifySetLeafFont = (font:Font) =>
     setLeafFont(font);
   

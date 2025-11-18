@@ -3,7 +3,7 @@
 import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import TextBox from "../journalWriter/svg/TextBox";
 import { Font } from "@/hooks/useFonts";
-import { useSuperEventContext } from "@/app/page";
+import { ScrollFunc, ScrollStartFunc, useScrollContext } from "@/app/page";
 
 type Props = {
   x:number,
@@ -22,9 +22,6 @@ const _ = {
 const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHandlers}:Props) => {
   const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
   const [scrollPosition, setScrollPosition] = useState<number>(0);
-  const [scrollingOffset, setScrollingOffset] = useState<number>(0);
-  const [scrolling, setScrolling] = useState<boolean>(false);
-  const [scrollingStart, setScrollingStart] = useState<number>(0);
   const [scrollOverflow, setScrollOverflow] = useState<number>(0);
   const animationRef = useRef(0);
 
@@ -37,13 +34,44 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
   const heightRatioRev = (nodesHeight === 0) ? 0 : (totalHeight/nodesHeight);
   const scrollerHeight = heightRatio*nodesHeight;
 
-  const {subMouseMove} = useSuperEventContext();
+  const ref = useRef<SVGSVGElement>(null);
+  const offset = useRef<number>(0);
+  const start = useRef<number>(0);
+  const position = useRef<number>(0);
 
-  console.log('SCROLLER RE-RENDERED');
+  const {subScroll, scrollOn, scrolling} = useScrollContext();
+
+  const setPosition = (newPosition:number) => {
+    setScrollPosition(newPosition);
+    position.current = newPosition;
+  };
+
+  const onScrollStart:ScrollStartFunc = (e) => {
+    offset.current = e.clientY;
+    start.current = position.current;
+    console.log('SET offset:' + e.clientY + " start:" + position.current);
+  }
+
+  const onScroll:ScrollFunc = (e) => {
+    console.log('onScroll (' + e.clientY + ', ' + offset.current + ', ' + start.current + ")");
+
+    const newPosition = start.current + (e.clientY - offset.current)*heightRatioRev;
+    setPosition(newPosition);
+  };
+
+  const onScrollEnd:ScrollFunc = (e) => {
+    const endPosition = start.current + (e.clientY - offset.current)*heightRatioRev;
+
+    console.log('scrollPosition:', endPosition);
+    setPosition(endPosition);
+    if (endPosition < 0) setScrollOverflow(endPosition);
+    if (endPosition > leftoverHeight) setScrollOverflow(endPosition - leftoverHeight);
+  }
 
   useEffect(() => {
-    subMouseMove('scroller', () => console.log('hi from Scroller'));
-  }, []);
+    if (height !== 0)
+      subScroll({tag:'scroller', onScrollStart, onScroll, onScrollEnd});
+  }, [height]);
 
   useEffect(() => {
     if (scrollOverflow === 0) return;
@@ -60,7 +88,7 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
 
       const progress = Math.min((time - start)/duration, 1);
 
-      setScrollPosition(initialScrollPosition - initialScrollOverflow*progress);
+      setPosition(initialScrollPosition - initialScrollOverflow*progress);
  
       if (progress < 1)
         animationRef.current = requestAnimationFrame(animate);
@@ -73,19 +101,6 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
     return () => cancelAnimationFrame(animationRef.current);
   }, [scrollOverflow]);
 
-  /*console.log`Hello`; // [ 'Hello' ]
-  console.log.bind(1, 2)`Hello`; // 2 [ 'Hello' ]
-  new Function("console.log(arguments)")`Hello`; // [Arguments] { '0': [ 'Hello' ] }*/
-
-  const stopScrolling = () => {
-    if (!scrolling) return;
-
-    setScrolling(false);
-
-    if (scrollPosition < 0) setScrollOverflow(scrollPosition);
-    if (scrollPosition > leftoverHeight) setScrollOverflow(scrollPosition - leftoverHeight);
-  }
-
   const onMouseEnter = (index:number) => {
     setHoveredIndex(index);
   };
@@ -95,18 +110,8 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
   };
   
   const scrollerOnMouseDown:React.MouseEventHandler = (e) => {
-    setScrollingOffset(e.clientY);
-    setScrollingStart(scrollPosition);
-    setScrolling(true);
+    scrollOn(e);
   };
-
-  const scrollerOnMouseMove:React.MouseEventHandler = (e) => {
-    if (!scrolling) return;
-
-    const position = (e.clientY - scrollingOffset);
-
-    setScrollPosition(scrollingStart + heightRatioRev*position);
-  }
 
   const nodesJSX = labels.map((_label, _index) => (
     <TextBox
@@ -117,6 +122,7 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
       height={nodeHeight}
       text={_label}
       shouldFitText={true}
+      scrolling={scrolling}
       font={font}
       onMouseEnter={() => {onMouseEnter(_index)}}
       onMouseLeave={onMouseLeave}
@@ -128,7 +134,7 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
   const upperShadowHeight = (leftoverHeight === 0) ? 0 :
     10*scrollPosition/leftoverHeight;
 
-  return (<svg className="w-screen h-screen"> <svg x={x} y={y} width={width} height={height}>
+  return (<svg ref={ref} x={x} y={y} width={width} height={height}>
     <defs>
       <linearGradient id="upper" x1="0%" y1="100%" x2="0%" y2="0%">
         <stop offset="0" stopColor="white" />
@@ -162,18 +168,21 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
               'url(#both)'}>
       {...nodesJSX.filter((_node, _index) => _index !== hoveredIndex)}
     </g>
-    <rect className="cursor-pointer fill-gray-300 hover:fill-gray-400"
+    <rect
+      className={
+        (!scrolling) ? "cursor-pointer fill-gray-300 hover:fill-gray-400" :
+                       "cursor-grabbing fill-gray-400"}
       x={5 + nodeWidth}
       y={5 + heightRatio*scrollPosition}
       width={10}
       rx={3}
       height={scrollerHeight}
       onMouseDown={(e) => scrollerOnMouseDown(e)}
-      onMouseUp={stopScrolling}
-      onMouseLeave={stopScrolling}
-      onMouseMove={(e) => scrollerOnMouseMove(e)}/>
+      style={{
+        filter: (scrolling) ? 'drop-shadow( 3px 3px 2px rgba(0, 255, 0, .7))' : ''
+      }}/>
     {nodesJSX[hoveredIndex]}
-  </svg></svg>);
+  </svg>);
 };
 
 export default Scroller;
