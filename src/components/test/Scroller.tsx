@@ -144,6 +144,21 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
         <stop offset="0" stopColor="black" />
         <stop offset="1" stopColor="white" />
       </linearGradient>
+      <linearGradient id="left" x1="100%" y1="0%" x2="0%" y2="0%">
+        <stop offset="0" stopColor="black" />
+        <stop offset="1" stopColor="white" />
+      </linearGradient>
+      <linearGradient id="right" x1="100%" y1="0%" x2="0%" y2="0%">
+        <stop offset="0" stopColor="white" />
+        <stop offset="1" stopColor="black" />
+      </linearGradient>
+      <mask id="glow" x={5 + nodeWidth} y={4 + heightRatio*scrollPosition} width={10} height={scrollerHeight} maskUnits="userSpaceOnUse">
+        <rect x={5 + nodeWidth} y={4 + heightRatio*scrollPosition} width={3} height={scrollerHeight} fill="url(#left)" />
+        <rect x={8 + nodeWidth} y={7 + heightRatio*scrollPosition} width={4} height={scrollerHeight} fill="black" />
+        <rect x={12 + nodeWidth} y={4 + heightRatio*scrollPosition} width={3} height={scrollerHeight} fill="url(#right)" />
+        <rect x={5 + nodeWidth} y={4 + heightRatio*scrollPosition} width={10} height={3} fill="url(#upper)" />
+        <rect x={5 + nodeWidth} y={3 + heightRatio*scrollPosition + scrollerHeight} width={10} height={3} fill="url(#lower)" />
+      </mask>
       <mask id="both" x="0" y="5" width={width} height={nodesHeight} maskUnits="userSpaceOnUse">
         <rect x="0" y="5" width={width} height={upperShadowHeight} fill="url(#upper)" />
         <rect x="0" y={5 + upperShadowHeight} width={width} height={nodesHeight-upperShadowHeight-lowerShadowHeight} fill="white" />
@@ -177,9 +192,20 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
       width={10}
       rx={3}
       height={scrollerHeight}
+      onMouseDown={(e) => scrollerOnMouseDown(e)}/>
+    <rect
+      className={
+        (!scrolling) ? "invisible" :
+                       "cursor-grabbing fill-yellow-100"}
+      x={5 + nodeWidth}
+      y={5 + heightRatio*scrollPosition}
+      width={10}
+      rx={3}
+      height={scrollerHeight}
+      mask={scrolling ? "url(#glow)" : ""}
       onMouseDown={(e) => scrollerOnMouseDown(e)}
       style={{
-        filter: (scrolling) ? 'drop-shadow( 3px 3px 2px rgba(0, 255, 0, .7))' : ''
+        pointerEvents:"none"
       }}/>
     {nodesJSX[hoveredIndex]}
   </svg>);
