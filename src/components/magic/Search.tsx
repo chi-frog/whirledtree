@@ -6,6 +6,34 @@ type Card = {
   name:string,
 }
 
+type Set = {
+  name:string,
+  acronym:string,
+}
+
+async function fetchSets(url:string, fcb:(data:Set[])=>void) {
+  let sets:Set[] = [];
+
+  const response = await fetch(url);
+  console.log('r', response);
+  const json = await response.json();
+  console.log('json', json);
+  await addSets(json.search_uri);
+  
+  async function addSets(url:string) {
+    sets = sets.concat(json.data.map((_piece:any) => (
+      {
+        name:_piece.name, acronym:_piece.code,
+      })));
+    console.log('data', json.data);
+    console.log('sets', sets);
+    if (json.has_more)
+      await fetchSets(json.next_page, fcb);
+  }
+
+  fcb(sets);
+}
+
 async function fetchCards(url:string, fcb:(data:Card[])=>void) {
   let cards:Card[] = [];
 
@@ -32,6 +60,7 @@ export const Search:React.FC<Props> = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [cards, setCards] = useState<any[]>([]);
   const [imageMap, setImageMap] = useState<Map<string, string>>(new Map());
+  const [sets, setSets] = useState<Set[]>([]);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [numCardsPage, setNumCardsPage] = useState<number>(100);
 
@@ -85,6 +114,12 @@ export const Search:React.FC<Props> = () => {
   };
 
   useEffect(() => {
+    fetchSets('https://api.scryfall.com/sets/', (data) => {
+      setSets(data);
+    })
+  }, []);
+
+  useEffect(() => {
     fetchCards('https://api.scryfall.com/sets/aer', (data) => {
       setLoading(false);
       setCards(data);
@@ -134,20 +169,27 @@ console.log('imageMap', newImageMap);
           display:'flex',
           }}>
           <label>
-            Cards Per Row:<input name="cardsPerRow" type="number" defaultValue={numCardsRow} onChange={onChangeNumCardsRow}/>
+            Cards Per Row: <input name="cardsPerRow" type="number" style={{
+              width:'fit-content',
+              backgroundColor:'white',
+              textAlign:'center',
+              }} defaultValue={numCardsRow} onChange={onChangeNumCardsRow} max={cards.length} min={1}/>
           </label>
         </div>
       }
       {!loading && cards.map((_card, _index)=>(
         <div key={_index} style={{
+            margin:'10px',
             display:'flex',
             flexDirection:'column',
-            margin:'10px',
           }}>
           <h2 key={_index} style={{
             textAlign:'center',
             }}>{_card.name}</h2>
-          <img src={imageMap.get(_card.name)} />
+          <img src={imageMap.get(_card.name)} style={{
+            maxWidth:'100%',
+            marginTop:'auto',
+          }}/>
         </div>
       ))}
     </div>
