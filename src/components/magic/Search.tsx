@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler, useEffect, useState } from "react";
+import { ChangeEventHandler, MouseEventHandler, useEffect, useState } from "react";
 
 type Card = {
   name:string,
@@ -63,6 +63,11 @@ export const Search:React.FC<Props> = () => {
   const [sets, setSets] = useState<Set[]>([]);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [numCardsPage, setNumCardsPage] = useState<number>(100);
+  const [optionsShown, setOptionsShown] = useState<boolean>(false);
+  const [optionsIntensity, setOptionsIntensity] = useState<number>(0);
+  const [optionsDragging, setOptionsDragging] = useState<boolean>(false);
+  const [optionsDragPoint, setOptionsDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
+  const [optionsDragLocation, setOptionsDragLocation] = useState<{x:number, y:number}>({x:0, y:0});
 
   const fetchImages = async (cards:any[], cb:(images:any[])=>void) => {
     type Image = {
@@ -119,6 +124,24 @@ export const Search:React.FC<Props> = () => {
     })
   }, []);
 
+  /*
+      {!loading &&
+        <div style={{
+          gridColumn: `1/${numCardsRow + 1}`,
+          height: '30px',
+          display:'flex',
+          }}>
+          <label>
+            Cards Per Row: <input name="cardsPerRow" type="number" style={{
+              width:'fit-content',
+              backgroundColor:'white',
+              textAlign:'center',
+              }} defaultValue={numCardsRow} onChange={onChangeNumCardsRow} max={cards.length} min={1}/>
+          </label>
+        </div>
+      }
+  */
+
   useEffect(() => {
     fetchCards('https://api.scryfall.com/sets/aer', (data) => {
       setLoading(false);
@@ -145,9 +168,63 @@ console.log('imageMap', newImageMap);
     setNumCardsRow(value);
   };
 
-  return (
+  const handleFiltersMouseLeave:MouseEventHandler = (e) => {
+    setOptionsIntensity(0);
+  }
+
+  const handleFiltersMouseDown:MouseEventHandler = (e) => {
+    setOptionsDragging(true);
+    setOptionsDragPoint({x:e.clientX, y:e.clientY});
+  };
+
+  const handleMouseUp:MouseEventHandler = (e) => {
+    const y = e.clientY;
+
+    if (((!optionsShown) && (y >= 30)) || (optionsShown))
+      setOptionsShown((_) => !_);
+    
+    setOptionsDragging(false);
+    setOptionsDragPoint({x:0, y:0});
+    setOptionsDragLocation({x:0, y:0});
+  };
+
+  const handleMouseMove:MouseEventHandler = (e) => {
+    const y = e.clientY;
+
+    if (optionsDragging) {
+      setOptionsDragLocation({x:e.clientX - optionsDragPoint.x, y:y - optionsDragPoint.y});
+
+    } else if ((!optionsShown) && (y <= 15))
+      setOptionsIntensity(15 - e.clientY);
+
+    else
+      setOptionsIntensity(0);
+  };
+
+  return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+    {(!loading) && <>
+      <div onMouseLeave={handleFiltersMouseLeave}
+        onMouseDown={handleFiltersMouseDown}
+        style={{
+        position:'absolute',
+        top:(!optionsShown) ?
+              `${-50 + optionsIntensity + optionsDragLocation.y}px` :
+              `${optionsDragLocation.y}px`,
+        width:'100%',
+        border: '2px solid black',
+        cursor:'pointer',
+        borderRadius:'5px',
+        height:'50px',
+        boxShadow: `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(146, 148, 248, 0.4)`,
+        backgroundColor:'white',
+        transition: (optionsDragging) ? "box-shadow 0.1s ease-in-out" :
+                                        "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out",
+      }}>
+      </div>
+    </>}
     <div
       style={{
+        paddingTop:'50px',
         overflow:'scroll',
         minWidth:'100vw',
         width:'fit-content',
@@ -162,24 +239,9 @@ console.log('imageMap', newImageMap);
         textAlign:'center',
         textAnchor:'middle',
       }}>Loading...</h4>}
-      {!loading &&
-        <div style={{
-          gridColumn: `1/${numCardsRow + 1}`,
-          height: '30px',
-          display:'flex',
-          }}>
-          <label>
-            Cards Per Row: <input name="cardsPerRow" type="number" style={{
-              width:'fit-content',
-              backgroundColor:'white',
-              textAlign:'center',
-              }} defaultValue={numCardsRow} onChange={onChangeNumCardsRow} max={cards.length} min={1}/>
-          </label>
-        </div>
-      }
       {!loading && cards.map((_card, _index)=>(
         <div key={_index} style={{
-            margin:'10px',
+            padding:'10px',
             display:'flex',
             flexDirection:'column',
           }}>
@@ -192,6 +254,6 @@ console.log('imageMap', newImageMap);
           }}/>
         </div>
       ))}
-    </div>
+    </div></div>
   )
 };
