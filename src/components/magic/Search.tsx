@@ -168,10 +168,6 @@ console.log('imageMap', newImageMap);
     setNumCardsRow(value);
   };
 
-  const handleFiltersMouseLeave:MouseEventHandler = (e) => {
-    setOptionsIntensity(0);
-  }
-
   const handleFiltersMouseDown:MouseEventHandler = (e) => {
     setOptionsDragging(true);
     setOptionsDragPoint({x:e.clientX, y:e.clientY});
@@ -180,18 +176,21 @@ console.log('imageMap', newImageMap);
   const handleMouseUp:MouseEventHandler = (e) => {
     const y = e.clientY;
 
-    if (((!optionsShown) && (y >= 30)) || (optionsShown))
+    if (((!optionsShown) && (optionsDragging) && (y >= 30)) ||
+        ((optionsShown) && (!optionsDragging) && (y > 50)))
       setOptionsShown((_) => !_);
     
     setOptionsDragging(false);
     setOptionsDragPoint({x:0, y:0});
     setOptionsDragLocation({x:0, y:0});
+    setOptionsIntensity(0);
   };
 
   const handleMouseMove:MouseEventHandler = (e) => {
     const y = e.clientY;
 
     if (optionsDragging) {
+      console.log('drag');
       setOptionsDragLocation({x:e.clientX - optionsDragPoint.x, y:y - optionsDragPoint.y});
 
     } else if ((!optionsShown) && (y <= 15))
@@ -203,7 +202,7 @@ console.log('imageMap', newImageMap);
 
   return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
     {(!loading) && <>
-      <div onMouseLeave={handleFiltersMouseLeave}
+      <div
         onMouseDown={handleFiltersMouseDown}
         style={{
         position:'absolute',
@@ -212,7 +211,9 @@ console.log('imageMap', newImageMap);
               `${optionsDragLocation.y}px`,
         width:'100%',
         border: '2px solid black',
-        cursor:'pointer',
+        cursor:(optionsDragging) ? 'grabbing' :
+               (!optionsShown) ?   'pointer' :
+                                   'auto',
         borderRadius:'5px',
         height:'50px',
         boxShadow: `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(146, 148, 248, 0.4)`,
@@ -224,6 +225,7 @@ console.log('imageMap', newImageMap);
     </>}
     <div
       style={{
+        cursor:(optionsDragging) ? 'grabbing' : 'auto',
         paddingTop:'50px',
         overflow:'scroll',
         minWidth:'100vw',
@@ -231,6 +233,7 @@ console.log('imageMap', newImageMap);
         paddingLeft:'15px',
         paddingRight:'15px',
         backgroundColor:'#E6DDC5',
+        userSelect:(optionsDragging) ? 'none' : 'auto',
         color: 'black',
         display:'grid',
         gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
