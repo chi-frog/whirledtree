@@ -1,5 +1,6 @@
 'use client'
 
+import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, MouseEventHandler, useEffect, useState } from "react";
 
 type Card = {
@@ -68,6 +69,13 @@ export const Search:React.FC<Props> = () => {
   const [optionsDragging, setOptionsDragging] = useState<boolean>(false);
   const [optionsDragPoint, setOptionsDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
   const [optionsDragLocation, setOptionsDragLocation] = useState<{x:number, y:number}>({x:0, y:0});
+
+  useMouseLeavePage(() => {
+    setOptionsDragging(false);
+    setOptionsDragPoint({x:0, y:0});
+    setOptionsDragLocation({x:0, y:0});
+    setOptionsIntensity(0);
+  });
 
   const fetchImages = async (cards:any[], cb:(images:any[])=>void) => {
     type Image = {
@@ -176,24 +184,29 @@ console.log('imageMap', newImageMap);
   const handleMouseUp:MouseEventHandler = (e) => {
     const y = e.clientY;
 
-    if (((!optionsShown) && (optionsDragging) && (y >= 30)) ||
-        ((optionsShown) && (!optionsDragging) && (y > 50)))
-      setOptionsShown((_) => !_);
-    
     setOptionsDragging(false);
     setOptionsDragPoint({x:0, y:0});
     setOptionsDragLocation({x:0, y:0});
-    setOptionsIntensity(0);
+
+    if (((!optionsShown) && (optionsDragging) && (y >= 30)) ||
+        ((optionsShown) && (!optionsDragging) && (y > 50)) ||
+        ((optionsShown) && (optionsDragging) && (y <= 15)))
+      setOptionsShown((_) => !_);
+    
+    if ((!optionsShown) && (optionsDragging) && (y < 30))
+      setOptionsIntensity(Math.max(15 - y, 0));
+    else
+      setOptionsIntensity(0);
+    (e.target as HTMLElement).style.cursor = "auto";
   };
 
   const handleMouseMove:MouseEventHandler = (e) => {
     const y = e.clientY;
 
-    if (optionsDragging) {
-      console.log('drag');
+    if (optionsDragging)
       setOptionsDragLocation({x:e.clientX - optionsDragPoint.x, y:y - optionsDragPoint.y});
 
-    } else if ((!optionsShown) && (y <= 15))
+    else if ((!optionsShown) && (y <= 15))
       setOptionsIntensity(15 - e.clientY);
 
     else
@@ -205,7 +218,7 @@ console.log('imageMap', newImageMap);
       <div
         onMouseDown={handleFiltersMouseDown}
         style={{
-        position:'absolute',
+        position:'fixed',
         top:(!optionsShown) ?
               `${-50 + optionsIntensity + optionsDragLocation.y}px` :
               `${optionsDragLocation.y}px`,
