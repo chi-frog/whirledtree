@@ -193,14 +193,10 @@ console.log('imageMap', newImageMap);
     setOptionsDragging(false);
     setOptionsDragPoint({x:0, y:0});
     setOptionsDragLocation({x:0, y:0});
-    console.log('os', optionsShown);
-    console.log('od', optionsDragging);
-    console.log('y', y);
 
     if ((!optionsShown) && (optionsDragPoint.x === x) && (optionsDragPoint.y === y))
       setOptionsShown(true);
     else if (((!optionsShown) && (optionsDragging) && (y >= 30)) ||
-        ((optionsShown) && (!optionsDragging) && (y > 50)) ||
         ((optionsShown) && (optionsDragging) && (y <= 15)))
       setOptionsShown((_) => !_);
     
@@ -289,7 +285,7 @@ console.log('imageMap', newImageMap);
         paddingRight:'15px',
         backgroundColor:'#E6DDC5',
         userSelect:(optionsDragging || dragging) ? 'none' : 'auto',
-        transition:'padding 0.1s ease-in-out',
+        transition:(optionsDragging) ? "" : 'padding 0.1s ease-in-out',
         color: 'black',
         display:'grid',
         gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
@@ -308,6 +304,7 @@ console.log('imageMap', newImageMap);
             overflow:'hidden',
             borderRadius:'12px',
             border:'1px solid black',
+            minWidth:'100px',
           }}>
           <h2 key={_index} onMouseDown={handleCardNameMouseDown} style={{
             textAlign:'center',
