@@ -69,6 +69,9 @@ export const Search:React.FC<Props> = () => {
   const [optionsDragging, setOptionsDragging] = useState<boolean>(false);
   const [optionsDragPoint, setOptionsDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
   const [optionsDragLocation, setOptionsDragLocation] = useState<{x:number, y:number}>({x:0, y:0});
+  const [dragging, setDragging] = useState<boolean>(false);
+  const [dragPoint, setDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
+
 
   useMouseLeavePage(() => {
     setOptionsDragging(false);
@@ -182,46 +185,69 @@ console.log('imageMap', newImageMap);
   };
 
   const handleMouseUp:MouseEventHandler = (e) => {
+    const x = e.clientX;
     const y = e.clientY;
 
+    setDragging(false);
+    setDragPoint({x:0, y:0});
     setOptionsDragging(false);
     setOptionsDragPoint({x:0, y:0});
     setOptionsDragLocation({x:0, y:0});
+    console.log('os', optionsShown);
+    console.log('od', optionsDragging);
+    console.log('y', y);
 
-    if (((!optionsShown) && (optionsDragging) && (y >= 30)) ||
+    if ((!optionsShown) && (optionsDragPoint.x === x) && (optionsDragPoint.y === y))
+      setOptionsShown(true);
+    else if (((!optionsShown) && (optionsDragging) && (y >= 30)) ||
         ((optionsShown) && (!optionsDragging) && (y > 50)) ||
         ((optionsShown) && (optionsDragging) && (y <= 15)))
       setOptionsShown((_) => !_);
     
-    if ((!optionsShown) && (optionsDragging) && (y < 30))
-      setOptionsIntensity(Math.max(15 - y, 0));
-    else
-      setOptionsIntensity(0);
-    (e.target as HTMLElement).style.cursor = "auto";
+    setOptionsIntensity((!optionsShown) ? Math.max(15 - y, 0) :
+                        (y <= 15) ? 5 : 0);
   };
 
   const handleMouseMove:MouseEventHandler = (e) => {
     const y = e.clientY;
 
-    if (optionsDragging)
+    if (optionsDragging) {
       setOptionsDragLocation({x:e.clientX - optionsDragPoint.x, y:y - optionsDragPoint.y});
 
-    else if ((y <= 15))
-      setOptionsIntensity((!optionsShown) ? (15 - e.clientY) : 10);
+    } else if (dragging) {
+      window.scrollTo(window.scrollX + dragPoint.x - e.clientX, window.scrollY + dragPoint.y - e.clientY);
+      setDragPoint({x:e.clientX, y:e.clientY});
 
-    else
-      setOptionsIntensity(0);
+    }
+
+    setOptionsIntensity((!optionsShown) ? Math.max(15 - y, 0) :
+                        (y <= 15) ? 5 : 0);
   };
 
-  return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+  const handleMouseDown:MouseEventHandler = (e) => {
+    setDragging(true);
+    setDragPoint({x:e.clientX, y:e.clientY});
+  };
+
+  const handleCardNameMouseDown:MouseEventHandler = (e) => {
+    console.log('here');
+    e.stopPropagation();
+  };
+
+  const handleCardMouseDown:MouseEventHandler = (e) => {
+    console.log('in card');
+    e.stopPropagation();
+  }
+
+  return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
     {(!loading) && <>
       <div
         onMouseDown={handleFiltersMouseDown}
         style={{
         position:'fixed',
-        top:(!optionsShown) ?
-              `${-50 + optionsIntensity + optionsDragLocation.y}px` :
-              `${optionsDragLocation.y}px`,
+        top: (optionsDragging && !optionsShown) ? `${-50 + (15 - optionsDragPoint.y) + optionsDragLocation.y}px` :
+             (!optionsShown) ?   `${-50 + optionsIntensity + optionsDragLocation.y}px` :
+                                `${optionsDragLocation.y}px`,
         left:`${5 + optionsDragLocation.x}px`,
         width:'calc(100% - 10px)',
         border: '2px solid black',
@@ -236,7 +262,7 @@ console.log('imageMap', newImageMap);
         height:'50px',
         boxShadow: (!optionsShown) ?
           `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(146, 148, 248, 0.4)` :
-          `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(256, 44, 44, 0.4)`,
+          `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(256, 44, 44, 0.8)`,
         backgroundColor:'white',
         transition: (optionsDragging) ? "box-shadow 0.1s ease-in-out" :
                                         "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out",
@@ -254,15 +280,16 @@ console.log('imageMap', newImageMap);
     </>}
     <div
       style={{
-        cursor:(optionsDragging) ? 'grabbing' : 'auto',
-        paddingTop:'50px',
+        cursor:(optionsDragging || dragging) ? 'grabbing' : 'move',
+        paddingTop:`${(!optionsShown) ? Math.min(15 + optionsDragLocation.y, 50) : 50}px`,
         overflow:'scroll',
         minWidth:'100vw',
         width:'fit-content',
         paddingLeft:'15px',
         paddingRight:'15px',
         backgroundColor:'#E6DDC5',
-        userSelect:(optionsDragging) ? 'none' : 'auto',
+        userSelect:(optionsDragging || dragging) ? 'none' : 'auto',
+        transition:'padding 0.1s ease-in-out',
         color: 'black',
         display:'grid',
         gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
@@ -272,16 +299,24 @@ console.log('imageMap', newImageMap);
         textAnchor:'middle',
       }}>Loading...</h4>}
       {!loading && cards.map((_card, _index)=>(
-        <div key={_index} style={{
-            padding:'10px',
+        <div key={_index} onMouseDown={handleCardMouseDown} style={{
             display:'flex',
+            cursor:(optionsDragging || dragging) ? 'grabbing' : 'pointer',
             flexDirection:'column',
+            backgroundColor:'white',
+            margin:'5px',
+            overflow:'hidden',
+            borderRadius:'12px',
+            border:'1px solid black',
           }}>
-          <h2 key={_index} style={{
+          <h2 key={_index} onMouseDown={handleCardNameMouseDown} style={{
             textAlign:'center',
+            margin:'3px',
+            cursor:(optionsDragging || dragging) ? 'grabbing' : 'text',
             }}>{_card.name}</h2>
-          <img src={imageMap.get(_card.name)} style={{
+          <img src={imageMap.get(_card.name)} draggable="false" style={{
             maxWidth:'100%',
+            cursor:(optionsDragging || dragging) ? 'grabbing' : 'pointer',
             marginTop:'auto',
           }}/>
         </div>
