@@ -206,8 +206,8 @@ console.log('imageMap', newImageMap);
     if (optionsDragging)
       setOptionsDragLocation({x:e.clientX - optionsDragPoint.x, y:y - optionsDragPoint.y});
 
-    else if ((!optionsShown) && (y <= 15))
-      setOptionsIntensity(15 - e.clientY);
+    else if ((y <= 15))
+      setOptionsIntensity((!optionsShown) ? (15 - e.clientY) : 10);
 
     else
       setOptionsIntensity(0);
@@ -222,18 +222,34 @@ console.log('imageMap', newImageMap);
         top:(!optionsShown) ?
               `${-50 + optionsIntensity + optionsDragLocation.y}px` :
               `${optionsDragLocation.y}px`,
-        width:'100%',
+        left:`${5 + optionsDragLocation.x}px`,
+        width:'calc(100% - 10px)',
         border: '2px solid black',
+        padding:'5px',
+        color: 'black',
         cursor:(optionsDragging) ? 'grabbing' :
                (!optionsShown) ?   'pointer' :
-                                   'auto',
+                                   'pointer',
+        display:'flex',
+        alignItems:'center',
         borderRadius:'5px',
         height:'50px',
-        boxShadow: `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(146, 148, 248, 0.4)`,
+        boxShadow: (!optionsShown) ?
+          `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(146, 148, 248, 0.4)` :
+          `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(256, 44, 44, 0.4)`,
         backgroundColor:'white',
         transition: (optionsDragging) ? "box-shadow 0.1s ease-in-out" :
-                                        "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out",
+                                        "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out",
       }}>
+        <label>
+          Cards Per Row: <input name="cardsPerRow" type="number" style={{
+            width:'fit-content',
+            backgroundColor:'white',
+            textAlign:'center',
+            }}
+            defaultValue={numCardsRow} onChange={onChangeNumCardsRow}
+            max={cards.length} min={1}/>
+        </label>
       </div>
     </>}
     <div
