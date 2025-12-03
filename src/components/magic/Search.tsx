@@ -16,9 +16,7 @@ async function fetchSets(url:string, fcb:(data:Set[])=>void) {
   let sets:Set[] = [];
 
   const response = await fetch(url);
-  console.log('r', response);
   const json = await response.json();
-  console.log('json', json);
   await addSets(json.search_uri);
   
   async function addSets(url:string) {
@@ -26,8 +24,7 @@ async function fetchSets(url:string, fcb:(data:Set[])=>void) {
       {
         name:_piece.name, acronym:_piece.code,
       })));
-    console.log('data', json.data);
-    console.log('sets', sets);
+
     if (json.has_more)
       await fetchSets(json.next_page, fcb);
   }
@@ -39,15 +36,12 @@ async function fetchCards(url:string, fcb:(data:Card[])=>void) {
   let cards:Card[] = [];
 
   const response = await fetch(url);
-  console.log('r', response);
   const json = await response.json();
-  console.log('json', json);
   await addCards(json.search_uri);
   
   async function addCards(url:string) {
     const search = await fetch(url);
     const res = await search.json();
-    console.log('res', res);
     cards = cards.concat(res.data);
     if (res.has_more)
       await addCards(res.next_page);
@@ -122,7 +116,6 @@ export const Search:React.FC<Props> = () => {
         // Update image
         .then((url) => {
           images.push({name:_card.name, url:url});
-          console.log('adding');
           if (images.length === cards.length)
             cb(images);
         })
@@ -135,38 +128,18 @@ export const Search:React.FC<Props> = () => {
     })
   }, []);
 
-  /*
-      {!loading &&
-        <div style={{
-          gridColumn: `1/${numCardsRow + 1}`,
-          height: '30px',
-          display:'flex',
-          }}>
-          <label>
-            Cards Per Row: <input name="cardsPerRow" type="number" style={{
-              width:'fit-content',
-              backgroundColor:'white',
-              textAlign:'center',
-              }} defaultValue={numCardsRow} onChange={onChangeNumCardsRow} max={cards.length} min={1}/>
-          </label>
-        </div>
-      }
-  */
-
   useEffect(() => {
     fetchCards('https://api.scryfall.com/sets/aer', (data) => {
       setLoading(false);
       setCards(data);
-      console.log('data', data);
-      console.log('fetching images...');
       fetchImages(data, (_images) => {
         const newImageMap = new Map<string, string>();
 
         for(const [key, value] of imageMap)
           newImageMap.set(key, value);
-console.log('_images', _images);
+
         _images.forEach((_image) => newImageMap.set(_image.name, _image.url));
-console.log('imageMap', newImageMap);
+
         setImageMap(newImageMap);
         })});
   }, []);
@@ -179,6 +152,10 @@ console.log('imageMap', newImageMap);
     setNumCardsRow(value);
   };
 
+  const onChangeSet:ChangeEventHandler<HTMLSelectElement> = (e) => {
+    console.log('onChangeSet', e);
+  };
+
   const handleFiltersMouseDown:MouseEventHandler = (e) => {
     setOptionsDragging(true);
     setOptionsDragPoint({x:e.clientX, y:e.clientY});
@@ -187,6 +164,9 @@ console.log('imageMap', newImageMap);
   const handleMouseUp:MouseEventHandler = (e) => {
     const x = e.clientX;
     const y = e.clientY;
+
+    if ((e.target as HTMLElement).tagName === "OPTION")
+      return;
 
     setDragging(false);
     setDragPoint({x:0, y:0});
@@ -226,12 +206,10 @@ console.log('imageMap', newImageMap);
   };
 
   const handleCardNameMouseDown:MouseEventHandler = (e) => {
-    console.log('here');
     e.stopPropagation();
   };
 
   const handleCardMouseDown:MouseEventHandler = (e) => {
-    console.log('in card');
     e.stopPropagation();
   }
 
@@ -254,6 +232,8 @@ console.log('imageMap', newImageMap);
                                    'pointer',
         display:'flex',
         alignItems:'center',
+        justifyContent:'space-evenly',
+        gap:'5px',
         borderRadius:'5px',
         height:'50px',
         boxShadow: (!optionsShown) ?
@@ -264,13 +244,28 @@ console.log('imageMap', newImageMap);
                                         "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out",
       }}>
         <label>
-          Cards Per Row: <input name="cardsPerRow" type="number" style={{
+          Cards Per Row: <input className="hover:bg-sky-200 bg-white" name="cardsPerRow" type="number" style={{
             width:'fit-content',
-            backgroundColor:'white',
             textAlign:'center',
+            borderRadius:'5px',
+            transition:"background-color 0.1s ease-in-out",
             }}
             defaultValue={numCardsRow} onChange={onChangeNumCardsRow}
+            onMouseDown={(e)=>e.stopPropagation()}
             max={cards.length} min={1}/>
+        </label>
+        <label>
+          Set: <select id="set" className="hover:bg-sky-200" name="set" value="aer" onChange={onChangeSet}
+                       onMouseDown={(e)=>e.stopPropagation()} style={{
+                  cursor:'pointer',
+                  borderRadius:'5px',
+                  padding:'2px',
+                  transition:'background-color 0.1s ease-in-out',
+                }}>
+                {sets.map((_set, _index) => (
+                  <option key={_index} value={_set.acronym}>{_set.name}</option>
+                ))}
+               </select>
         </label>
       </div>
     </>}
