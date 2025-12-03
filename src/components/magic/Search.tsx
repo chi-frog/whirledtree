@@ -130,9 +130,11 @@ export const Search:React.FC<Props> = () => {
 
   useEffect(() => {
     fetchCards('https://api.scryfall.com/sets/aer', (data) => {
+      const cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
+
       setLoading(false);
-      setCards(data);
-      fetchImages(data, (_images) => {
+      setCards(cards);
+      fetchImages(cards, (_images) => {
         const newImageMap = new Map<string, string>();
 
         for(const [key, value] of imageMap)
@@ -209,8 +211,9 @@ export const Search:React.FC<Props> = () => {
     e.stopPropagation();
   };
 
-  const handleCardMouseDown:MouseEventHandler = (e) => {
+  const handleCardMouseDown = (e:React.MouseEvent, index:number) => {
     e.stopPropagation();
+    console.log('d', cards[index]);
   }
 
   return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
@@ -290,7 +293,7 @@ export const Search:React.FC<Props> = () => {
         textAnchor:'middle',
       }}>Loading...</h4>}
       {!loading && cards.map((_card, _index)=>(
-        <div key={_index} onMouseDown={handleCardMouseDown} style={{
+        <div key={_index} onMouseDown={(e) => handleCardMouseDown(e, _index)} style={{
             display:'flex',
             cursor:(optionsDragging || dragging) ? 'grabbing' : 'pointer',
             flexDirection:'column',
