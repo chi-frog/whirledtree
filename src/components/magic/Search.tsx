@@ -2,18 +2,11 @@
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, MouseEventHandler, useEffect, useState } from "react";
+import { MagicCard, MagicSet } from "./types/default";
+import useRefMap from "@/hooks/useRefMap";
 
-type Card = {
-  name:string,
-}
-
-type Set = {
-  name:string,
-  acronym:string,
-}
-
-async function fetchSets(url:string, fcb:(data:Set[])=>void) {
-  let sets:Set[] = [];
+async function fetchSets(url:string, fcb:(data:MagicSet[])=>void) {
+  let sets:MagicSet[] = [];
 
   const response = await fetch(url);
   const json = await response.json();
@@ -32,8 +25,8 @@ async function fetchSets(url:string, fcb:(data:Set[])=>void) {
   fcb(sets);
 }
 
-async function fetchCards(url:string, fcb:(data:Card[])=>void) {
-  let cards:Card[] = [];
+async function fetchCards(url:string, fcb:(data:MagicCard[])=>void) {
+  let cards:MagicCard[] = [];
 
   const response = await fetch(url);
   const json = await response.json();
@@ -50,12 +43,16 @@ async function fetchCards(url:string, fcb:(data:Card[])=>void) {
   fcb(cards);
 }
 
+const scryfallUrl = 'https://api.scryfall.com/';
+const urlSets = 'sets/';
+
 type Props = {};
 export const Search:React.FC<Props> = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [cards, setCards] = useState<any[]>([]);
   const [imageMap, setImageMap] = useState<Map<string, string>>(new Map());
-  const [sets, setSets] = useState<Set[]>([]);
+  const [sets, setSets] = useState<MagicSet[]>([]);
+  const [selectedSets, setSelectedSets] = useState<string[]>(['aer']);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [numCardsPage, setNumCardsPage] = useState<number>(100);
   const [optionsShown, setOptionsShown] = useState<boolean>(false);
@@ -65,7 +62,7 @@ export const Search:React.FC<Props> = () => {
   const [optionsDragLocation, setOptionsDragLocation] = useState<{x:number, y:number}>({x:0, y:0});
   const [dragging, setDragging] = useState<boolean>(false);
   const [dragPoint, setDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
-
+  const {getMap, getRef} = useRefMap();
 
   useMouseLeavePage(() => {
     setOptionsDragging(false);
@@ -74,15 +71,22 @@ export const Search:React.FC<Props> = () => {
     setOptionsIntensity(0);
   });
 
-  const fetchImages = async (cards:any[], cb:(images:any[])=>void) => {
+  const fetchImages = async (cards:any[], cb:(image:any)=>void) => {
     type Image = {
       name:string,
       url:string,
     }
-    let images:Image[] = [];
+    //let images:Image[] = [];
 
     cards.forEach(async (_card, _index) => {
-      fetch(_card.image_uris.small)
+      console.log('Card to Find Image For:', _card);
+      let imageUri = _card.image_uris?.small;
+
+      if (!imageUri) {
+        console.log('Doesnt Exist', _card);
+        imageUri = _card.card_faces[0].image_uris.small;
+      }
+      fetch(imageUri)
         .then((response) => {
           const reader = response.body?.getReader();
 
@@ -114,37 +118,47 @@ export const Search:React.FC<Props> = () => {
         .then((response) => response.blob())
         .then((blob) => URL.createObjectURL(blob))
         // Update image
-        .then((url) => {
-          images.push({name:_card.name, url:url});
-          if (images.length === cards.length)
-            cb(images);
+        .then((url) => {  //Need to count requests/responses in case there is an error
+          //images.push({name:_card.name, url:url});
+          //if (images.length === cards.length)
+            //cb(images);
+          cb({name:_card.name, url:url});
         })
         .catch((err) => console.error(err))});
   };
 
   useEffect(() => {
-    fetchSets('https://api.scryfall.com/sets/', (data) => {
+    fetchSets(scryfallUrl + urlSets, (data) => {
       setSets(data);
     })
   }, []);
 
   useEffect(() => {
-    fetchCards('https://api.scryfall.com/sets/aer', (data) => {
+    setLoading(true);
+    fetchCards(scryfallUrl + urlSets + "/" + selectedSets[0], (data) => {
       const cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
 
       setLoading(false);
       setCards(cards);
-      fetchImages(cards, (_images) => {
+      fetchImages(cards, (_image) => {
         const newImageMap = new Map<string, string>();
 
         for(const [key, value] of imageMap)
           newImageMap.set(key, value);
 
-        _images.forEach((_image) => newImageMap.set(_image.name, _image.url));
+        newImageMap.set(_image.name, _image.url);
 
-        setImageMap(newImageMap);
+        setImageMap((_imageMap) => {
+          const newImageMap = new Map<string, string>();
+
+          for(const [key, value] of _imageMap)
+            newImageMap.set(key, value);
+
+          newImageMap.set(_image.name, _image.url);
+          return newImageMap;
+        });
         })});
-  }, []);
+  }, [selectedSets]);
 
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
     const value = parseInt(e.target.value);
@@ -155,7 +169,8 @@ export const Search:React.FC<Props> = () => {
   };
 
   const onChangeSet:ChangeEventHandler<HTMLSelectElement> = (e) => {
-    console.log('onChangeSet', e);
+    console.log('onChangeSet', e.target.value);
+    setSelectedSets([e.target.value]);
   };
 
   const handleFiltersMouseDown:MouseEventHandler = (e) => {
@@ -213,8 +228,57 @@ export const Search:React.FC<Props> = () => {
 
   const handleCardMouseDown = (e:React.MouseEvent, index:number) => {
     e.stopPropagation();
-    console.log('d', cards[index]);
-  }
+    console.log('card', cards[index]);
+    console.log('image', imageMap.get(cards[index].name));
+    console.log('imageMap', imageMap);
+  };
+
+  const handleCardMouseEnter = (e:React.MouseEvent, index:number) => {
+    const element = getMap().get(index);
+    let opacity = 0;
+    let opacityGoingUp = true;
+    let opacityFirstPass = true;
+    let opacityRate = 0.008;
+
+    element.style.border = "1px solid rgb(146, 148, 248)";
+    element.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
+    element.style.position = "relative";
+    element.style.top = "-3px";
+
+    setTimeout(() => {
+      const change = () => {
+        if (element.style.boxShadow === 'none')
+          return;
+
+        if(opacityGoingUp) {
+          opacity += (opacityFirstPass) ? opacityRate*15 : opacityRate;
+          if (opacity >= 1) {
+            opacityGoingUp = false;
+            opacityFirstPass = false;
+          }
+        } else {
+          opacity -= opacityRate;
+          if (opacity <= 0.7)
+            opacityGoingUp = true;
+        }
+        element.style.boxShadow = `0px 0px 10px 3px rgba(146, 148, 248, ${opacity})`;
+
+        setTimeout(change, 10);
+      };
+
+      change();
+    }, 10);
+  };
+
+  const handleCardMouseLeave = (e:React.MouseEvent, index:number) => {
+    const element = getMap().get(index);
+
+    element.style.border = "1px solid white";
+    element.style.boxShadow = "none";
+    element.style.position = "auto";
+    element.style.top = "";
+
+  };
 
   return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
     {(!loading) && <>
@@ -230,6 +294,7 @@ export const Search:React.FC<Props> = () => {
         border: '2px solid black',
         padding:'5px',
         color: 'black',
+        zIndex: '10',
         cursor:(optionsDragging) ? 'grabbing' :
                (!optionsShown) ?   'pointer' :
                                    'pointer',
@@ -258,7 +323,7 @@ export const Search:React.FC<Props> = () => {
             max={cards.length} min={1}/>
         </label>
         <label>
-          Set: <select id="set" className="hover:bg-sky-200" name="set" value="aer" onChange={onChangeSet}
+          Set: <select id="set" className="hover:bg-sky-200" name="set" value={selectedSets[0]} onChange={onChangeSet}
                        onMouseDown={(e)=>e.stopPropagation()} style={{
                   cursor:'pointer',
                   borderRadius:'5px',
@@ -278,10 +343,11 @@ export const Search:React.FC<Props> = () => {
         paddingTop:`${(!optionsShown) ? Math.min(15 + optionsDragLocation.y, 50) : 50}px`,
         overflow:'scroll',
         minWidth:'100vw',
+        minHeight:'100vh',
         width:'fit-content',
         paddingLeft:'15px',
         paddingRight:'15px',
-        backgroundColor:'#E6DDC5',
+        backgroundColor:'black',
         userSelect:(optionsDragging || dragging) ? 'none' : 'auto',
         transition:(optionsDragging) ? "" : 'padding 0.1s ease-in-out',
         color: 'black',
@@ -293,7 +359,11 @@ export const Search:React.FC<Props> = () => {
         textAnchor:'middle',
       }}>Loading...</h4>}
       {!loading && cards.map((_card, _index)=>(
-        <div key={_index} onMouseDown={(e) => handleCardMouseDown(e, _index)} style={{
+        <div
+          key={_index} ref={getRef.bind(null, _index)}
+          onMouseEnter={(e)=>handleCardMouseEnter(e, _index)}
+          onMouseLeave={(e)=>handleCardMouseLeave(e, _index)}
+          onMouseDown={(e) => handleCardMouseDown(e, _index)} style={{
             display:'flex',
             cursor:(optionsDragging || dragging) ? 'grabbing' : 'pointer',
             flexDirection:'column',
@@ -301,14 +371,14 @@ export const Search:React.FC<Props> = () => {
             margin:'5px',
             overflow:'hidden',
             borderRadius:'12px',
-            border:'1px solid black',
-            minWidth:'100px',
-          }}>
-          <h2 key={_index} onMouseDown={handleCardNameMouseDown} style={{
+            border:'1px solid white',
+            transition:'top 0.3s ease-in-out',
+            minWidth:'100px',}}>
+          {/*<h2 key={_index} onMouseDown={handleCardNameMouseDown} style={{
             textAlign:'center',
             margin:'3px',
             cursor:(optionsDragging || dragging) ? 'grabbing' : 'text',
-            }}>{_card.name}</h2>
+            }}>{_card.name}</h2>*/}
           <img src={imageMap.get(_card.name)} draggable="false" style={{
             maxWidth:'100%',
             cursor:(optionsDragging || dragging) ? 'grabbing' : 'pointer',
