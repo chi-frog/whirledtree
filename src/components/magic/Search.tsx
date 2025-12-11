@@ -273,7 +273,7 @@ export const Search:React.FC<Props> = () => {
   const handleCardMouseLeave = (e:React.MouseEvent, index:number) => {
     const element = getMap().get(index);
 
-    element.style.border = "1px solid white";
+    element.style.border = '1px solid rgba(255, 255, 255, 0.7)',
     element.style.boxShadow = "none";
     element.style.position = "auto";
     element.style.top = "";
@@ -365,13 +365,12 @@ export const Search:React.FC<Props> = () => {
           onMouseLeave={(e)=>handleCardMouseLeave(e, _index)}
           onMouseDown={(e) => handleCardMouseDown(e, _index)} style={{
             display:'flex',
-            cursor:(optionsDragging || dragging) ? 'grabbing' : 'pointer',
+            cursor:(optionsDragging || dragging) ? 'grabbing' : 'hand',
             flexDirection:'column',
-            backgroundColor:'white',
             margin:'5px',
             overflow:'hidden',
             borderRadius:'12px',
-            border:'1px solid white',
+            border:'1px solid rgba(255, 255, 255, 0.7)',
             transition:'top 0.3s ease-in-out',
             minWidth:'100px',}}>
           {/*<h2 key={_index} onMouseDown={handleCardNameMouseDown} style={{
