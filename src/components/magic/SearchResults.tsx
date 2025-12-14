@@ -2,24 +2,31 @@
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, MouseEventHandler, useEffect, useState } from "react";
-import { MagicCard, MagicSet } from "./types/default";
+import { MagicCard, MagicFormat, MagicSet } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
+import FiltersBar from "./filters/FiltersBar";
+import { capitalize } from "@/helpers/string";
 
-async function fetchSets(url:string, fcb:(data:MagicSet[])=>void) {
+async function fetchSets(fcb:(data:MagicSet[])=>void) {
+  const url = scryfallUrl + urlSets;
   let sets:MagicSet[] = [];
 
-  const response = await fetch(url);
-  const json = await response.json();
-  await addSets(json.search_uri);
+  await chunk(url);
   
-  async function addSets(url:string) {
-    sets = sets.concat(json.data.map((_piece:any) => (
-      {
-        name:_piece.name, acronym:_piece.code,
-      })));
+  async function chunk(url:string) {
+    const response = await fetch(url);
+    const json = await response.json();
+    addSets(json.data);
 
-    if (json.has_more)
-      await fetchSets(json.next_page, fcb);
+    async function addSets(data:any) {
+      sets = sets.concat(data.map((_set:any) => (
+        {
+          name:_set.name, acronym:_set.code,
+        })));
+
+      if (json.has_more)
+        await chunk(json.next_page);
+    }
   }
 
   fcb(sets);
@@ -27,14 +34,14 @@ async function fetchSets(url:string, fcb:(data:MagicSet[])=>void) {
 
 async function fetchCards(url:string, fcb:(data:MagicCard[])=>void) {
   let cards:MagicCard[] = [];
+  console.log('searching url ' + url);
 
-  const response = await fetch(url);
-  const json = await response.json();
-  await addCards(json.search_uri);
+  await addCards(url);
   
   async function addCards(url:string) {
     const search = await fetch(url);
     const res = await search.json();
+
     cards = cards.concat(res.data);
     if (res.has_more)
       await addCards(res.next_page);
@@ -45,16 +52,21 @@ async function fetchCards(url:string, fcb:(data:MagicCard[])=>void) {
 
 const scryfallUrl = 'https://api.scryfall.com/';
 const urlSets = 'sets/';
+const urlCards= 'cards/';
+const urlSearch = 'search?q=';
+const urlSearchFormat = 'f:';
+const urlSearchSet = 's:';
 
 type Props = {};
-export const Search:React.FC<Props> = () => {
+export const SearchResults:React.FC<Props> = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [cards, setCards] = useState<any[]>([]);
   const [imageMap, setImageMap] = useState<Map<string, string>>(new Map());
   const [sets, setSets] = useState<MagicSet[]>([]);
   const [selectedSets, setSelectedSets] = useState<string[]>(['aer']);
+  const [formats, setFormats] = useState<MagicFormat[]>([]);
+  const [selectedFormats, setSelectedFormats] = useState<string[]>(['All']);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
-  const [numCardsPage, setNumCardsPage] = useState<number>(100);
   const [optionsShown, setOptionsShown] = useState<boolean>(false);
   const [optionsIntensity, setOptionsIntensity] = useState<number>(0);
   const [optionsDragging, setOptionsDragging] = useState<boolean>(false);
@@ -72,14 +84,7 @@ export const Search:React.FC<Props> = () => {
   });
 
   const fetchImages = async (cards:any[], cb:(image:any)=>void) => {
-    type Image = {
-      name:string,
-      url:string,
-    }
-    //let images:Image[] = [];
-
     cards.forEach(async (_card, _index) => {
-      console.log('Card to Find Image For:', _card);
       let imageUri = _card.image_uris?.small;
 
       if (!imageUri) {
@@ -128,18 +133,39 @@ export const Search:React.FC<Props> = () => {
   };
 
   useEffect(() => {
-    fetchSets(scryfallUrl + urlSets, (data) => {
+    fetchSets((data) => {
       setSets(data);
+
     })
   }, []);
 
   useEffect(() => {
     setLoading(true);
-    fetchCards(scryfallUrl + urlSets + "/" + selectedSets[0], (data) => {
+
+    let url = scryfallUrl + urlCards + urlSearch;
+
+    if (selectedSets[0] !== "All") {
+      url += urlSearchSet + selectedSets[0];
+    }
+    if (selectedFormats[0] !== "All") {
+      if (selectedSets[0] !== "All")
+        url += "+";
+      url += urlSearchFormat + selectedFormats[0];
+    }
+
+    fetchCards(url, (data) => {
       const cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
 
       setLoading(false);
       setCards(cards);
+
+      // Do something if no cards
+
+      if (formats.length === 0)
+        setFormats([
+          {name:"All"},
+          ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
+
       fetchImages(cards, (_image) => {
         const newImageMap = new Map<string, string>();
 
@@ -158,7 +184,7 @@ export const Search:React.FC<Props> = () => {
           return newImageMap;
         });
         })});
-  }, [selectedSets]);
+  }, [selectedSets, selectedFormats]);
 
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
     const value = parseInt(e.target.value);
@@ -169,9 +195,12 @@ export const Search:React.FC<Props> = () => {
   };
 
   const onChangeSet:ChangeEventHandler<HTMLSelectElement> = (e) => {
-    console.log('onChangeSet', e.target.value);
     setSelectedSets([e.target.value]);
   };
+
+  const onChangeFormat:ChangeEventHandler<HTMLSelectElement> = (e) => {
+    setSelectedFormats([e.target.value]);
+  }
 
   const handleFiltersMouseDown:MouseEventHandler = (e) => {
     setOptionsDragging(true);
@@ -220,10 +249,6 @@ export const Search:React.FC<Props> = () => {
   const handleMouseDown:MouseEventHandler = (e) => {
     setDragging(true);
     setDragPoint({x:e.clientX, y:e.clientY});
-  };
-
-  const handleCardNameMouseDown:MouseEventHandler = (e) => {
-    e.stopPropagation();
   };
 
   const handleCardMouseDown = (e:React.MouseEvent, index:number) => {
@@ -281,62 +306,12 @@ export const Search:React.FC<Props> = () => {
   };
 
   return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
-    {(!loading) && <>
-      <div
-        onMouseDown={handleFiltersMouseDown}
-        style={{
-        position:'fixed',
-        top: (optionsDragging && !optionsShown) ? `${-50 + (15 - optionsDragPoint.y) + optionsDragLocation.y}px` :
-             (!optionsShown) ?   `${-50 + optionsIntensity + optionsDragLocation.y}px` :
-                                `${optionsDragLocation.y}px`,
-        left:`${5 + optionsDragLocation.x}px`,
-        width:'calc(100% - 10px)',
-        border: '2px solid black',
-        padding:'5px',
-        color: 'black',
-        zIndex: '10',
-        cursor:(optionsDragging) ? 'grabbing' :
-               (!optionsShown) ?   'pointer' :
-                                   'pointer',
-        display:'flex',
-        alignItems:'center',
-        justifyContent:'space-evenly',
-        gap:'5px',
-        borderRadius:'5px',
-        height:'50px',
-        boxShadow: (!optionsShown) ?
-          `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(146, 148, 248, 0.4)` :
-          `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(256, 44, 44, 0.8)`,
-        backgroundColor:'white',
-        transition: (optionsDragging) ? "box-shadow 0.1s ease-in-out" :
-                                        "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out",
-      }}>
-        <label>
-          Cards Per Row: <input className="hover:bg-sky-200 bg-white" name="cardsPerRow" type="number" style={{
-            width:'fit-content',
-            textAlign:'center',
-            borderRadius:'5px',
-            transition:"background-color 0.1s ease-in-out",
-            }}
-            defaultValue={numCardsRow} onChange={onChangeNumCardsRow}
-            onMouseDown={(e)=>e.stopPropagation()}
-            max={cards.length} min={1}/>
-        </label>
-        <label>
-          Set: <select id="set" className="hover:bg-sky-200" name="set" value={selectedSets[0]} onChange={onChangeSet}
-                       onMouseDown={(e)=>e.stopPropagation()} style={{
-                  cursor:'pointer',
-                  borderRadius:'5px',
-                  padding:'2px',
-                  transition:'background-color 0.1s ease-in-out',
-                }}>
-                {sets.map((_set, _index) => (
-                  <option key={_index} value={_set.acronym}>{_set.name}</option>
-                ))}
-               </select>
-        </label>
-      </div>
-    </>}
+    <FiltersBar handleFiltersMouseDown={handleFiltersMouseDown} optionsDragging={optionsDragging}
+      optionsShown={optionsShown} optionsDragPoint={optionsDragPoint} optionsDragLocation={optionsDragLocation} optionsIntensity={optionsIntensity}
+      numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
+      selectedSets={selectedSets} onChangeSet={onChangeSet}
+      selectedFormats={selectedFormats} onChangeFormat={onChangeFormat}
+      sets={sets} cards={cards} formats={formats}/>
     <div
       style={{
         cursor:(optionsDragging || dragging) ? 'grabbing' : 'move',
@@ -372,7 +347,8 @@ export const Search:React.FC<Props> = () => {
             borderRadius:'12px',
             border:'1px solid rgba(255, 255, 255, 0.7)',
             transition:'top 0.3s ease-in-out',
-            minWidth:'100px',}}>
+            minWidth:'100px',
+            height:'fit-content'}}>
           {/*<h2 key={_index} onMouseDown={handleCardNameMouseDown} style={{
             textAlign:'center',
             margin:'3px',

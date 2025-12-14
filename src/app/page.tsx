@@ -1,7 +1,7 @@
 'use client'
 
 import JournalWriter from "@/components/journalWriter/JournalWriter";
-import { Search } from "@/components/magic/Search";
+import {SearchResults} from "@/components/magic/SearchResults";
 import Focus from "@/components/test/Focus";
 import { createContext, MouseEventHandler, useContext, useState } from "react";
 
@@ -84,7 +84,7 @@ export default function Home() {
       onMouseMoveCapture={handleMouseMove}
       onMouseUp={handleMouseUp}>
       <ScrollContext value={{subScroll, scrollOn, scrolling}}>
-      {!testing && <Search />}
+      {!testing && <SearchResults />}
       {testing && <JournalWriter />}
       {testing === 'focus' && <Focus />}
       </ScrollContext>
