@@ -2,14 +2,14 @@
 
 import { ChangeEventHandler, MouseEventHandler } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "../types/default";
+import { FilterState } from "../SearchResults";
 
 type Props = {
   handleFiltersMouseDown:MouseEventHandler,
-  optionsDragging:boolean,
-  optionsShown:boolean,
-  optionsDragPoint:{x:number, y:number},
-  optionsDragLocation:{x:number, y:number},
-  optionsIntensity:number,
+  state:FilterState,
+  dragPoint:{x:number, y:number},
+  dragLocation:{x:number, y:number},
+  glow:number,
   numCardsRow:number,
   onChangeNumCardsRow:ChangeEventHandler,
   selectedSets:string[],
@@ -23,11 +23,10 @@ type Props = {
 
 const FiltersBar:React.FC<Props> = (
   {handleFiltersMouseDown,
-  optionsDragging,
-  optionsShown,
-  optionsDragPoint,
-  optionsDragLocation,
-  optionsIntensity,
+  state,
+  dragPoint,
+  dragLocation,
+  glow,
   numCardsRow,
   onChangeNumCardsRow,
   selectedSets,
@@ -38,34 +37,38 @@ const FiltersBar:React.FC<Props> = (
   sets,
   formats}:Props) => {
 
+  const dragging = (state === FilterState.REDUCED_DRAGGING) ||
+                   (state === FilterState.HIDDEN_DRAGGING);
+  const hidden = (state === FilterState.HIDDEN) ||
+                 (state === FilterState.HIDDEN_DRAGGING);
+
   return (<>
     <div
       onMouseDown={handleFiltersMouseDown}
       style={{
       position:'fixed',
-      top: (optionsDragging && !optionsShown) ? `${-50 + (15 - optionsDragPoint.y) + optionsDragLocation.y}px` :
-           (!optionsShown) ?   `${-50 + optionsIntensity + optionsDragLocation.y}px` :
-                              `${optionsDragLocation.y}px`,
-      left:`${5 + optionsDragLocation.x}px`,
+      top: (state === FilterState.HIDDEN_DRAGGING) ? `${-50 + (15 - dragPoint.y) + dragLocation.y}px` :
+           (hidden) ? `${-50 + glow + dragLocation.y}px` :
+                      `${dragLocation.y}px`,
+      left:`${5 + dragLocation.x}px`,
       width:'calc(100% - 10px)',
       border: '2px solid black',
       padding:'5px',
       color: 'black',
       zIndex: '10',
-      cursor:(optionsDragging) ? 'grabbing' :
-             (!optionsShown) ?   'pointer' :
-                                 'pointer',
+      cursor:(dragging) ? 'grabbing' :
+                          'pointer',
       display:'flex',
       alignItems:'center',
       justifyContent:'space-evenly',
       gap:'5px',
       borderRadius:'5px',
       height:'50px',
-      boxShadow: (!optionsShown) ?
-        `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(146, 148, 248, 0.4)` :
-        `0px 0px ${optionsIntensity}px ${optionsIntensity}px rgba(256, 44, 44, 0.8)`,
+      boxShadow: (hidden) ?
+        `0px 0px ${glow}px ${glow}px rgba(146, 148, 248, 0.4)` :
+        `0px 0px ${glow}px ${glow}px rgba(256, 44, 44, 0.8)`,
       backgroundColor:'white',
-      transition: (optionsDragging) ? "box-shadow 0.1s ease-in-out" :
+      transition: (dragging) ? "box-shadow 0.1s ease-in-out" :
                                       "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out",
       }}>
       <label>
