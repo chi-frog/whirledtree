@@ -4,7 +4,7 @@ import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, MouseEventHandler, useEffect, useState } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
-import FiltersBar from "./filters/FiltersBar";
+import FiltersBar, { yCutoffHidden, yCutoffWhole } from "./filters/FiltersBar";
 import { capitalize } from "@/helpers/string";
 
 async function fetchSets(fcb:(data:MagicSet[])=>void) {
@@ -57,10 +57,17 @@ const urlSearch = 'search?q=';
 const urlSearchFormat = 'f:';
 const urlSearchSet = 's:';
 
+export enum InteractState {
+  FREE = 'free',
+  BUSY = 'busy',
+}
+
 export enum FilterState {
   HIDDEN = 'hidden',
+  HIDDEN_PRESSED = 'hidden_pressed',
   HIDDEN_DRAGGING = 'hidden_dragging',
   REDUCED = 'reduced',
+  REDUCED_PRESSED = 'reduced_pressed',
   REDUCED_DRAGGING = 'reduced_dragging',
   WHOLE = 'whole',
 }
@@ -216,66 +223,27 @@ export const SearchResults:React.FC<Props> = () => {
     setSelectedFormats([e.target.value]);
   }
 
-  const handleFiltersMouseDown:MouseEventHandler = (e) => {
-    if (filterState === FilterState.HIDDEN)
-      setFilterState(FilterState.HIDDEN_DRAGGING);
-    else if (filterState === FilterState.REDUCED)
-      setFilterState(FilterState.REDUCED_DRAGGING);
-    setFilterDragPoint({x:e.clientX, y:e.clientY});
-  };
-
-  const handleMouseUp:MouseEventHandler = (e) => {
-    const x = e.clientX;
-    const y = e.clientY;
-
-    if ((e.target as HTMLElement).tagName === "OPTION")
-      return;
-
-    setDragging(false);
-    setDragPoint({x:0, y:0});
-    setFilterDragPoint({x:0, y:0});
-    setFilterDragLocation({x:0, y:0});
-
-    let newFilterState = filterState;
-
-    if ((filterDragging) && (filterDragPoint.x === x) && (filterDragPoint.y === y)) {
-      if (filterReduced)
-        newFilterState = FilterState.HIDDEN;
-      else if (filterHidden)
-        newFilterState = FilterState.REDUCED;
-    } else if ((filterState === FilterState.HIDDEN_DRAGGING) && (y >= 30))
-      newFilterState = FilterState.REDUCED;
-    else if ((filterReduced) && (y <= 15))
-      newFilterState = FilterState.HIDDEN;
-    else if (filterState === FilterState.HIDDEN_DRAGGING)
-      newFilterState = FilterState.HIDDEN;
-    else if (filterState === FilterState.REDUCED_DRAGGING)
-      newFilterState = FilterState.REDUCED;
-
-    setFilterState(newFilterState);
-    
-    setFilterGlow((newFilterState === FilterState.HIDDEN) ? Math.max(15 - y, 0) :
-                                   (y <= 15) ? 5 : 0);
-  };
-
-  const handleMouseMove:MouseEventHandler = (e) => {
-    const y = e.clientY;
-
-    if (filterDragging) {
-      setFilterDragLocation({x:e.clientX - filterDragPoint.x, y:y - filterDragPoint.y});
-
-    } else if (dragging) {
-      window.scrollTo(window.scrollX + dragPoint.x - e.clientX, window.scrollY + dragPoint.y - e.clientY);
-      setDragPoint({x:e.clientX, y:e.clientY});
-
+  const handleFilterMouseDown:MouseEventHandler = (e) => {
+    console.log('fmd', filterState);
+    switch(filterState) {
+    case FilterState.HIDDEN:
+      setFilterState(FilterState.HIDDEN_PRESSED);
+      break;
+    case FilterState.REDUCED:
+      setFilterState(FilterState.REDUCED_PRESSED);
+      break;
+    case FilterState.WHOLE:
+      handleMouseDown(e);
+      break;
+    default: console.log('Error with filterState', filterState);
     }
 
-    setFilterGlow((filterState === FilterState.HIDDEN) ?
-                          (Math.max(15 - y, 0)) :
-                          (y <= 15) ? 5 : 0);
+    setFilterDragPoint({x:e.clientX, y:e.clientY});
+    e.stopPropagation();
   };
 
   const handleMouseDown:MouseEventHandler = (e) => {
+    console.log('md', filterState);
     setDragging(true);
     setDragPoint({x:e.clientX, y:e.clientY});
   };
@@ -287,7 +255,98 @@ export const SearchResults:React.FC<Props> = () => {
     console.log('imageMap', imageMap);
   };
 
+  const handleMouseMove:MouseEventHandler = (e) => {
+    console.log('mm', filterState);
+    const y = e.clientY;
+
+    const newFilterState = 
+      (filterState === FilterState.HIDDEN_PRESSED)  ? FilterState.HIDDEN_DRAGGING :
+      (filterState === FilterState.REDUCED_PRESSED) ? FilterState.REDUCED_DRAGGING :
+                                                      filterState;
+
+    if (filterDragging(newFilterState)) {
+      setFilterDragLocation({x:e.clientX - filterDragPoint.x, y:y - filterDragPoint.y});
+
+    } else if (dragging) {
+      window.scrollTo(window.scrollX + dragPoint.x - e.clientX, window.scrollY + dragPoint.y - e.clientY);
+      setDragPoint({x:e.clientX, y:e.clientY});
+    }
+
+    setFilterState(newFilterState);
+    setFilterGlow((filterState === FilterState.HIDDEN && y < yCutoffHidden) ?
+                    (yCutoffHidden) :
+                    (y <= yCutoffHidden) ? 3 : 0);
+  };
+
+  const handleFilterMouseUp:MouseEventHandler = (e) => {
+    console.log('fmu', filterState);
+    const y = e.clientY;
+
+    setFilterDragLocation({x:0, y:0});
+
+    if (filterState === FilterState.HIDDEN_PRESSED) {
+      setFilterState(FilterState.REDUCED);
+      setFilterGlow((y <= yCutoffHidden) ? 3 : 0);
+
+    } else if (filterState === FilterState.REDUCED_PRESSED) {
+      if (y < yCutoffHidden)
+        setFilterState(FilterState.HIDDEN);
+      else
+        setFilterState(FilterState.REDUCED);
+      
+    } else if (filterState === FilterState.HIDDEN_DRAGGING) {
+      if (y >= yCutoffHidden && y <= yCutoffWhole)
+        setFilterState(FilterState.REDUCED);
+      else if (y > yCutoffWhole)
+        setFilterState(FilterState.WHOLE)
+      else
+        setFilterState(FilterState.HIDDEN);
+    } else if (filterState === FilterState.REDUCED_DRAGGING) {
+      if (y < yCutoffHidden)
+        setFilterState(FilterState.HIDDEN);
+      else if (y > yCutoffWhole)
+        setFilterState(FilterState.WHOLE);
+      else
+        setFilterState(FilterState.REDUCED);
+    } else if (filterState === FilterState.WHOLE) {
+      handleMouseUp(e);
+    }
+
+    e.stopPropagation();
+  };
+
+  const handleMouseUp:MouseEventHandler = (e) => {
+    console.log('mu', filterState);
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if ((e.target as HTMLElement).tagName === "OPTION")
+      return;
+
+    setDragging(false);
+    setDragPoint({x:0, y:0});
+    setFilterDragPoint({x:0, y:0});
+    setFilterDragLocation({x:0, y:0});
+
+    let newFilterState;
+    if (filterState === FilterState.HIDDEN_DRAGGING) {
+      newFilterState = (y >= yCutoffHidden) ? FilterState.REDUCED :
+                                              FilterState.HIDDEN;
+    } else if (filterState === FilterState.REDUCED_DRAGGING) {
+      newFilterState = (y < yCutoffHidden) ? FilterState.HIDDEN :
+                       (y > yCutoffWhole)  ? FilterState.WHOLE :
+                                             filterState;
+    } else
+      console.log('FilterState not changed', filterState);
+    
+    setFilterGlow((newFilterState === FilterState.HIDDEN && y < yCutoffHidden) ? yCutoffHidden :
+                                   (y <= yCutoffHidden) ? 3 : 0);
+  };
+
   const handleCardMouseEnter = (e:React.MouseEvent, index:number) => {
+    if (dragging || filterDragging(filterState))
+      return;
+
     const element = getMap().get(index);
     let opacity = 0;
     let opacityGoingUp = true;
@@ -334,49 +393,53 @@ export const SearchResults:React.FC<Props> = () => {
 
   };
 
-  const filterDragging = (filterState === FilterState.REDUCED_DRAGGING) ||
-                         (filterState === FilterState.HIDDEN_DRAGGING);
+  const filterDragging = (filterState:FilterState) => (filterState === FilterState.REDUCED_DRAGGING) ||
+                                                      (filterState === FilterState.HIDDEN_DRAGGING);
   const filterHidden = (filterState === FilterState.HIDDEN) ||
+                       (filterState === FilterState.HIDDEN_PRESSED) ||
                        (filterState === FilterState.HIDDEN_DRAGGING);
   const filterReduced = (filterState === FilterState.REDUCED) ||
+                        (filterState === FilterState.REDUCED_PRESSED) ||
                         (filterState === FilterState.REDUCED_DRAGGING);
+  const filterWhole = (filterState === FilterState.WHOLE);                    
 
-  return (<div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
-    <FiltersBar handleFiltersMouseDown={handleFiltersMouseDown}
+  return (
+  <div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
+    <FiltersBar handleMouseDown={handleFilterMouseDown} handleMouseUp={handleFilterMouseUp}
       state={filterState} dragPoint={filterDragPoint} dragLocation={filterDragLocation} glow={filterGlow}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
       selectedSets={selectedSets} onChangeSet={onChangeSet}
       selectedFormats={selectedFormats} onChangeFormat={onChangeFormat}
       sets={sets} cards={cards} formats={formats}/>
-    <div
-      style={{
-        cursor:(filterDragging || dragging) ? 'grabbing' : 'move',
-        paddingTop:`${(filterHidden) ? Math.min(15 + filterDragLocation.y, 50) : 50}px`,
-        overflow:'scroll',
-        minWidth:'100vw',
-        minHeight:'100vh',
-        width:'fit-content',
-        paddingLeft:'15px',
-        paddingRight:'15px',
-        backgroundColor:'black',
-        userSelect:(filterDragging || dragging) ? 'none' : 'auto',
-        transition:(filterDragging) ? "" : 'padding 0.1s ease-in-out',
-        color: 'black',
-        display:'grid',
-        gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
+    <div className="hover:bg-blue" style={{
+      cursor:(filterDragging(filterState) || dragging) ? 'grabbing' : 'move',
+      paddingTop:`${(filterHidden) ? Math.min(yCutoffHidden + filterDragLocation.y, 50) : 50}px`,
+      overflow:'scroll',
+      minWidth:'100vw',
+      minHeight:'100vh',
+      width:'fit-content',
+      paddingLeft:'15px',
+      paddingRight:'15px',
+      backgroundColor:'black',
+      userSelect:(filterDragging(filterState) || dragging) ? 'none' : 'auto',
+      transition:(filterDragging(filterState)) ? "" : 'padding 0.1s ease-in-out',
+      color: 'black',
+      display:'grid',
+      gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
       }}>
-      {loading && <h4 style={{
+      {loading &&
+      <h4 style={{
         textAlign:'center',
         textAnchor:'middle',
-      }}>Loading...</h4>}
-      {!loading && cards.map((_card, _index)=>(
-        <div
-          key={_index} ref={getRef.bind(null, _index)}
+        }}>Loading...</h4>}
+      {!loading &&
+      cards.map((_card, _index)=>(
+        <div key={_index} ref={getRef.bind(null, _index)}
           onMouseEnter={(e)=>handleCardMouseEnter(e, _index)}
           onMouseLeave={(e)=>handleCardMouseLeave(e, _index)}
           onMouseDown={(e) => handleCardMouseDown(e, _index)} style={{
             display:'flex',
-            cursor:(filterDragging || dragging) ? 'grabbing' : 'hand',
+            cursor:(filterDragging(filterState) || dragging) ? 'grabbing' : 'hand',
             flexDirection:'column',
             margin:'5px',
             overflow:'hidden',
@@ -384,19 +447,24 @@ export const SearchResults:React.FC<Props> = () => {
             border:'1px solid rgba(255, 255, 255, 0.7)',
             transition:'top 0.3s ease-in-out',
             minWidth:'100px',
-            height:'fit-content'}}>
-          {/*<h2 key={_index} onMouseDown={handleCardNameMouseDown} style={{
-            textAlign:'center',
-            margin:'3px',
-            cursor:(optionsDragging || dragging) ? 'grabbing' : 'text',
-            }}>{_card.name}</h2>*/}
+            height:'fit-content'
+            }}>
           <img src={imageMap.get(_card.name)} draggable="false" style={{
             maxWidth:'100%',
-            cursor:(filterDragging || dragging) ? 'grabbing' : 'pointer',
+            cursor:(filterDragging(filterState) || dragging) ? 'grabbing' : 'pointer',
             marginTop:'auto',
-          }}/>
+           }}/>
         </div>
       ))}
-    </div></div>
-  )
+    </div>
+    <div id="whole_shadow" className="w-screen h-screen" style={{
+        background: 'transparent',
+        position:'fixed',
+        top:'0px',
+        pointerEvents:'none',
+        boxShadow:(filterDragging(filterState) && filterDragLocation.y > yCutoffWhole) ?
+          'inset 0px 0px 15px 15px rgba(146, 148, 248, 0.7)' : '',
+        transition: 'box-shadow 0.1s ease-in-out'
+      }} />
+  </div>)
 };
