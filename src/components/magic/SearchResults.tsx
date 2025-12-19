@@ -4,8 +4,11 @@ import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, MouseEventHandler, useEffect, useState } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
-import FiltersBar, { yCutoffHidden, yCutoffWhole } from "./filters/FiltersBar";
+import FiltersBar from "./filters/FiltersBar";
 import { capitalize } from "@/helpers/string";
+
+const yCutoffHidden = 10;
+const yCutoffWhole = 300;
 
 async function fetchSets(fcb:(data:MagicSet[])=>void) {
   const url = scryfallUrl + urlSets;
@@ -236,6 +239,18 @@ export const SearchResults:React.FC<Props> = () => {
     setFilterState(filterState);
   };
 
+  const handleFilterArrowMouseDown:MouseEventHandler = (e) => {
+    console.log('amd', filterState);
+    setFilterState(FilterState.WHOLE_PRESSED);
+    e.stopPropagation();
+  };
+
+  const handleFilterArrowMouseUp:MouseEventHandler = (e) => {
+    console.log('amu', filterState);
+    setFilterState(FilterState.REDUCED);
+    e.stopPropagation();
+  };
+
   const handleFilterMouseDown:MouseEventHandler = (e) => {
     console.log('fmd', filterState);
     const y = e.clientY;
@@ -424,7 +439,9 @@ export const SearchResults:React.FC<Props> = () => {
 
   return (
   <div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
-    <FiltersBar handleMouseDown={handleFilterMouseDown} handleMouseUp={handleFilterMouseUp}
+    <FiltersBar yCutoffHidden={yCutoffHidden}
+      handleArrowMouseDown={handleFilterArrowMouseDown} handleArrowMouseUp={handleFilterArrowMouseUp}
+      handleMouseDown={handleFilterMouseDown} handleMouseUp={handleFilterMouseUp}
       state={filterState} dragPoint={filterDragPoint} dragLocation={filterDragLocation} glow={filterGlow}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
       selectedSets={selectedSets} onChangeSet={onChangeSet}

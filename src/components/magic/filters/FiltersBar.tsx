@@ -5,12 +5,12 @@ import { MagicCard, MagicFormat, MagicSet } from "../types/default";
 import { FilterState } from "../SearchResults";
 import FilterOption from "./FilterOption";
 
-export const yCutoffHidden = 10;
-export const yCutoffWhole = 300;
-
 type Props = {
+  yCutoffHidden:number,
   handleMouseDown:MouseEventHandler,
   handleMouseUp:MouseEventHandler,
+  handleArrowMouseDown:MouseEventHandler,
+  handleArrowMouseUp:MouseEventHandler,
   state:FilterState,
   dragPoint:{x:number, y:number},
   dragLocation:{x:number, y:number},
@@ -27,6 +27,9 @@ type Props = {
 };
 
 const FiltersBar:React.FC<Props> = ({
+  yCutoffHidden,
+  handleArrowMouseDown,
+  handleArrowMouseUp,
   handleMouseDown,
   handleMouseUp,
   state,
@@ -66,7 +69,6 @@ const FiltersBar:React.FC<Props> = ({
       width: (whole) ? 'calc(100vw - 40px)' : 'calc(100% - 10px)',
       height:(whole) ? 'calc(100vh - 40px)' : '50px',
       border: '2px solid black',
-      padding:'5px',
       color: 'black',
       zIndex: '10',
       cursor:(dragging) ? 'grabbing' :
@@ -75,6 +77,7 @@ const FiltersBar:React.FC<Props> = ({
       alignItems:'center',
       justifyContent:'space-evenly',
       flexWrap:'wrap',
+      overflow:'hidden',
       gap:'5px',
       borderRadius:'5px',
       boxShadow: (hidden)   ? `0px 0px ${glow*2}px ${glow*2}px rgba(146, 148, 248, 0.8)` :
@@ -106,6 +109,7 @@ const FiltersBar:React.FC<Props> = ({
           borderRadius:'5px',
           padding:'2px 5px 2px 5px',
           backgroundColor:'white',
+          textAlign:'center',
           transition:'background-color 0.1s ease-in-out',
           boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
           }}>
@@ -121,9 +125,10 @@ const FiltersBar:React.FC<Props> = ({
           style={{
             cursor:'pointer',
             borderRadius:'5px',
-            padding:'2px',
+            padding:'2px 5px 2px 5px',
+            textAlign:'center',
             backgroundColor:'white',
-          boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
+            boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.8)',
             transition:'background-color 0.1s ease-in-out',
           }}>
           {formats.map((_format, _index) => (
@@ -133,6 +138,22 @@ const FiltersBar:React.FC<Props> = ({
           ))}
         </select>
       </FilterOption>
+      {(whole) &&
+      <svg className="hover:scale-150 hover:bg-gradient-to-b from-light-red to-rgba[255, 255, 255, 0.8]"
+        onMouseDown={handleArrowMouseDown} onMouseUp={handleArrowMouseUp}
+        fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" 
+	      width="800px" height="800px" viewBox="0 0 100 100" enableBackground="new 0 0 100 100" xmlSpace="preserve" style={{
+          alignSelf:'flex-end',
+          width:'100%',
+          height:'30px',
+          rotate:'180deg',
+        }}>
+        <g>
+	        <path d="M78.466,35.559L50.15,63.633L22.078,35.317c-0.777-0.785-2.044-0.789-2.828-0.012s-0.789,2.044-0.012,2.827L48.432,67.58
+		      c0.365,0.368,0.835,0.563,1.312,0.589c0.139,0.008,0.278-0.001,0.415-0.021c0.054,0.008,0.106,0.021,0.16,0.022
+		      c0.544,0.029,1.099-0.162,1.515-0.576l29.447-29.196c0.785-0.777,0.79-2.043,0.012-2.828S79.249,34.781,78.466,35.559z"/>
+        </g>
+      </svg>}
       </div>
   </>);
 };
