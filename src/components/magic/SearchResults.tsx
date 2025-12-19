@@ -70,6 +70,7 @@ export enum FilterState {
   REDUCED_PRESSED = 'reduced_pressed',
   REDUCED_DRAGGING = 'reduced_dragging',
   WHOLE = 'whole',
+  WHOLE_PRESSED = 'whole_pressed',
 }
 
 type Props = {};
@@ -223,8 +224,22 @@ export const SearchResults:React.FC<Props> = () => {
     setSelectedFormats([e.target.value]);
   }
 
+  const resetFilterGlow = (filterState:FilterState, y:number) => {
+    setFilterGlow((filterState === FilterState.HIDDEN && y <= yCutoffHidden)  ? 10 :
+                  (y <= yCutoffHidden)                                        ? -3 :
+                  (filterState === FilterState.REDUCED && y >= 40 && y <= 50) ? 10 :
+                                                                                0);
+  }
+
+  const changeFilterState = (filterState:FilterState, y:number) => {
+    resetFilterGlow(filterState, y);
+    setFilterState(filterState);
+  };
+
   const handleFilterMouseDown:MouseEventHandler = (e) => {
     console.log('fmd', filterState);
+    const y = e.clientY;
+
     switch(filterState) {
     case FilterState.HIDDEN:
       setFilterState(FilterState.HIDDEN_PRESSED);
@@ -234,6 +249,7 @@ export const SearchResults:React.FC<Props> = () => {
       break;
     case FilterState.WHOLE:
       handleMouseDown(e);
+      setFilterState(FilterState.WHOLE_PRESSED);
       break;
     default: console.log('Error with filterState', filterState);
     }
@@ -262,6 +278,7 @@ export const SearchResults:React.FC<Props> = () => {
     const newFilterState = 
       (filterState === FilterState.HIDDEN_PRESSED)  ? FilterState.HIDDEN_DRAGGING :
       (filterState === FilterState.REDUCED_PRESSED) ? FilterState.REDUCED_DRAGGING :
+      (filterState === FilterState.WHOLE_PRESSED)   ? FilterState.WHOLE :
                                                       filterState;
 
     if (filterDragging(newFilterState)) {
@@ -272,10 +289,7 @@ export const SearchResults:React.FC<Props> = () => {
       setDragPoint({x:e.clientX, y:e.clientY});
     }
 
-    setFilterState(newFilterState);
-    setFilterGlow((filterState === FilterState.HIDDEN && y < yCutoffHidden) ?
-                    (yCutoffHidden) :
-                    (y <= yCutoffHidden) ? 3 : 0);
+    changeFilterState(newFilterState, y);
   };
 
   const handleFilterMouseUp:MouseEventHandler = (e) => {
@@ -285,30 +299,31 @@ export const SearchResults:React.FC<Props> = () => {
     setFilterDragLocation({x:0, y:0});
 
     if (filterState === FilterState.HIDDEN_PRESSED) {
-      setFilterState(FilterState.REDUCED);
-      setFilterGlow((y <= yCutoffHidden) ? 3 : 0);
+      changeFilterState(FilterState.REDUCED, y);
 
     } else if (filterState === FilterState.REDUCED_PRESSED) {
-      if (y < yCutoffHidden)
-        setFilterState(FilterState.HIDDEN);
+      if (y <= yCutoffHidden) {
+        changeFilterState(FilterState.HIDDEN, y);
+      } else if (y >= 40 && y <= 50)
+        changeFilterState(FilterState.WHOLE, y);
       else
-        setFilterState(FilterState.REDUCED);
+        changeFilterState(FilterState.REDUCED, y);
       
     } else if (filterState === FilterState.HIDDEN_DRAGGING) {
-      if (y >= yCutoffHidden && y <= yCutoffWhole)
-        setFilterState(FilterState.REDUCED);
-      else if (y > yCutoffWhole)
-        setFilterState(FilterState.WHOLE)
+      if (y > yCutoffHidden && y <= yCutoffWhole) {
+        changeFilterState(FilterState.REDUCED, y);
+      } else if (y > yCutoffWhole)
+        changeFilterState(FilterState.WHOLE, y);
       else
-        setFilterState(FilterState.HIDDEN);
+        changeFilterState(FilterState.HIDDEN, y);
     } else if (filterState === FilterState.REDUCED_DRAGGING) {
-      if (y < yCutoffHidden)
-        setFilterState(FilterState.HIDDEN);
-      else if (y > yCutoffWhole)
-        setFilterState(FilterState.WHOLE);
+      if (y <= yCutoffHidden) {
+        changeFilterState(FilterState.HIDDEN, y);
+      } else if (y > yCutoffWhole)
+        changeFilterState(FilterState.WHOLE, y);
       else
-        setFilterState(FilterState.REDUCED);
-    } else if (filterState === FilterState.WHOLE) {
+        changeFilterState(FilterState.REDUCED, y);
+    } else if (filterWhole) {
       handleMouseUp(e);
     }
 
@@ -328,19 +343,22 @@ export const SearchResults:React.FC<Props> = () => {
     setFilterDragPoint({x:0, y:0});
     setFilterDragLocation({x:0, y:0});
 
-    let newFilterState;
+    let newFilterState = filterState;;
     if (filterState === FilterState.HIDDEN_DRAGGING) {
       newFilterState = (y >= yCutoffHidden) ? FilterState.REDUCED :
                                               FilterState.HIDDEN;
     } else if (filterState === FilterState.REDUCED_DRAGGING) {
-      newFilterState = (y < yCutoffHidden) ? FilterState.HIDDEN :
+      newFilterState = (y <= yCutoffHidden) ? FilterState.HIDDEN :
                        (y > yCutoffWhole)  ? FilterState.WHOLE :
                                              filterState;
+    } else if (filterWhole) {
+      newFilterState = (y <= yCutoffHidden) ? FilterState.HIDDEN :
+                       (y <= 50)            ? FilterState.REDUCED :
+                                              FilterState.WHOLE;
     } else
       console.log('FilterState not changed', filterState);
     
-    setFilterGlow((newFilterState === FilterState.HIDDEN && y < yCutoffHidden) ? yCutoffHidden :
-                                   (y <= yCutoffHidden) ? 3 : 0);
+    changeFilterState(newFilterState, y);
   };
 
   const handleCardMouseEnter = (e:React.MouseEvent, index:number) => {
@@ -401,7 +419,8 @@ export const SearchResults:React.FC<Props> = () => {
   const filterReduced = (filterState === FilterState.REDUCED) ||
                         (filterState === FilterState.REDUCED_PRESSED) ||
                         (filterState === FilterState.REDUCED_DRAGGING);
-  const filterWhole = (filterState === FilterState.WHOLE);                    
+  const filterWhole = (filterState === FilterState.WHOLE) ||
+                      (filterState === FilterState.WHOLE_PRESSED);                    
 
   return (
   <div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
