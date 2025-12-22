@@ -89,11 +89,10 @@ const FiltersBar:React.FC<Props> = ({
                                "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out",
       }}>
       <FilterOption text="Cards Per Row: ">
-        <input className="hover:bg-sky-200 bg-white" name="cardsPerRow" type="number" style={{
+        <input className="bg-white hover:bg-sky-200" name="cardsPerRow" type="number" style={{
           width:'fit-content',
           textAlign:'center',
           borderRadius:'5px',
-          backgroundColor:'white',
           boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
           transition:"background-color 0.1s ease-in-out",
           }}
@@ -101,34 +100,34 @@ const FiltersBar:React.FC<Props> = ({
           max={cards.length} min={1}/>
       </FilterOption>
       <FilterOption text="Set: " dragging={dragging}>
-        <select id="set"
-          className={"hover:bg-sky-200 [&>option]:bg-white"}
+        <select id="set" autoComplete="on"
+          className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
           name="set" value={selectedSets[0]} onChange={onChangeSet}
           style={{
-          cursor:'pointer',
-          borderRadius:'5px',
-          padding:'2px 5px 2px 5px',
-          backgroundColor:'white',
-          textAlign:'center',
-          transition:'background-color 0.1s ease-in-out',
-          boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
+            cursor:'pointer',
+            borderRadius:'5px',
+            padding:'2px 5px 2px 5px',
+            textAlign:'center',
+            transition:'background-color 0.1s ease-in-out',
+            boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
           }}>
           {sets.map((_set, _index) => (
-            <option key={_index} value={_set.acronym}>{_set.name}</option>
+            (_set.acronym !== selectedSets[0]) ?
+              <option className="notselected" key={_index} value={_set.acronym}>{_set.name}</option> :
+              <option className="selected" key={_index} value={_set.acronym}>{_set.name}</option>
           ))}
         </select>
       </FilterOption>
       <FilterOption text="Format: ">
         <select id="format"
-          className="hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
+          className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
           name="format" value={selectedFormats[0]} onChange={onChangeFormat}
           style={{
             cursor:'pointer',
             borderRadius:'5px',
             padding:'2px 5px 2px 5px',
             textAlign:'center',
-            backgroundColor:'white',
-            boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.8)',
+            boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
             transition:'background-color 0.1s ease-in-out',
           }}>
           {formats.map((_format, _index) => (

@@ -6,37 +6,13 @@ import { MagicCard, MagicFormat, MagicSet } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import FiltersBar from "./filters/FiltersBar";
 import { capitalize } from "@/helpers/string";
+import useMagicSets from "@/hooks/magic/useMagicSets";
 
 const yCutoffHidden = 10;
 const yCutoffWhole = 300;
 
-async function fetchSets(fcb:(data:MagicSet[])=>void) {
-  const url = scryfallUrl + urlSets;
-  let sets:MagicSet[] = [];
-
-  await chunk(url);
-  
-  async function chunk(url:string) {
-    const response = await fetch(url);
-    const json = await response.json();
-    addSets(json.data);
-
-    async function addSets(data:any) {
-      sets = sets.concat(data.map((_set:any) => (
-        {
-          name:_set.name, acronym:_set.code,
-        })));
-
-      if (json.has_more)
-        await chunk(json.next_page);
-    }
-  }
-
-  fcb(sets);
-}
-
-async function fetchCards(url:string, fcb:(data:MagicCard[])=>void) {
-  let cards:MagicCard[] = [];
+async function fetchCards(url:string, fcb:(data:any[])=>void) {
+  let cards:any[] = [];
   console.log('searching url ' + url);
 
   await addCards(url);
@@ -46,6 +22,7 @@ async function fetchCards(url:string, fcb:(data:MagicCard[])=>void) {
     const res = await search.json();
 
     cards = cards.concat(res.data);
+    console.log('res', res);
     if (res.has_more)
       await addCards(res.next_page);
   }
@@ -80,8 +57,7 @@ type Props = {};
 export const SearchResults:React.FC<Props> = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [cards, setCards] = useState<any[]>([]);
-  const [imageMap, setImageMap] = useState<Map<string, string>>(new Map());
-  const [sets, setSets] = useState<MagicSet[]>([]);
+  const [imageMap, setImageMap] = useState<Map<string, ImagePacket>>(new Map());
   const [selectedSets, setSelectedSets] = useState<string[]>(['aer']);
   const [formats, setFormats] = useState<MagicFormat[]>([]);
   const [selectedFormats, setSelectedFormats] = useState<string[]>(['All']);
@@ -92,7 +68,11 @@ export const SearchResults:React.FC<Props> = () => {
   const [filterDragLocation, setFilterDragLocation] = useState<{x:number, y:number}>({x:0, y:0});
   const [dragging, setDragging] = useState<boolean>(false);
   const [dragPoint, setDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
+  const [cardDragPoint, setCardDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
+  const [modalShown, setModalShown] = useState<boolean>(false);
+  const [modalCard, setModalCard] = useState<MagicCard|null>(null);
   const {getMap, getRef} = useRefMap();
+  const [setsLoaded, sets] = useMagicSets();
 
   const setFilterDefaultDrag = () => {
     if (filterState === FilterState.HIDDEN_DRAGGING)
@@ -108,28 +88,59 @@ export const SearchResults:React.FC<Props> = () => {
     setFilterGlow(0);
   });
 
-  const fetchImages = async (cards:any[], cb:(image:any)=>void) => {
-    cards.forEach(async (_card, _index) => {
-      let imageUri = _card.image_uris?.small;
+  type ImagePacket = {
+    name:string,
+    smallUri?:string,
+    smallBlob?:string,
+    largeUri?:string,
+    largeBlob?:string,
+  };
 
-      if (!imageUri) {
-        console.log('Doesnt Exist', _card);
-        imageUri = _card.card_faces[0].image_uris.small;
+  type ImageMap = Map<string, ImagePacket>;
+
+  const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
+    const newImageMap = new Map<string, ImagePacket>();
+
+    for (const [key, value] of imageMap)
+      newImageMap.set(key, value);
+
+    return newImageMap;
+  };
+
+  const primeImageMap = (cards:any[]):ImageMap => {
+    const newImageMap = copyImageMap(imageMap);
+
+    cards.forEach((_card) => {
+      let smallImageUri = _card.image_uris?.small;
+      let largeImageUri = _card.image_uris?.large;
+
+      if (!smallImageUri || !largeImageUri) {
+        smallImageUri = _card.card_faces[0].image_uris.small;
+        largeImageUri = _card.card_faces[0].image_uris.large;
       }
-      fetch(imageUri)
-        .then((response) => {
-          const reader = response.body?.getReader();
 
-          if (!reader) {
-            console.log('Reader error');
-            return;
-          }
+      newImageMap.set(_card.name, {name:_card.name, smallUri:smallImageUri, largeUri:largeImageUri})
+    });
+    
+    return newImageMap;
+  };
 
-          return new ReadableStream({
-            start(controller) {
-              return pump();
-              async function pump():Promise<ReadableStream<any> | undefined> {
-                return reader?.read().then(({ done, value }) => {
+  const fetchImage = async (hydratedImageMap:ImageMap, name:string, uri:string) => {
+    const blob = await fetch(uri)
+      .then((response) => {
+        const reader = response.body?.getReader();
+
+        if (!reader) {
+          console.log('Reader error');
+          return;
+        }
+
+        return new ReadableStream({
+          start(controller) {
+            return pump();
+            
+            async function pump():Promise<ReadableStream<any> | undefined> {
+              return reader?.read().then(({ done, value }) => {
                 // When no more data needs to be consumed, close the stream
                 if (done) {
                   controller.close();
@@ -142,27 +153,47 @@ export const SearchResults:React.FC<Props> = () => {
             }
           },
         })})
-        // Create a new response out of the stream
-        .then((stream) => new Response(stream))
-        // Create an object URL for the response
-        .then((response) => response.blob())
-        .then((blob) => URL.createObjectURL(blob))
-        // Update image
-        .then((url) => {  //Need to count requests/responses in case there is an error
-          //images.push({name:_card.name, url:url});
-          //if (images.length === cards.length)
-            //cb(images);
-          cb({name:_card.name, url:url});
-        })
-        .catch((err) => console.error(err))});
+      // Create a new response out of the stream
+      .then((stream) => new Response(stream))
+      // Create an object URL for the response
+      .then((response) => response.blob())
+      .then((blob) => URL.createObjectURL(blob))
+      .then((url) => url)
+      .catch((err) => console.error(err));
+
+    if (!blob) {
+      console.log('Something wrong with blob');
+      return;
+    }
+
+    const dryImage = hydratedImageMap.get(name);
+
+    if (!dryImage) {
+      console.log('Dry Image for ' + name, blob);
+      return;
+    }
+
+    console.log('Hydrating ' + name);
+    hydratedImageMap.set(name, {...dryImage, smallBlob:blob});
+  }
+
+  const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:any[], cb:(hydratedImageMap:ImageMap)=>void) => {
+    let hydratedImageMap = copyImageMap(imageMap);
+    
+    await Promise.all(cards.map(async (_card, _index) => {
+      const uri = imageMap.get(_card.name)?.smallUri;
+
+      if (!uri) {
+        console.log('Invalid Uri for ' + _card.name, uri);
+        return Promise.resolve();
+      }
+
+      return fetchImage(hydratedImageMap, _card.name, uri);
+    }));
+
+    console.log('end of hydrate function');
+    cb(hydratedImageMap);
   };
-
-  useEffect(() => {
-    fetchSets((data) => {
-      setSets(data);
-
-    })
-  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -183,6 +214,7 @@ export const SearchResults:React.FC<Props> = () => {
 
       setLoading(false);
       setCards(cards);
+      console.log('cards', cards);
 
       // Do something if no cards
 
@@ -191,24 +223,13 @@ export const SearchResults:React.FC<Props> = () => {
           {name:"All"},
           ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
 
-      fetchImages(cards, (_image) => {
-        const newImageMap = new Map<string, string>();
+      let primedImageMap = primeImageMap(cards);
 
-        for(const [key, value] of imageMap)
-          newImageMap.set(key, value);
-
-        newImageMap.set(_image.name, _image.url);
-
-        setImageMap((_imageMap) => {
-          const newImageMap = new Map<string, string>();
-
-          for(const [key, value] of _imageMap)
-            newImageMap.set(key, value);
-
-          newImageMap.set(_image.name, _image.url);
-          return newImageMap;
-        });
-        })});
+      hydrateImageMap(primedImageMap, cards, (hydratedImageMap:ImageMap) => {
+        console.log('here we go', hydratedImageMap);
+        setImageMap(hydratedImageMap);
+      });
+    });
   }, [selectedSets, selectedFormats]);
 
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -281,9 +302,20 @@ export const SearchResults:React.FC<Props> = () => {
 
   const handleCardMouseDown = (e:React.MouseEvent, index:number) => {
     e.stopPropagation();
+
+    setCardDragPoint({x:e.clientX, y:e.clientY});
+  };
+
+  const handleCardMouseUp = (e:React.MouseEvent, index:number) => {
+    e.stopPropagation();
+
     console.log('card', cards[index]);
-    console.log('image', imageMap.get(cards[index].name));
-    console.log('imageMap', imageMap);
+    setCardDragPoint({x:0, y:0});
+
+    if (e.clientX === cardDragPoint.x && (e.clientY === cardDragPoint.y)) {
+      setModalShown(true);
+      setModalCard(cards[index]);
+    }
   };
 
   const handleMouseMove:MouseEventHandler = (e) => {
@@ -435,7 +467,22 @@ export const SearchResults:React.FC<Props> = () => {
                         (filterState === FilterState.REDUCED_PRESSED) ||
                         (filterState === FilterState.REDUCED_DRAGGING);
   const filterWhole = (filterState === FilterState.WHOLE) ||
-                      (filterState === FilterState.WHOLE_PRESSED);                    
+                      (filterState === FilterState.WHOLE_PRESSED);      
+                      
+  const handleModalMouseDown:MouseEventHandler = (e) => {
+    console.log('mmd');
+    e.stopPropagation();
+  }
+
+  const handleModalMouseUp:MouseEventHandler = (e) => {
+    console.log('mmu');
+    e.stopPropagation();
+  }
+
+  const handleModalMouseMove:MouseEventHandler = (e) => {
+    console.log('mmm');
+    e.stopPropagation();
+  }
 
   return (
   <div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
@@ -473,7 +520,8 @@ export const SearchResults:React.FC<Props> = () => {
         <div key={_index} ref={getRef.bind(null, _index)}
           onMouseEnter={(e)=>handleCardMouseEnter(e, _index)}
           onMouseLeave={(e)=>handleCardMouseLeave(e, _index)}
-          onMouseDown={(e) => handleCardMouseDown(e, _index)} style={{
+          onMouseDown={(e) => handleCardMouseDown(e, _index)}
+          onMouseUp={(e) => handleCardMouseUp(e, _index)} style={{
             display:'flex',
             cursor:(filterDragging(filterState) || dragging) ? 'grabbing' : 'hand',
             flexDirection:'column',
@@ -485,7 +533,7 @@ export const SearchResults:React.FC<Props> = () => {
             minWidth:'100px',
             height:'fit-content'
             }}>
-          <img src={imageMap.get(_card.name)} draggable="false" style={{
+          <img src={imageMap.get(_card.name)?.smallBlob} draggable="false" style={{
             maxWidth:'100%',
             cursor:(filterDragging(filterState) || dragging) ? 'grabbing' : 'pointer',
             marginTop:'auto',
@@ -502,5 +550,37 @@ export const SearchResults:React.FC<Props> = () => {
           'inset 0px 0px 15px 15px rgba(146, 148, 248, 0.7)' : '',
         transition: 'box-shadow 0.1s ease-in-out'
       }} />
+    {modalShown &&
+    <div id="modal" className="w-screen h-screen" 
+      onMouseDown={handleModalMouseDown}
+      onMouseUp={handleModalMouseUp}
+      onMouseMove={handleModalMouseMove}
+      style={{
+        background: 'rgba(120, 120, 120, 0.5)',
+        position:'fixed',
+        top:'0px',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+      }}>
+      <div id="inner" style={{
+        backgroundColor:'blue',
+        height: '80vh',
+        width: '80vw',
+        borderRadius:'20px',
+      }}>
+        {modalCard && <div style={{
+          height:'100%',
+          borderRadius:'20px',
+          width:'fit-content',
+          overflow:'hidden',
+        }}>
+          <img src={imageMap.get(modalCard.name)?.smallBlob} draggable="false" style={{
+            maxWidth:'100%',
+            height:'100%',
+          }}/>
+        </div>}
+      </div>
+    </div>}
   </div>)
 };

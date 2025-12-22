@@ -7,6 +7,7 @@ export type MagicCard = {
 export type MagicSet = {
   name:string,
   acronym:string,
+  type:string,
 }
 
 export type MagicFormat = {
