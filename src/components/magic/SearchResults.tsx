@@ -7,13 +7,14 @@ import useRefMap from "@/hooks/useRefMap";
 import FiltersBar from "./filters/FiltersBar";
 import { capitalize } from "@/helpers/string";
 import useMagicSets from "@/hooks/magic/useMagicSets";
+import Modal from "./Modal";
+import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 
 const yCutoffHidden = 10;
 const yCutoffWhole = 300;
 
 async function fetchCards(url:string, fcb:(data:any[])=>void) {
   let cards:any[] = [];
-  console.log('searching url ' + url);
 
   await addCards(url);
   
@@ -22,24 +23,12 @@ async function fetchCards(url:string, fcb:(data:any[])=>void) {
     const res = await search.json();
 
     cards = cards.concat(res.data);
-    console.log('res', res);
+
     if (res.has_more)
       await addCards(res.next_page);
   }
 
   fcb(cards);
-}
-
-const scryfallUrl = 'https://api.scryfall.com/';
-const urlSets = 'sets/';
-const urlCards= 'cards/';
-const urlSearch = 'search?q=';
-const urlSearchFormat = 'f:';
-const urlSearchSet = 's:';
-
-export enum InteractState {
-  FREE = 'free',
-  BUSY = 'busy',
 }
 
 export enum FilterState {
@@ -90,9 +79,7 @@ export const SearchResults:React.FC<Props> = () => {
 
   type ImagePacket = {
     name:string,
-    smallUri?:string,
     smallBlob?:string,
-    largeUri?:string,
     largeBlob?:string,
   };
 
@@ -107,25 +94,7 @@ export const SearchResults:React.FC<Props> = () => {
     return newImageMap;
   };
 
-  const primeImageMap = (cards:any[]):ImageMap => {
-    const newImageMap = copyImageMap(imageMap);
-
-    cards.forEach((_card) => {
-      let smallImageUri = _card.image_uris?.small;
-      let largeImageUri = _card.image_uris?.large;
-
-      if (!smallImageUri || !largeImageUri) {
-        smallImageUri = _card.card_faces[0].image_uris.small;
-        largeImageUri = _card.card_faces[0].image_uris.large;
-      }
-
-      newImageMap.set(_card.name, {name:_card.name, smallUri:smallImageUri, largeUri:largeImageUri})
-    });
-    
-    return newImageMap;
-  };
-
-  const fetchImage = async (hydratedImageMap:ImageMap, name:string, uri:string) => {
+  const fetchImage = async (hydratedImageMap:ImageMap, name:string, type:string, uri:string) => {
     const blob = await fetch(uri)
       .then((response) => {
         const reader = response.body?.getReader();
@@ -166,55 +135,65 @@ export const SearchResults:React.FC<Props> = () => {
       return;
     }
 
-    const dryImage = hydratedImageMap.get(name);
+    let dryImagePacket = hydratedImageMap.get(name);
 
-    if (!dryImage) {
-      console.log('Dry Image for ' + name, blob);
-      return;
+    if (!dryImagePacket) {
+      dryImagePacket = {name:name};
     }
 
-    console.log('Hydrating ' + name);
-    hydratedImageMap.set(name, {...dryImage, smallBlob:blob});
+    let imagePacket = {...dryImagePacket};
+    if (type === 'small') imagePacket.smallBlob = blob;
+    else if (type === 'large') imagePacket.largeBlob = blob;
+    else console.log('Unknown image type', type);
+    hydratedImageMap.set(name, imagePacket);
   }
 
-  const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:any[], cb:(hydratedImageMap:ImageMap)=>void) => {
+
+
+  const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:any[], type:string) => {
     let hydratedImageMap = copyImageMap(imageMap);
     
     await Promise.all(cards.map(async (_card, _index) => {
-      const uri = imageMap.get(_card.name)?.smallUri;
+      const uri = (type === "small") ? _card.imageUris.small :
+                  (type === "large") ? _card.imageUris.large :
+                                       "";
 
       if (!uri) {
         console.log('Invalid Uri for ' + _card.name, uri);
         return Promise.resolve();
       }
 
-      return fetchImage(hydratedImageMap, _card.name, uri);
+      return fetchImage(hydratedImageMap, _card.name, type, uri);
     }));
 
-    console.log('end of hydrate function');
-    cb(hydratedImageMap);
+    return hydratedImageMap;
   };
 
   useEffect(() => {
     setLoading(true);
 
-    let url = scryfallUrl + urlCards + urlSearch;
+    let url = constructSearchUrl(selectedSets, selectedFormats);
 
-    if (selectedSets[0] !== "All") {
-      url += urlSearchSet + selectedSets[0];
-    }
-    if (selectedFormats[0] !== "All") {
-      if (selectedSets[0] !== "All")
-        url += "+";
-      url += urlSearchFormat + selectedFormats[0];
-    }
-
-    fetchCards(url, (data) => {
-      const cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
+    fetchCards(url, async (data) => {
+      let cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
 
       setLoading(false);
+
+      const transformCard:(card:any)=>MagicCard = (card:any) => {
+        return {
+          name:card.name,
+          doubledfaced:true && (card.card_faces),
+          legalities:card.legalities,
+          imageUris:{
+            small:card.image_uris.small,
+            large:card.image_uris.large,
+          }
+        }
+      }
+
+      cards = cards.map(transformCard);
+
       setCards(cards);
-      console.log('cards', cards);
 
       // Do something if no cards
 
@@ -223,12 +202,9 @@ export const SearchResults:React.FC<Props> = () => {
           {name:"All"},
           ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
 
-      let primedImageMap = primeImageMap(cards);
-
-      hydrateImageMap(primedImageMap, cards, (hydratedImageMap:ImageMap) => {
-        console.log('here we go', hydratedImageMap);
-        setImageMap(hydratedImageMap);
-      });
+      const hydratedImageMap = await hydrateImageMap(imageMap, cards, "small");
+      
+      setImageMap(hydratedImageMap);
     });
   }, [selectedSets, selectedFormats]);
 
@@ -306,7 +282,7 @@ export const SearchResults:React.FC<Props> = () => {
     setCardDragPoint({x:e.clientX, y:e.clientY});
   };
 
-  const handleCardMouseUp = (e:React.MouseEvent, index:number) => {
+  const handleCardMouseUp = async (e:React.MouseEvent, index:number) => {
     e.stopPropagation();
 
     console.log('card', cards[index]);
@@ -315,6 +291,9 @@ export const SearchResults:React.FC<Props> = () => {
     if (e.clientX === cardDragPoint.x && (e.clientY === cardDragPoint.y)) {
       setModalShown(true);
       setModalCard(cards[index]);
+      const hydratedImageMap = await hydrateImageMap(imageMap, [cards[index]], "large");
+      
+      setImageMap(hydratedImageMap);
     }
   };
 
@@ -468,21 +447,6 @@ export const SearchResults:React.FC<Props> = () => {
                         (filterState === FilterState.REDUCED_DRAGGING);
   const filterWhole = (filterState === FilterState.WHOLE) ||
                       (filterState === FilterState.WHOLE_PRESSED);      
-                      
-  const handleModalMouseDown:MouseEventHandler = (e) => {
-    console.log('mmd');
-    e.stopPropagation();
-  }
-
-  const handleModalMouseUp:MouseEventHandler = (e) => {
-    console.log('mmu');
-    e.stopPropagation();
-  }
-
-  const handleModalMouseMove:MouseEventHandler = (e) => {
-    console.log('mmm');
-    e.stopPropagation();
-  }
 
   return (
   <div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}>
@@ -551,36 +515,13 @@ export const SearchResults:React.FC<Props> = () => {
         transition: 'box-shadow 0.1s ease-in-out'
       }} />
     {modalShown &&
-    <div id="modal" className="w-screen h-screen" 
-      onMouseDown={handleModalMouseDown}
-      onMouseUp={handleModalMouseUp}
-      onMouseMove={handleModalMouseMove}
-      style={{
-        background: 'rgba(120, 120, 120, 0.5)',
-        position:'fixed',
-        top:'0px',
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center',
-      }}>
-      <div id="inner" style={{
-        backgroundColor:'blue',
-        height: '80vh',
-        width: '80vw',
-        borderRadius:'20px',
-      }}>
-        {modalCard && <div style={{
-          height:'100%',
-          borderRadius:'20px',
-          width:'fit-content',
-          overflow:'hidden',
-        }}>
-          <img src={imageMap.get(modalCard.name)?.smallBlob} draggable="false" style={{
-            maxWidth:'100%',
-            height:'100%',
-          }}/>
-        </div>}
-      </div>
-    </div>}
+    <Modal
+      close={()=>setModalShown(false)}
+      card={modalCard}
+      imageBlob={modalCard ?
+                 imageMap.get(modalCard.name)?.largeBlob ? 
+                 imageMap.get(modalCard.name)?.largeBlob : 
+                 imageMap.get(modalCard.name)?.smallBlob :
+                 undefined}/>}
   </div>)
 };

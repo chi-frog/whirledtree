@@ -13,7 +13,6 @@ const transformMagicSet:Transform<MagicSet> = (input) => ({
 });
 
 const useMagicSets = () => {
-
   
   return useExternalData<MagicSet>(
     scryfallUrl + urlSets,

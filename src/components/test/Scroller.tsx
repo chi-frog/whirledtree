@@ -3,7 +3,7 @@
 import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import TextBox from "../journalWriter/svg/TextBox";
 import { Font } from "@/hooks/useFonts";
-import { ScrollFunc, ScrollStartFunc, useScrollContext } from "@/app/page";
+import { ScrollFunc, useScrollContext } from "@/app/page";
 
 type Props = {
   x:number,
@@ -46,7 +46,7 @@ const Scroller:React.FC<Props> = ({x, y, width, height, font, labels, onClickHan
     position.current = newPosition;
   };
 
-  const onScrollStart:ScrollStartFunc = (e) => {
+  const onScrollStart:ScrollFunc = (e) => {
     offset.current = e.clientY;
     start.current = position.current;
     console.log('SET offset:' + e.clientY + " start:" + position.current);

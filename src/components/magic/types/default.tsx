@@ -2,6 +2,7 @@ export type MagicCard = {
   name:string,
   doublefaced?:boolean,
   legalities:any,
+  imageUris:{small:string, large:string},
 }
 
 export type MagicSet = {
