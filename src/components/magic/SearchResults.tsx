@@ -227,7 +227,7 @@ export const SearchResults:React.FC<Props> = () => {
   const resetFilterGlow = (filterState:FilterState, y:number) => {
     setFilterGlow((filterState === FilterState.HIDDEN && y <= yCutoffHidden)  ? 10 :
                   (y <= yCutoffHidden)                                        ? -3 :
-                  (filterState === FilterState.REDUCED && y >= 40 && y <= 50) ? 10 :
+                  (filterState === FilterState.REDUCED && y > 50 && y <= 80) ? 10 :
                                                                                 0);
   }
 
@@ -238,13 +238,24 @@ export const SearchResults:React.FC<Props> = () => {
 
   const handleFilterArrowMouseDown:MouseEventHandler = (e) => {
     console.log('amd', filterState);
-    setFilterState(FilterState.WHOLE_PRESSED);
+    if (filterState === FilterState.WHOLE)
+      setFilterState(FilterState.WHOLE_PRESSED);
+    if (filterState === FilterState.REDUCED)
+      setFilterState(FilterState.REDUCED_PRESSED);
+    if (filterState === FilterState.HIDDEN)
+      setFilterState(FilterState.HIDDEN_PRESSED);
+
     e.stopPropagation();
   };
 
   const handleFilterArrowMouseUp:MouseEventHandler = (e) => {
     console.log('amu', filterState);
-    setFilterState(FilterState.REDUCED);
+    if (filterState === FilterState.WHOLE_PRESSED)
+      setFilterState(FilterState.REDUCED);
+    if (filterState === FilterState.REDUCED_PRESSED)
+      changeFilterState(FilterState.WHOLE, e.clientY);
+    if (filterState === FilterState.HIDDEN_PRESSED)
+      setFilterState(FilterState.REDUCED);
     e.stopPropagation();
   };
 
@@ -328,10 +339,8 @@ export const SearchResults:React.FC<Props> = () => {
       changeFilterState(FilterState.REDUCED, y);
 
     } else if (filterState === FilterState.REDUCED_PRESSED) {
-      if (y <= yCutoffHidden) {
+      if (y <= yCutoffHidden)
         changeFilterState(FilterState.HIDDEN, y);
-      } else if (y >= 40 && y <= 50)
-        changeFilterState(FilterState.WHOLE, y);
       else
         changeFilterState(FilterState.REDUCED, y);
       
@@ -460,7 +469,7 @@ export const SearchResults:React.FC<Props> = () => {
       sets={sets} cards={cards} formats={formats}/>
     <div className="hover:bg-blue" style={{
       cursor:(filterDragging(filterState) || dragging) ? 'grabbing' : 'move',
-      paddingTop:`${(filterHidden) ? Math.min(yCutoffHidden + filterDragLocation.y, 50) : 50}px`,
+      paddingTop:`${(filterHidden) ? Math.min(yCutoffHidden + filterDragLocation.y, 80) : 80}px`,
       overflow:'scroll',
       minWidth:'100vw',
       minHeight:'100vh',
