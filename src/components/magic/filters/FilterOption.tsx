@@ -18,6 +18,7 @@ const FilterOption:React.FC<Props> = ({text, dragging, children}:PropsWithChildr
         borderRadius:'5px',
         maxHeight:'100%',
         textWrap:'nowrap',
+        alignItems:'center',
         }}>
         <h1 style={{fontWeight:'bold', cursor:(dragging) ? 'grabbing' : 'auto'}}>{text}</h1>
         {children}

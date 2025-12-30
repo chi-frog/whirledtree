@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler, MouseEventHandler } from "react";
+import { ChangeEventHandler, FormEventHandler, MouseEventHandler } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "../types/default";
 import { FilterState } from "../SearchResults";
 import FilterOption from "./FilterOption";
@@ -17,10 +17,12 @@ type Props = {
   glow:number,
   numCardsRow:number,
   onChangeNumCardsRow:ChangeEventHandler,
-  selectedSets:string[],
+  selectedSet:string,
   onChangeSet:ChangeEventHandler,
-  selectedFormats:string[],
+  selectedFormat:string,
   onChangeFormat:ChangeEventHandler,
+  selectedName:string,
+  onChangeName:ChangeEventHandler,
   sets:MagicSet[],
   cards:MagicCard[],
   formats:MagicFormat[],
@@ -38,10 +40,12 @@ const FiltersBar:React.FC<Props> = ({
   glow,
   numCardsRow,
   onChangeNumCardsRow,
-  selectedSets,
+  selectedSet,
   onChangeSet,
-  selectedFormats,
+  selectedFormat,
   onChangeFormat,
+  selectedName,
+  onChangeName,
   cards,
   sets,
   formats}:Props) => {
@@ -73,7 +77,7 @@ const FiltersBar:React.FC<Props> = ({
       <FilterOption text="Set: " dragging={dragging}>
         <select id="set" autoComplete="on"
           className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
-          name="set" value={selectedSets[0]} onChange={onChangeSet}
+          name="set" value={selectedSet} onChange={onChangeSet}
           style={{
             cursor:'pointer',
             borderRadius:'5px',
@@ -83,7 +87,7 @@ const FiltersBar:React.FC<Props> = ({
             boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
           }}>
           {sets.map((_set, _index) => (
-            (_set.acronym !== selectedSets[0]) ?
+            (_set.acronym !== selectedSet) ?
               <option className="notselected" key={_index} value={_set.acronym}>{_set.name}</option> :
               <option className="selected" key={_index} value={_set.acronym}>{_set.name}</option>
           ))}
@@ -92,7 +96,7 @@ const FiltersBar:React.FC<Props> = ({
       <FilterOption text="Format: ">
         <select id="format"
           className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
-          name="format" value={selectedFormats[0]} onChange={onChangeFormat}
+          name="format" value={selectedFormat} onChange={onChangeFormat}
           style={{
             cursor:'pointer',
             borderRadius:'5px',
@@ -102,30 +106,22 @@ const FiltersBar:React.FC<Props> = ({
             transition:'background-color 0.1s ease-in-out',
           }}>
           {formats.map((_format, _index) => (
-            (_format.name !== selectedFormats[0]) ?
+            (_format.name !== selectedFormat) ?
               <option className="notselected" key={_index} value={_format.name}>{_format.name}</option> :
               <option className="selected" key={_index} value={_format.name}>{_format.name}</option>
           ))}
         </select>
       </FilterOption>
-      <FilterOption text="Set: " dragging={dragging}>
-        <select id="set" autoComplete="on"
-          className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
-          name="set" value={selectedSets[0]} onChange={onChangeSet}
+      <FilterOption text="Name: " dragging={dragging}>
+        <input name="name" className="bg-white hover:bg-sky-200" type="text"
+          onChange={onChangeName}
+          value={selectedName}
           style={{
-            cursor:'pointer',
-            borderRadius:'5px',
-            padding:'2px 5px 2px 5px',
-            textAlign:'center',
-            transition:'background-color 0.1s ease-in-out',
-            boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
-          }}>
-          {sets.map((_set, _index) => (
-            (_set.acronym !== selectedSets[0]) ?
-              <option className="notselected" key={_index} value={_set.acronym}>{_set.name}</option> :
-              <option className="selected" key={_index} value={_set.acronym}>{_set.name}</option>
-          ))}
-        </select>
+          transition:'background-color 0.1s ease-in-out',
+          borderRadius:'5px',
+          padding:'2px 5px 2px 5px',
+          boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
+        }}/>
       </FilterOption>
   </>);
 

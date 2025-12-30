@@ -1,7 +1,7 @@
 'use client'
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
-import { ChangeEventHandler, MouseEventHandler, useEffect, useState } from "react";
+import { ChangeEventHandler, FormEventHandler, MouseEventHandler, useEffect, useState } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import FiltersBar from "./filters/FiltersBar";
@@ -9,26 +9,34 @@ import { capitalize } from "@/helpers/string";
 import useMagicSets from "@/hooks/magic/useMagicSets";
 import Modal from "./Modal";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
+import { transformCard } from "./transforms/transformCard";
+import useFilters from "@/hooks/magic/useFilters";
 
 const yCutoffHidden = 10;
 const yCutoffWhole = 300;
 
-async function fetchCards(url:string, fcb:(data:any[])=>void) {
+async function fetchCards(url:string) {
   let cards:any[] = [];
 
   await addCards(url);
   
   async function addCards(url:string) {
-    const search = await fetch(url);
-    const res = await search.json();
+    try {
+      const search = await fetch(url);
+      const res = await search.json();
 
-    cards = cards.concat(res.data);
+      if (res.code !== Error.NOT_FOUND) {
+        cards = cards.concat(res.data);
 
-    if (res.has_more)
-      await addCards(res.next_page);
+        if (res.has_more)
+          await addCards(res.next_page);
+      }
+    } catch(e) {
+      console.log('error', e);
+    }
   }
 
-  fcb(cards);
+  return cards;
 }
 
 export enum FilterState {
@@ -42,14 +50,18 @@ export enum FilterState {
   WHOLE_PRESSED = 'whole_pressed',
 }
 
+export enum Error {
+  NO_ERROR = 'no_error',
+  NOT_FOUND = 'not_found',
+
+}
+
 type Props = {};
 export const SearchResults:React.FC<Props> = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [cards, setCards] = useState<any[]>([]);
   const [imageMap, setImageMap] = useState<Map<string, ImagePacket>>(new Map());
-  const [selectedSets, setSelectedSets] = useState<string[]>(['aer']);
   const [formats, setFormats] = useState<MagicFormat[]>([]);
-  const [selectedFormats, setSelectedFormats] = useState<string[]>(['All']);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
@@ -60,8 +72,10 @@ export const SearchResults:React.FC<Props> = () => {
   const [cardDragPoint, setCardDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalCard, setModalCard] = useState<MagicCard|null>(null);
+  const [error, setError] = useState<Error>(Error.NO_ERROR);
   const {getMap, getRef} = useRefMap();
   const [setsLoaded, sets] = useMagicSets();
+  const {url, selected, updateSelected, handlers} = useFilters();
 
   const setFilterDefaultDrag = () => {
     if (filterState === FilterState.HIDDEN_DRAGGING)
@@ -169,44 +183,44 @@ export const SearchResults:React.FC<Props> = () => {
     return hydratedImageMap;
   };
 
-  useEffect(() => {
+  const search = async () => {
     setLoading(true);
 
-    let url = constructSearchUrl(selectedSets, selectedFormats);
+    let url = constructSearchUrl(selected.set, selected.format, selected.name);
 
-    fetchCards(url, async (data) => {
-      let cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
+    let data = await fetchCards(url);
 
-      setLoading(false);
+    if ((data.length <= 0) ||
+        (!data[0])) {
+      setError(Error.NOT_FOUND);
+      setCards([]);
+      console.log('here');
+      return;
+    }
 
-      const transformCard:(card:any)=>MagicCard = (card:any) => {
-        return {
-          name:card.name,
-          doubledfaced:true && (card.card_faces),
-          legalities:card.legalities,
-          imageUris:{
-            small:card.image_uris.small,
-            large:card.image_uris.large,
-          }
-        }
-      }
+    let cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
 
-      cards = cards.map(transformCard);
+    cards = cards.map(transformCard);
 
-      setCards(cards);
+    setCards(cards);
+    setLoading(false);
+    setError(Error.NO_ERROR);
 
-      // Do something if no cards
+    // Do something if no cards
 
-      if (formats.length === 0)
-        setFormats([
-          {name:"All"},
-          ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
+    if (formats.length === 0)
+      setFormats([
+        {name:"All"},
+        ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
 
-      const hydratedImageMap = await hydrateImageMap(imageMap, cards, "small");
+    const hydratedImageMap = await hydrateImageMap(imageMap, cards, "small");
       
-      setImageMap(hydratedImageMap);
-    });
-  }, [selectedSets, selectedFormats]);
+    setImageMap(hydratedImageMap);
+  }
+
+  useEffect(() => {
+    search();
+  }, [selected]);
 
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
     const value = parseInt(e.target.value);
@@ -216,13 +230,6 @@ export const SearchResults:React.FC<Props> = () => {
     setNumCardsRow(value);
   };
 
-  const onChangeSet:ChangeEventHandler<HTMLSelectElement> = (e) => {
-    setSelectedSets([e.target.value]);
-  };
-
-  const onChangeFormat:ChangeEventHandler<HTMLSelectElement> = (e) => {
-    setSelectedFormats([e.target.value]);
-  }
 
   const resetFilterGlow = (filterState:FilterState, y:number) => {
     setFilterGlow((filterState === FilterState.HIDDEN && y <= yCutoffHidden)  ? 10 :
@@ -251,11 +258,11 @@ export const SearchResults:React.FC<Props> = () => {
   const handleFilterArrowMouseUp:MouseEventHandler = (e) => {
     console.log('amu', filterState);
     if (filterState === FilterState.WHOLE_PRESSED)
-      setFilterState(FilterState.REDUCED);
+      changeFilterState(FilterState.REDUCED, e.clientY);
     if (filterState === FilterState.REDUCED_PRESSED)
       changeFilterState(FilterState.WHOLE, e.clientY);
     if (filterState === FilterState.HIDDEN_PRESSED)
-      setFilterState(FilterState.REDUCED);
+      changeFilterState(FilterState.REDUCED, e.clientY);
     e.stopPropagation();
   };
 
@@ -464,10 +471,11 @@ export const SearchResults:React.FC<Props> = () => {
       handleMouseDown={handleFilterMouseDown} handleMouseUp={handleFilterMouseUp}
       state={filterState} dragPoint={filterDragPoint} dragLocation={filterDragLocation} glow={filterGlow}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
-      selectedSets={selectedSets} onChangeSet={onChangeSet}
-      selectedFormats={selectedFormats} onChangeFormat={onChangeFormat}
+      selectedSet={selected.set} onChangeSet={handlers.set}
+      selectedFormat={selected.format} onChangeFormat={handlers.format}
+      selectedName={selected.name} onChangeName={handlers.name}
       sets={sets} cards={cards} formats={formats}/>
-    <div className="hover:bg-blue" style={{
+    {error === Error.NO_ERROR && <div className="hover:bg-blue" style={{
       cursor:(filterDragging(filterState) || dragging) ? 'grabbing' : 'move',
       paddingTop:`${(filterHidden) ? Math.min(yCutoffHidden + filterDragLocation.y, 80) : 80}px`,
       overflow:'scroll',
@@ -513,7 +521,20 @@ export const SearchResults:React.FC<Props> = () => {
            }}/>
         </div>
       ))}
-    </div>
+    </div>}
+    {error === Error.NOT_FOUND &&
+      <div id="error_screen" style={{
+        width:'100vw',
+        height: '100vh',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        fontSize:'48px',
+        fontWeight:'bold',
+      }}>
+        <h1> No cards matched your search! </h1>
+      </div>
+    }
     <div id="whole_shadow" className="w-screen h-screen" style={{
         background: 'transparent',
         position:'fixed',

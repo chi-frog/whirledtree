@@ -31,7 +31,6 @@ function useExternalData<T> (
         else {
           setLoaded(true);
           setData(data);
-          console.log('data loaded');
         }
       };
     };

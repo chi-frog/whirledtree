@@ -162,6 +162,7 @@ const handleTooltipMouseLeave:MouseEventHandler = (e) => {
         justifyContent:'center',
         alignItems:'center',
         whiteSpace:'nowrap',
+        zIndex:20,
       }}>
       <div id="inner" style={{
         backgroundColor:'white',

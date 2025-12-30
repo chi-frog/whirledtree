@@ -2,6 +2,8 @@
 * Functions to construct valid scryfall requests
 */
 
+import { ANY } from "@/hooks/magic/useFilters";
+
 const scryfallUrl = 'https://api.scryfall.com'
 const bitSets = 'sets';
 const bitCards = 'cards';
@@ -9,22 +11,26 @@ const bitSearch = 'search?q=';
 const bitSearchFormat = 'f';
 const bitSearchSet = 's';
 
-type ConstructUrl = (
-
-)=>string;
 export const constructSearchUrl = (
-  selectedSets:string[],
-  selectedFormats:string[],
-) => {
+    set:string,
+    format:string,
+    name:string,
+  ) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
 
-  if (selectedSets[0] !== "All")
-    url += bitSearchSet + ':' + selectedSets[0];
-  
-  if (selectedFormats[0] !== "All") {
-    if (selectedSets[0] !== "All")
+  if (name)
+    url += name;
+
+  if (set !== ANY) {
+    if (name)
       url += "+";
-    url += bitSearchFormat + ':' + selectedFormats[0];
+    url += bitSearchSet + ':' + set;
+  }
+  
+  if (format !== ANY) {
+    if (set !== ANY)
+      url += "+";
+    url += bitSearchFormat + ':' + format;
   }
 
   return url;
