@@ -1,6 +1,6 @@
 'use client'
 
-import { MouseEventHandler, useEffect, useRef, useState } from "react";
+import { PointerEventHandler, useEffect, useRef, useState } from "react";
 import { MagicCard } from "./types/default";
 import { SelectionChangeFunc, useSelectionContext } from "@/app/page";
 
@@ -23,8 +23,6 @@ function createSearchTooltip({
   // Root
   const div = document.createElement("div");
   div.id = "searchTooltip";
-
-  console.log('slection in create', selection);
 
   Object.assign(div.style, {
     position: "absolute",
@@ -83,8 +81,6 @@ const Modal:React.FC<Props> = ({
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
 
-    console.log('New Selection: ' + newSelection);
-
     if (newSelection === '') {
       setSelection(newSelection);
       setTooltipState(TooltipState.HIDDEN);
@@ -126,34 +122,35 @@ const Modal:React.FC<Props> = ({
     subSelection({tag:'modal', onSelectionChange});
   }, [ref.current]);
 
-  const handleTooltipMouseDown:MouseEventHandler = (e) => {
+  const handleTooltipPointerDown:PointerEventHandler = (e) => {
     console.log('Searching for ', selection);
   };
 
-  const handleTooltipMouseEnter:MouseEventHandler = (e) => {
+  const handleTooltipPointerEnter:PointerEventHandler = (e) => {
     setTooltipHovered(true);
   };
 
-const handleTooltipMouseLeave:MouseEventHandler = (e) => {
+  const handleTooltipPointerLeave:PointerEventHandler = (e) => {
     setTooltipHovered(false);
   };
 
-  const handleMouseDown:MouseEventHandler = (e) => {
+  const handlePointerDown:PointerEventHandler = (e) => {
+    console.log('modal md');
     e.stopPropagation();
 
     if ((e.target as HTMLElement).id === 'modal')
       close();
   }
 
-  const handleMouseUp:MouseEventHandler = (e) => {
+  const handlePointerUp:PointerEventHandler = (e) => {
     e.stopPropagation();
   }
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseMove={(e)=>e.stopPropagation()}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerMove={(e)=>e.stopPropagation()}
       style={{
         background: 'rgba(120, 120, 120, 0.5)',
         position:'fixed',
@@ -204,9 +201,9 @@ const handleTooltipMouseLeave:MouseEventHandler = (e) => {
       </div>
       <div id="searchTooltip" ref={ref}
         className="hover:bg-sky-200"
-        onMouseDown={handleTooltipMouseDown}
-        onMouseEnter={handleTooltipMouseEnter}
-        onMouseLeave={handleTooltipMouseLeave}
+        onPointerDown={handleTooltipPointerDown}
+        onPointerEnter={handleTooltipPointerEnter}
+        onPointerLeave={handleTooltipPointerLeave}
         style={{
         cursor:'pointer',
         position:'absolute',

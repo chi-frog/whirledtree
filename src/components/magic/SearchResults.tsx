@@ -42,13 +42,8 @@ async function fetchCards(url:string) {
 
 export enum FilterState {
   HIDDEN = 'hidden',
-  HIDDEN_PRESSED = 'hidden_pressed',
-  HIDDEN_DRAGGING = 'hidden_dragging',
   REDUCED = 'reduced',
-  REDUCED_PRESSED = 'reduced_pressed',
-  REDUCED_DRAGGING = 'reduced_dragging',
   WHOLE = 'whole',
-  WHOLE_PRESSED = 'whole_pressed',
 }
 
 export enum Error {
@@ -88,54 +83,34 @@ export const SearchResults:React.FC<Props> = () => {
   const draggingCards = useRef<boolean>(false);
   const {subDrag, startDragging} = useDragContext();
 
-  const onPointerMove = (e:PointerEvent) => {
+  const onDragCards = (e:PointerEvent) => {
     console.log('mm', filterState);
     console.log('drag', draggingCards.current);
     console.log('(' + e.clientX + ',' + e.clientY + ')');
     console.log('DragPoint: (' + dragPoint.current.x + ',' + dragPoint.current.y + ')');
     const y = e.clientY;
 
-    const newFilterState = 
-      (filterState === FilterState.HIDDEN_PRESSED)  ? FilterState.HIDDEN_DRAGGING :
-      (filterState === FilterState.REDUCED_PRESSED) ? FilterState.REDUCED_DRAGGING :
-      (filterState === FilterState.WHOLE_PRESSED)   ? FilterState.WHOLE :
-                                                      filterState;
-
-    if (filterDragging(newFilterState)) {
-      setFilterDragLocation({x:e.clientX - filterDragPoint.x, y:y - filterDragPoint.y});
-
-    } else if (draggingCards) {
-      window.scrollTo(window.scrollX + dragPoint.current.x - e.clientX, window.scrollY + dragPoint.current.y - e.clientY);
-      dragPoint.current = {x:e.clientX, y:e.clientY};
-      console.log('here????');
-    }
-
-    changeFilterState(newFilterState, y);
+    window.scrollTo(window.scrollX + dragPoint.current.x - e.clientX, window.scrollY + dragPoint.current.y - e.clientY);
+    dragPoint.current = {x:e.clientX, y:e.clientY};
   }
 
-  const onDragStart = (e:PointerEvent) => {
+  const onDragCardsStart = (e:PointerEvent) => {
     draggingCards.current = true;
-    console.log('onDragtart');
+    dragPoint.current = {x:e.clientX, y:e.clientY};
   }
 
-  const onDragEnd = (e:PointerEvent) => {
-    console.log('IN SEARCH UP', e.clientX);
+  const onDragCardsEnd = (e:PointerEvent) => {
     draggingCards.current = false;
   }
 
   useEffect(() => {
-    subDrag({tag:'cards', onDragStart, onDrag:onPointerMove, onDragEnd})
+    subDrag({tag:'cards',
+             onDragStart:onDragCardsStart,
+             onDrag:onDragCards,
+             onDragEnd:onDragCardsEnd})
   }, []);
 
-  const setFilterDefaultDrag = () => {
-    if (filterState === FilterState.HIDDEN_DRAGGING)
-      setFilterState(FilterState.HIDDEN);
-    else if (filterState === FilterState.REDUCED_DRAGGING)
-      setFilterState(FilterState.REDUCED_DRAGGING);
-  };
-
   useMouseLeavePage(() => {
-    setFilterDefaultDrag();
     setFilterDragPoint({x:0, y:0});
     setFilterDragLocation({x:0, y:0});
     setFilterGlow(0);
@@ -278,53 +253,27 @@ export const SearchResults:React.FC<Props> = () => {
                                                                                 0);
   }
 
-  const changeFilterState = (filterState:FilterState, y:number) => {
-    resetFilterGlow(filterState, y);
-    setFilterState(filterState);
-  };
-
   const handleFilterArrowPointerDown:PointerEventHandler = (e) => {
     console.log('amd', filterState);
-    if (filterState === FilterState.WHOLE)
-      setFilterState(FilterState.WHOLE_PRESSED);
-    if (filterState === FilterState.REDUCED)
-      setFilterState(FilterState.REDUCED_PRESSED);
-    if (filterState === FilterState.HIDDEN)
-      setFilterState(FilterState.HIDDEN_PRESSED);
 
     e.stopPropagation();
   };
 
   const handleFilterArrowPointerUp:PointerEventHandler = (e) => {
     console.log('amu', filterState);
-    if (filterState === FilterState.WHOLE_PRESSED)
-      changeFilterState(FilterState.REDUCED, e.clientY);
-    if (filterState === FilterState.REDUCED_PRESSED)
-      changeFilterState(FilterState.WHOLE, e.clientY);
-    if (filterState === FilterState.HIDDEN_PRESSED)
-      changeFilterState(FilterState.REDUCED, e.clientY);
     e.stopPropagation();
+
+    setFilterState((_filterState) =>
+      (_filterState === FilterState.HIDDEN)  ? FilterState.REDUCED :
+      (_filterState === FilterState.REDUCED) ? FilterState.WHOLE :
+      (_filterState === FilterState.WHOLE)   ? FilterState.REDUCED :
+                                               _filterState);
   };
 
   const handleFilterPointerDown:PointerEventHandler = (e) => {
     console.log('fmd', filterState);
-    const y = e.clientY;
 
-    switch(filterState) {
-    case FilterState.HIDDEN:
-      setFilterState(FilterState.HIDDEN_PRESSED);
-      break;
-    case FilterState.REDUCED:
-      setFilterState(FilterState.REDUCED_PRESSED);
-      break;
-    case FilterState.WHOLE:
-      handlePointerDown(e);
-      setFilterState(FilterState.WHOLE_PRESSED);
-      break;
-    default: console.log('Error with filterState', filterState);
-    }
-
-    setFilterDragPoint({x:e.clientX, y:e.clientY});
+    
     e.stopPropagation();
   };
 
@@ -332,6 +281,29 @@ export const SearchResults:React.FC<Props> = () => {
     console.log('md', filterState);
     startDragging(e, 'cards');
     dragPoint.current = {x:e.clientX, y:e.clientY};
+  };
+
+  const handlePointerMove:PointerEventHandler = (e) => {
+    console.log('handlePointerMove');
+    if (modalShown) return;
+
+    switch(filterState) {
+      case FilterState.HIDDEN:
+      case FilterState.REDUCED:
+
+      case FilterState.WHOLE:
+    }
+    
+    resetFilterGlow(filterState, e.clientY)
+  };
+
+  const handlePointerUp:PointerEventHandler = (e) => {
+    console.log('mu', filterState);
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if ((e.target as HTMLElement).tagName === "OPTION")
+      return;
   };
 
   const handleCardPointerDown = (e:React.PointerEvent, index:number) => {
@@ -361,68 +333,12 @@ export const SearchResults:React.FC<Props> = () => {
 
     setFilterDragLocation({x:0, y:0});
 
-    if (filterState === FilterState.HIDDEN_PRESSED) {
-      changeFilterState(FilterState.REDUCED, y);
-
-    } else if (filterState === FilterState.REDUCED_PRESSED) {
-      if (y <= yCutoffHidden)
-        changeFilterState(FilterState.HIDDEN, y);
-      else
-        changeFilterState(FilterState.REDUCED, y);
-      
-    } else if (filterState === FilterState.HIDDEN_DRAGGING) {
-      if (y > yCutoffHidden && y <= yCutoffWhole) {
-        changeFilterState(FilterState.REDUCED, y);
-      } else if (y > yCutoffWhole)
-        changeFilterState(FilterState.WHOLE, y);
-      else
-        changeFilterState(FilterState.HIDDEN, y);
-    } else if (filterState === FilterState.REDUCED_DRAGGING) {
-      if (y <= yCutoffHidden) {
-        changeFilterState(FilterState.HIDDEN, y);
-      } else if (y > yCutoffWhole)
-        changeFilterState(FilterState.WHOLE, y);
-      else
-        changeFilterState(FilterState.REDUCED, y);
-    } else if (filterWhole) {
-      handlePointerUp(e);
-    }
-
     e.stopPropagation();
   };
 
-  const handlePointerUp:PointerEventHandler = (e) => {
-    console.log('mu', filterState);
-    const x = e.clientX;
-    const y = e.clientY;
-
-    if ((e.target as HTMLElement).tagName === "OPTION")
-      return;
-
-    dragPoint.current = {x:0, y:0};
-    setFilterDragPoint({x:0, y:0});
-    setFilterDragLocation({x:0, y:0});
-
-    let newFilterState = filterState;;
-    if (filterState === FilterState.HIDDEN_DRAGGING) {
-      newFilterState = (y >= yCutoffHidden) ? FilterState.REDUCED :
-                                              FilterState.HIDDEN;
-    } else if (filterState === FilterState.REDUCED_DRAGGING) {
-      newFilterState = (y <= yCutoffHidden) ? FilterState.HIDDEN :
-                       (y > yCutoffWhole)  ? FilterState.WHOLE :
-                                             filterState;
-    } else if (filterWhole) {
-      newFilterState = (y <= yCutoffHidden) ? FilterState.HIDDEN :
-                       (y <= 50)            ? FilterState.REDUCED :
-                                              FilterState.WHOLE;
-    } else
-      console.log('FilterState not changed', filterState);
-    
-    changeFilterState(newFilterState, y);
-  };
-
   const handleCardPointerEnter = (e:React.PointerEvent, index:number) => {
-    if (draggingCards || filterDragging(filterState))
+    console.log('handleCardPointerEnter');
+    if (draggingCards.current || filterDragging)
       return;
 
     const element = getMap().get(index);
@@ -471,19 +387,16 @@ export const SearchResults:React.FC<Props> = () => {
 
   };
 
-  const filterDragging = (filterState:FilterState) => (filterState === FilterState.REDUCED_DRAGGING) ||
-                                                      (filterState === FilterState.HIDDEN_DRAGGING);
-  const filterHidden = (filterState === FilterState.HIDDEN) ||
-                       (filterState === FilterState.HIDDEN_PRESSED) ||
-                       (filterState === FilterState.HIDDEN_DRAGGING);
-  const filterReduced = (filterState === FilterState.REDUCED) ||
-                        (filterState === FilterState.REDUCED_PRESSED) ||
-                        (filterState === FilterState.REDUCED_DRAGGING);
-  const filterWhole = (filterState === FilterState.WHOLE) ||
-                      (filterState === FilterState.WHOLE_PRESSED);      
+  const filterDragging = false;
+  const filterHidden = (filterState === FilterState.HIDDEN);
+  const filterReduced = (filterState === FilterState.REDUCED);
+  const filterWhole = (filterState === FilterState.WHOLE);     
 
   return (
-  <div onPointerUp={handlePointerUp} onPointerDown={(e)=>handlePointerDown(e)}>
+  <div
+    onPointerUp={handlePointerUp}
+    onPointerMove={handlePointerMove}
+    onPointerDown={(e)=>handlePointerDown(e)}>
     <FiltersBar yCutoffHidden={yCutoffHidden}
       handleArrowPointerDown={handleFilterArrowPointerDown} handleArrowPointerUp={handleFilterArrowPointerUp}
       handlePointerDown={handleFilterPointerDown} handlePointerUp={handleFilterPointerUp}
@@ -495,7 +408,7 @@ export const SearchResults:React.FC<Props> = () => {
       sets={sets} cards={cards} formats={formats}/>
     {error === Error.NO_ERROR && 
       <View loading={loading} getRef={getRef}
-        filterDragging={filterDragging(filterState)}
+        filterDragging={filterDragging}
         dragging={draggingCards.current || false}
         filterHidden={filterHidden}
         yCutoffHidden={yCutoffHidden}
@@ -526,7 +439,7 @@ export const SearchResults:React.FC<Props> = () => {
         position:'fixed',
         top:'0px',
         pointerEvents:'none',
-        boxShadow:(filterDragging(filterState) && filterDragLocation.y > yCutoffWhole) ?
+        boxShadow:(filterDragging && filterDragLocation.y > yCutoffWhole) ?
           'inset 0px 0px 15px 15px rgba(146, 148, 248, 0.7)' : '',
         transition: 'box-shadow 0.1s ease-in-out'
       }} />

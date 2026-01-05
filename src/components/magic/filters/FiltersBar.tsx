@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler, FormEventHandler, PointerEventHandler } from "react";
+import { ChangeEventHandler, PointerEventHandler } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "../types/default";
 import { FilterState } from "../SearchResults";
 import FilterOption from "./FilterOption";
@@ -50,16 +50,9 @@ const FiltersBar:React.FC<Props> = ({
   sets,
   formats}:Props) => {
 
-  const dragging = (state === FilterState.REDUCED_DRAGGING) ||
-                   (state === FilterState.HIDDEN_DRAGGING);
-  const hidden = (state === FilterState.HIDDEN) ||
-                 (state === FilterState.HIDDEN_PRESSED) ||
-                 (state === FilterState.HIDDEN_DRAGGING);
-  const reduced = (state === FilterState.REDUCED) ||
-                 (state === FilterState.REDUCED_PRESSED) ||
-                 (state === FilterState.REDUCED_DRAGGING);
-  const whole = (state === FilterState.WHOLE) ||
-                (state === FilterState.WHOLE_PRESSED);
+  const hidden = (state === FilterState.HIDDEN);
+  const reduced = (state === FilterState.REDUCED);
+  const whole = (state === FilterState.WHOLE);
 
   const filterOptions = (<>
     <FilterOption text="Cards Per Row: ">
@@ -74,7 +67,7 @@ const FiltersBar:React.FC<Props> = ({
           defaultValue={numCardsRow} onChange={onChangeNumCardsRow}
           max={cards.length} min={1}/>
       </FilterOption>
-      <FilterOption text="Set: " dragging={dragging}>
+      <FilterOption text="Set: ">
         <select id="set" autoComplete="on"
           className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
           name="set" value={selectedSet} onChange={onChangeSet}
@@ -112,7 +105,7 @@ const FiltersBar:React.FC<Props> = ({
           ))}
         </select>
       </FilterOption>
-      <FilterOption text="Name: " dragging={dragging}>
+      <FilterOption text="Name: ">
         <input name="name" className="bg-white hover:bg-sky-200" type="text"
           onChange={onChangeName}
           value={selectedName}
@@ -135,6 +128,7 @@ const FiltersBar:React.FC<Props> = ({
       alignSelf:'flex-end',
       width:'100%',
       height:'100%',
+      cursor:'pointer',
       rotate:(whole) ? '180deg' : '0deg',
       transition:'scale 0.1s ease-in-out, background-color 0.1s ease-in-out',
       }}>
@@ -152,8 +146,7 @@ const FiltersBar:React.FC<Props> = ({
       onPointerUp={handlePointerUp}
       style={{
       position:'fixed',
-      top: (state === FilterState.HIDDEN_DRAGGING) ? `${-80 + (yCutoffHidden - dragPoint.y) + dragLocation.y}px` :
-           (hidden) ? `${-80 + glow}px` :
+      top: (hidden) ? `${-80 + glow}px` :
            (whole)  ? `${0}px` :
                       `${dragLocation.y}px`,
       left: (whole) ? `${20 + dragLocation.x}px` :
@@ -163,8 +156,7 @@ const FiltersBar:React.FC<Props> = ({
       border: '2px solid black',
       color: 'black',
       zIndex: '10',
-      cursor:(dragging) ? 'grabbing' :
-                          'pointer',
+      cursor:(reduced) ? 'pointer' : '',
       display:'flex',
       alignItems:'center',
       justifyContent:'space-evenly',
@@ -175,7 +167,7 @@ const FiltersBar:React.FC<Props> = ({
                               `0px 0px ${glow}px ${glow}px rgba(146, 148, 248, 0.8)`,
                               
       backgroundColor: (whole) ? 'rgba(255, 255, 255, 0.85)' : 'white',
-      transition: (dragging) ? "box-shadow 0.1s ease-in-out" :
+      transition: (false) ? "box-shadow 0.1s ease-in-out" :
                                "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out, height 0.1s ease-in-out",
       }}>
       <div style={{

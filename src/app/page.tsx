@@ -136,8 +136,6 @@ export default function Home() {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     document.body.style.cursor = "grabbing";
     runStartFuncs(nativeEvent, tag);
-    console.log('startDrag', tag);
-    console.log('e', e);
   };
 
   const drag = (e:PointerEvent) => {
@@ -145,8 +143,6 @@ export default function Home() {
       runFuncs(e, dragTarget.current)};
 
   const stopDragging = (e:PointerEvent) => {
-    console.log('e', e);
-
     if (dragTarget.current !== '')
       runEndFuncs(e, dragTarget.current);
 

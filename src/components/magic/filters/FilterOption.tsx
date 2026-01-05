@@ -4,11 +4,10 @@ import { PropsWithChildren, ReactNode } from "react";
 
 type Props = {
   text:string,
-  dragging?:boolean,
   children:ReactNode,
 };
 
-const FilterOption:React.FC<Props> = ({text, dragging, children}:PropsWithChildren<Props>) => {
+const FilterOption:React.FC<Props> = ({text, children}:PropsWithChildren<Props>) => {
 
   return (
     <label onMouseDown={(e)=>e.stopPropagation()} onMouseUp={(e)=>e.stopPropagation()} style={{
@@ -20,7 +19,7 @@ const FilterOption:React.FC<Props> = ({text, dragging, children}:PropsWithChildr
         textWrap:'nowrap',
         alignItems:'center',
         }}>
-        <h1 style={{fontWeight:'bold', cursor:(dragging) ? 'grabbing' : 'auto'}}>{text}</h1>
+        <h1 style={{fontWeight:'bold'}}>{text}</h1>
         {children}
       </label>
   )
