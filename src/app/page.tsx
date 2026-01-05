@@ -3,30 +3,29 @@
 import JournalWriter from "@/components/journalWriter/JournalWriter";
 import {SearchResults} from "@/components/magic/SearchResults";
 import Focus from "@/components/test/Focus";
-import { createContext, MouseEventHandler, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
-export type ScrollFunc = (e:React.MouseEvent<Element>)=>void;
-export type ScrollSubscription = {
+export type DragFunc = (e:PointerEvent)=>void;
+export type DragSubscription = {
   tag:any,
-  onScrollStart:ScrollFunc,
-  onScroll:ScrollFunc,
-  onScrollEnd:ScrollFunc,
+  onDragStart?:DragFunc,
+  onDrag?:DragFunc,
+  onDragEnd?:DragFunc,
 };
-export type SubScroll = ({tag, onScroll, onScrollEnd}:ScrollSubscription)=>void;
-export type ScrollOn = (e:React.MouseEvent<Element>)=>void;
-type Scroll = {
-  subScroll:SubScroll,
-  scrollOn:ScrollOn,
-  scrolling:boolean,
+export type SubDrag = ({tag, onDragStart, onDrag, onDragEnd}:DragSubscription)=>void;
+export type StartDragging = (e:PointerEvent|React.PointerEvent, tag:string)=>void;
+type Drag = {
+  subDrag:SubDrag,
+  startDragging:StartDragging,
 };
 
-const ScrollContext = createContext<Scroll|undefined>(undefined);
+const DragContext = createContext<Drag|undefined>(undefined);
 
-export const useScrollContext = () => {
-  const ctx = useContext(ScrollContext);
+export const useDragContext = () => {
+  const ctx = useContext(DragContext);
 
   if (ctx === undefined)
-    throw new Error("useScrollContext not available");
+    throw new Error("useDragContext not available");
 
   return ctx;
 }
@@ -54,13 +53,11 @@ export const useSelectionContext = () => {
 
 export default function Home() {
   const testing:string|null = null;
-  const [scrolling , setScrolling] = useState<boolean>(false);
-  const [scrollSubscriptions, setScrollSubscriptions] = useState<ScrollSubscription[]>([]);
+  const dragTarget = useRef<string>("");
+  const dragSubscriptions = useRef<DragSubscription[]>([]);
   const selectionSubscriptions = useRef<SelectionSubscription[]>([]);
 
   const handleSelectionChange = (e:Event) => {
-    console.log('selectionchange', e);
-
     const selection = window.getSelection();
     if (!selection) return;
 
@@ -71,6 +68,24 @@ export default function Home() {
     document.addEventListener('selectionchange', handleSelectionChange);
 
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
+
+  const handleWindowPointerMove = (e:PointerEvent) => {
+    drag(e);
+  }
+
+  const handleWindowPointerUp = (e:PointerEvent) => {
+    stopDragging(e);
+  }
+
+  useEffect(() => {
+    window.addEventListener('pointermove', handleWindowPointerMove, {capture:true});
+    window.addEventListener('pointerup', handleWindowPointerUp, {capture:true});
+
+    return () => {
+      window.removeEventListener('pointermove', handleWindowPointerMove);
+      window.removeEventListener('pointerup', handleWindowPointerUp);
+    }
   }, []);
 
   const subSelection:SubSelection = ({tag, onSelectionChange}) => {
@@ -86,54 +101,74 @@ export default function Home() {
     }
   };
 
-  const subScroll:SubScroll = ({tag, onScrollStart, onScroll, onScrollEnd}) => {
+  const subDrag:SubDrag = ({tag, onDragStart, onDrag, onDragEnd}) => {
     if ((!tag))
       return;
 
-    const scrollSubscription = scrollSubscriptions.find((_ss) => _ss.tag === tag);
+    const dragSubscription = dragSubscriptions.current.find((_ss) => _ss.tag === tag);
 
-    if (scrollSubscription)
-      setScrollSubscriptions(scrollSubscriptions.filter((_ss) => _ss.tag !== tag).concat({tag, onScrollStart, onScroll, onScrollEnd}));
+    if (dragSubscription)
+      dragSubscriptions.current = dragSubscriptions.current.filter((_ss) => _ss.tag !== tag).concat({tag, onDragStart, onDrag, onDragEnd});
     else
-      setScrollSubscriptions(scrollSubscriptions.concat({tag, onScrollStart, onScroll, onScrollEnd}));
+      dragSubscriptions.current = dragSubscriptions.current.concat({tag, onDragStart, onDrag, onDragEnd});
   };
 
-  const runStartFuncs = (e:React.MouseEvent<Element>) =>
-    scrollSubscriptions.forEach((_ss) => _ss.onScrollStart(e));
+  const runStartFuncs = (e:PointerEvent, tag:string) =>
+    dragSubscriptions.current.filter((_ss) => _ss.tag === tag)
+      .forEach((_ss) => (_ss.onDragStart) &&
+      _ss.onDragStart(e));
 
-  const runFuncs = (e:React.MouseEvent<Element>) =>
-    scrollSubscriptions.forEach((_ss) => _ss.onScroll(e));
+  const runFuncs = (e:PointerEvent, tag:string) =>
+    dragSubscriptions.current.filter((_ss) => _ss.tag === tag)
+      .forEach((_ss) => (_ss.onDrag) &&
+      _ss.onDrag(e));
 
-  const runEndFuncs = (e:React.MouseEvent<Element>) =>
-    scrollSubscriptions.forEach((_ss) => _ss.onScrollEnd(e));
+  const runEndFuncs = (e:PointerEvent, tag:string) =>
+    dragSubscriptions.current.filter((_ss) => _ss.tag === tag)
+      .forEach((_ss) => (_ss.onDragEnd) &&
+      _ss.onDragEnd(e));
 
-  const scrollOn = (e:React.MouseEvent<Element>) => {
-    setScrolling(true);
-    runStartFuncs(e);
+  const startDragging = (e:PointerEvent|React.PointerEvent, tag:string) => {
+    const nativeEvent =
+      "nativeEvent" in e ? e.nativeEvent : e;
+    
+    dragTarget.current = tag;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    document.body.style.cursor = "grabbing";
+    runStartFuncs(nativeEvent, tag);
+    console.log('startDrag', tag);
+    console.log('e', e);
   };
 
-  const handleMouseMove:MouseEventHandler = (e) => {
-    if(scrolling) runFuncs(e);
+  const drag = (e:PointerEvent) => {
+    if (dragTarget.current !== "")
+      runFuncs(e, dragTarget.current)};
+
+  const stopDragging = (e:PointerEvent) => {
+    console.log('e', e);
+
+    if (dragTarget.current !== '')
+      runEndFuncs(e, dragTarget.current);
+
+    requestAnimationFrame(() => {
+      document.body.style.cursor = "";
+    });
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    dragTarget.current = "";
+    
   }
 
-  const handleMouseUp:MouseEventHandler = (e) => {
-    if (scrolling) {
-      runEndFuncs(e);
-      setScrolling(false);
-    }
-  }
+  //      {testing && <JournalWriter />}
+
 
   return (
-    <div className="flex min-h-screen flex-col justify-between"
-      onMouseMoveCapture={handleMouseMove}
-      onMouseUp={handleMouseUp}>
-      <ScrollContext value={{subScroll, scrollOn, scrolling}}>
+    <div className="flex min-h-screen flex-col justify-between">
+      <DragContext value={{subDrag, startDragging}}>
       <SelectionContext value={{subSelection}}>
       {!testing && <SearchResults />}
-      {testing && <JournalWriter />}
       {testing === 'focus' && <Focus />}
       </SelectionContext>
-      </ScrollContext>
+      </DragContext>
     </div>
   );
 }

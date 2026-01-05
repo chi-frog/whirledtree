@@ -1,16 +1,16 @@
 'use client'
 
-import { ChangeEventHandler, FormEventHandler, MouseEventHandler } from "react";
+import { ChangeEventHandler, FormEventHandler, PointerEventHandler } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "../types/default";
 import { FilterState } from "../SearchResults";
 import FilterOption from "./FilterOption";
 
 type Props = {
   yCutoffHidden:number,
-  handleMouseDown:MouseEventHandler,
-  handleMouseUp:MouseEventHandler,
-  handleArrowMouseDown:MouseEventHandler,
-  handleArrowMouseUp:MouseEventHandler,
+  handlePointerDown:PointerEventHandler,
+  handlePointerUp:PointerEventHandler,
+  handleArrowPointerDown:PointerEventHandler,
+  handleArrowPointerUp:PointerEventHandler,
   state:FilterState,
   dragPoint:{x:number, y:number},
   dragLocation:{x:number, y:number},
@@ -30,10 +30,10 @@ type Props = {
 
 const FiltersBar:React.FC<Props> = ({
   yCutoffHidden,
-  handleArrowMouseDown,
-  handleArrowMouseUp,
-  handleMouseDown,
-  handleMouseUp,
+  handleArrowPointerDown,
+  handleArrowPointerUp,
+  handlePointerDown,
+  handlePointerUp,
   state,
   dragPoint,
   dragLocation,
@@ -129,7 +129,7 @@ const FiltersBar:React.FC<Props> = ({
     <svg
       className={(whole) ? "hover:scale-130 hover:bg-gradient-to-b from-transparent to-light-red to-rgba[255, 255, 255, 0.8]" :
                            "hover:scale-130"}
-      onMouseDown={handleArrowMouseDown} onMouseUp={handleArrowMouseUp}
+      onPointerDown={handleArrowPointerDown} onPointerUp={handleArrowPointerUp}
       fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" 
 	    width="800px" height="800px" viewBox="0 0 100 100" enableBackground="new 0 0 100 100" xmlSpace="preserve" style={{
       alignSelf:'flex-end',
@@ -148,8 +148,8 @@ const FiltersBar:React.FC<Props> = ({
 
   return (<>
     <div
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
       style={{
       position:'fixed',
       top: (state === FilterState.HIDDEN_DRAGGING) ? `${-80 + (yCutoffHidden - dragPoint.y) + dragLocation.y}px` :
