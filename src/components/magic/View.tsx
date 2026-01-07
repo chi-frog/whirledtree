@@ -6,13 +6,14 @@ import { ImageMap } from "./SearchResults";
 type Props = {
   loading:boolean,
   getRef:(id:number, node:any) => () => void,
-  filterDragging:boolean,
   dragging:boolean,
+  dragX:number,
+  dragY:number,
   filterHidden:boolean,
   yCutoffHidden:number,
-  filterDragLocation:{x:number, y:number},
   numCardsRow:number,
   cards:MagicCard[],
+  draggingCardIndex:number,
   imageMap:ImageMap,
   handleCardPointerEnter:(e:React.PointerEvent, index:number) => void,
   handleCardPointerLeave:(e:React.PointerEvent, index:number) => void,
@@ -23,13 +24,14 @@ type Props = {
 const View:React.FC<Props> = ({
     loading,
     getRef,
-    filterDragging,
     dragging,
+    dragX,
+    dragY,
     filterHidden,
     yCutoffHidden,
-    filterDragLocation,
     numCardsRow,
     cards,
+    draggingCardIndex,
     imageMap,
     handleCardPointerEnter,
     handleCardPointerLeave,
@@ -37,11 +39,39 @@ const View:React.FC<Props> = ({
     handleCardPointerUp,
   }:Props) => {
 
+  const card = (name:string, index:number) => (
+    <div key={name} ref={getRef.bind(null, index)}
+          onPointerEnter={(e)=>handleCardPointerEnter(e, index)}
+          onPointerLeave={(e)=>handleCardPointerLeave(e, index)}
+          onPointerDown={(e) => handleCardPointerDown(e, index)}
+          onPointerUp={(e) => handleCardPointerUp(e, index)} style={{
+            display:'flex',
+            cursor:'hand',
+            flexDirection:'column',
+            margin:'5px',
+            overflow:'hidden',
+            borderRadius:'12px',
+            border:'1px solid rgba(255, 255, 255, 0.7)',
+            transition:(draggingCardIndex === index) ?
+              '' : 'top 0.3s ease-in-out left 0.3s ease-in-out',
+            minWidth:'100px',
+            height:'fit-content',
+            position: 'relative',
+            zIndex: (draggingCardIndex === index) ? 30 : 0,
+            left: (draggingCardIndex === index) ? `${dragX}px` : '0px',
+            top: (draggingCardIndex === index) ? `${dragY}px` : '0px',
+            }}>
+          <img src={imageMap.get(name)?.smallBlob} draggable="false" style={{
+            maxWidth:'100%',
+            cursor:(dragging) ? 'grabbing' : 'pointer',
+            marginTop:'auto',
+           }}/>
+        </div>
+  );
 
   return (
     <div className="hover:bg-blue" style={{
-      cursor:(filterDragging || dragging) ? 'grabbing' : 'move',
-      paddingTop:`${(filterHidden) ? Math.min(yCutoffHidden + filterDragLocation.y, 80) : 80}px`,
+      paddingTop:`${(filterHidden) ? Math.min(yCutoffHidden, 80) : 80}px`,
       overflow:'scroll',
       minWidth:'100vw',
       minHeight:'100vh',
@@ -49,8 +79,8 @@ const View:React.FC<Props> = ({
       paddingLeft:'15px',
       paddingRight:'15px',
       backgroundColor:'black',
-      userSelect:(filterDragging || dragging) ? 'none' : 'auto',
-      transition:(filterDragging) ? "" : 'padding 0.1s ease-in-out',
+      userSelect:(dragging) ? 'none' : 'auto',
+      transition:'padding 0.1s ease-in-out',
       color: 'black',
       display:'grid',
       gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
@@ -61,30 +91,9 @@ const View:React.FC<Props> = ({
         textAnchor:'middle',
         }}>Loading...</h4>}
       {!loading &&
-      cards.map((_card, _index)=>(
-        <div key={_card.name} ref={getRef.bind(null, _index)}
-          onPointerEnter={(e)=>handleCardPointerEnter(e, _index)}
-          onPointerLeave={(e)=>handleCardPointerLeave(e, _index)}
-          onPointerDown={(e) => handleCardPointerDown(e, _index)}
-          onPointerUp={(e) => handleCardPointerUp(e, _index)} style={{
-            display:'flex',
-            cursor:(filterDragging || dragging) ? 'grabbing' : 'hand',
-            flexDirection:'column',
-            margin:'5px',
-            overflow:'hidden',
-            borderRadius:'12px',
-            border:'1px solid rgba(255, 255, 255, 0.7)',
-            transition:'top 0.3s ease-in-out',
-            minWidth:'100px',
-            height:'fit-content'
-            }}>
-          <img src={imageMap.get(_card.name)?.smallBlob} draggable="false" style={{
-            maxWidth:'100%',
-            cursor:(filterDragging || dragging) ? 'grabbing' : 'pointer',
-            marginTop:'auto',
-           }}/>
-        </div>
-      ))}
+      cards.map((_card, _index)=>
+        card(_card.name, _index)
+      )}
     </div>
   );
 };

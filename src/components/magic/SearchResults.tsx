@@ -70,37 +70,34 @@ export const SearchResults:React.FC<Props> = () => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
-  const [filterDragPoint, setFilterDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
-  const [filterDragLocation, setFilterDragLocation] = useState<{x:number, y:number}>({x:0, y:0});
   const dragPoint = useRef<{x:number, y:number}>({x:0, y:0});
-  const [cardDragPoint, setCardDragPoint] = useState<{x:number, y:number}>({x:0, y:0});
+  const startDragPoint = useRef<{x:number, y:number}>({x:0, y:0});
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalCard, setModalCard] = useState<MagicCard|null>(null);
   const [error, setError] = useState<Error>(Error.NO_ERROR);
   const {getMap, getRef} = useRefMap();
   const [setsLoaded, sets] = useMagicSets();
   const {url, selected, updateSelected, handlers} = useFilters();
-  const draggingCards = useRef<boolean>(false);
+  const [dragging, setDragging] = useState<boolean>(false);
+  const draggingCard = useRef<number>(-1);
   const {subDrag, startDragging} = useDragContext();
+  const [dragState, setDragState] = useState({
+    x: 0,
+    y: 0,
+  });
 
   const onDragCards = (e:PointerEvent) => {
-    console.log('mm', filterState);
-    console.log('drag', draggingCards.current);
-    console.log('(' + e.clientX + ',' + e.clientY + ')');
-    console.log('DragPoint: (' + dragPoint.current.x + ',' + dragPoint.current.y + ')');
-    const y = e.clientY;
-
     window.scrollTo(window.scrollX + dragPoint.current.x - e.clientX, window.scrollY + dragPoint.current.y - e.clientY);
     dragPoint.current = {x:e.clientX, y:e.clientY};
   }
 
-  const onDragCardsStart = (e:PointerEvent) => {
-    draggingCards.current = true;
-    dragPoint.current = {x:e.clientX, y:e.clientY};
+  const onDragCardsStart = ({x, y}:PointerEvent) => {
+    setDragging(true);
+    dragPoint.current = {x, y};
   }
 
   const onDragCardsEnd = (e:PointerEvent) => {
-    draggingCards.current = false;
+    setDragging(false);
   }
 
   useEffect(() => {
@@ -110,9 +107,49 @@ export const SearchResults:React.FC<Props> = () => {
              onDragEnd:onDragCardsEnd})
   }, []);
 
+  const onDragCard = ({x, y}:PointerEvent) => {
+    dragPoint.current = {x, y};
+  }
+
+  const onDragCardStart = ({x, y}:PointerEvent) => {
+    dragPoint.current = {x, y};
+    startDragPoint.current = {x, y};
+    setDragging(true);
+  }
+
+  const onDragCardEnd = (e:PointerEvent) => {
+    draggingCard.current = -1;
+    setDragging(false);
+  }
+
+  useEffect(() => {
+    subDrag({tag:'card',
+             onDragStart:onDragCardStart,
+             onDrag:onDragCard,
+             onDragEnd:onDragCardEnd})
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle("no-select", dragging);
+  }, [dragging]);
+
+  useEffect(() => {
+    let raf: number;
+
+    const tick = () => {
+      setDragState({
+        x: dragPoint.current.x,
+        y: dragPoint.current.y,
+      });
+      if (dragging)
+        raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [dragging]);
+
   useMouseLeavePage(() => {
-    setFilterDragPoint({x:0, y:0});
-    setFilterDragLocation({x:0, y:0});
     setFilterGlow(0);
   });
 
@@ -209,7 +246,6 @@ export const SearchResults:React.FC<Props> = () => {
         (!data[0])) {
       setError(Error.NOT_FOUND);
       setCards([]);
-      console.log('here');
       return;
     }
 
@@ -254,51 +290,35 @@ export const SearchResults:React.FC<Props> = () => {
   }
 
   const handleFilterArrowPointerDown:PointerEventHandler = (e) => {
-    console.log('amd', filterState);
 
     e.stopPropagation();
   };
 
   const handleFilterArrowPointerUp:PointerEventHandler = (e) => {
-    console.log('amu', filterState);
     e.stopPropagation();
 
-    setFilterState((_filterState) =>
-      (_filterState === FilterState.HIDDEN)  ? FilterState.REDUCED :
-      (_filterState === FilterState.REDUCED) ? FilterState.WHOLE :
-      (_filterState === FilterState.WHOLE)   ? FilterState.REDUCED :
-                                               _filterState);
-  };
+    const _filterState =
+      (filterState === FilterState.HIDDEN)  ? FilterState.REDUCED :
+      (filterState === FilterState.REDUCED) ? FilterState.WHOLE :
+      (filterState === FilterState.WHOLE)   ? FilterState.REDUCED :
+                                              filterState;
 
-  const handleFilterPointerDown:PointerEventHandler = (e) => {
-    console.log('fmd', filterState);
-
-    
-    e.stopPropagation();
+    setFilterState(_filterState);
+    resetFilterGlow(_filterState, e.clientY);
   };
 
   const handlePointerDown = (e:React.PointerEvent) => {
-    console.log('md', filterState);
     startDragging(e, 'cards');
     dragPoint.current = {x:e.clientX, y:e.clientY};
   };
 
   const handlePointerMove:PointerEventHandler = (e) => {
-    console.log('handlePointerMove');
     if (modalShown) return;
 
-    switch(filterState) {
-      case FilterState.HIDDEN:
-      case FilterState.REDUCED:
-
-      case FilterState.WHOLE:
-    }
-    
     resetFilterGlow(filterState, e.clientY)
   };
 
   const handlePointerUp:PointerEventHandler = (e) => {
-    console.log('mu', filterState);
     const x = e.clientX;
     const y = e.clientY;
 
@@ -309,16 +329,18 @@ export const SearchResults:React.FC<Props> = () => {
   const handleCardPointerDown = (e:React.PointerEvent, index:number) => {
     e.stopPropagation();
 
-    setCardDragPoint({x:e.clientX, y:e.clientY});
+    startDragging(e, 'card');
+    setDragState({
+      x: dragPoint.current.x,
+      y: dragPoint.current.y,
+    });
+    draggingCard.current = index;
   };
 
   const handleCardPointerUp = async (e:React.PointerEvent, index:number) => {
     e.stopPropagation();
 
-    console.log('card', cards[index]);
-    setCardDragPoint({x:0, y:0});
-
-    if (e.clientX === cardDragPoint.x && (e.clientY === cardDragPoint.y)) {
+    if ((e.clientX === startDragPoint.current.x) && (e.clientY === startDragPoint.current.y)) {
       setModalShown(true);
       setModalCard(cards[index]);
       const hydratedImageMap = await hydrateImageMap(imageMap, [cards[index]], "large");
@@ -326,19 +348,25 @@ export const SearchResults:React.FC<Props> = () => {
       setImageMap(hydratedImageMap);
     }
   };
+  
+  const handleFilterPointerDown:PointerEventHandler = (e) => {
+    
+    e.stopPropagation();
+  };
 
   const handleFilterPointerUp:PointerEventHandler = (e) => {
-    console.log('fmu', filterState);
-    const y = e.clientY;
 
-    setFilterDragLocation({x:0, y:0});
+    if (!filterHidden &&
+        e.clientY <= yCutoffHidden) {
+      setFilterState(FilterState.HIDDEN);
+      resetFilterGlow(FilterState.HIDDEN, e.clientY);
+    }
 
     e.stopPropagation();
   };
 
   const handleCardPointerEnter = (e:React.PointerEvent, index:number) => {
-    console.log('handleCardPointerEnter');
-    if (draggingCards.current || filterDragging)
+    if (dragging)
       return;
 
     const element = getMap().get(index);
@@ -349,8 +377,8 @@ export const SearchResults:React.FC<Props> = () => {
 
     element.style.border = "1px solid rgb(146, 148, 248)";
     element.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
-    element.style.position = "relative";
-    element.style.top = "-3px";
+    if (!dragging)
+      element.style.top = "-3px";
 
     setTimeout(() => {
       const change = () => {
@@ -387,20 +415,17 @@ export const SearchResults:React.FC<Props> = () => {
 
   };
 
-  const filterDragging = false;
   const filterHidden = (filterState === FilterState.HIDDEN);
-  const filterReduced = (filterState === FilterState.REDUCED);
-  const filterWhole = (filterState === FilterState.WHOLE);     
 
   return (
   <div
     onPointerUp={handlePointerUp}
     onPointerMove={handlePointerMove}
     onPointerDown={(e)=>handlePointerDown(e)}>
-    <FiltersBar yCutoffHidden={yCutoffHidden}
+    <FiltersBar
       handleArrowPointerDown={handleFilterArrowPointerDown} handleArrowPointerUp={handleFilterArrowPointerUp}
       handlePointerDown={handleFilterPointerDown} handlePointerUp={handleFilterPointerUp}
-      state={filterState} dragPoint={filterDragPoint} dragLocation={filterDragLocation} glow={filterGlow}
+      state={filterState} glow={filterGlow}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
       selectedSet={selected.set} onChangeSet={handlers.set}
       selectedFormat={selected.format} onChangeFormat={handlers.format}
@@ -408,13 +433,14 @@ export const SearchResults:React.FC<Props> = () => {
       sets={sets} cards={cards} formats={formats}/>
     {error === Error.NO_ERROR && 
       <View loading={loading} getRef={getRef}
-        filterDragging={filterDragging}
-        dragging={draggingCards.current || false}
+        dragging={dragging}
+        dragX={dragState.x - startDragPoint.current.x}
+        dragY={dragState.y - startDragPoint.current.y}
         filterHidden={filterHidden}
         yCutoffHidden={yCutoffHidden}
-        filterDragLocation={filterDragLocation}
         numCardsRow={numCardsRow}
         cards={cards}
+        draggingCardIndex={draggingCard.current}
         imageMap={imageMap}
         handleCardPointerEnter={handleCardPointerEnter}
         handleCardPointerLeave={handleCardPointerLeave}
@@ -434,15 +460,6 @@ export const SearchResults:React.FC<Props> = () => {
         <h1> No cards matched your search! </h1>
       </div>
     }
-    <div id="whole_shadow" className="w-screen h-screen" style={{
-        background: 'transparent',
-        position:'fixed',
-        top:'0px',
-        pointerEvents:'none',
-        boxShadow:(filterDragging && filterDragLocation.y > yCutoffWhole) ?
-          'inset 0px 0px 15px 15px rgba(146, 148, 248, 0.7)' : '',
-        transition: 'box-shadow 0.1s ease-in-out'
-      }} />
     {modalShown &&
     <Modal
       close={()=>setModalShown(false)}

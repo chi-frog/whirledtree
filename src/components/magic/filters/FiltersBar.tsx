@@ -6,14 +6,11 @@ import { FilterState } from "../SearchResults";
 import FilterOption from "./FilterOption";
 
 type Props = {
-  yCutoffHidden:number,
   handlePointerDown:PointerEventHandler,
   handlePointerUp:PointerEventHandler,
   handleArrowPointerDown:PointerEventHandler,
   handleArrowPointerUp:PointerEventHandler,
   state:FilterState,
-  dragPoint:{x:number, y:number},
-  dragLocation:{x:number, y:number},
   glow:number,
   numCardsRow:number,
   onChangeNumCardsRow:ChangeEventHandler,
@@ -29,14 +26,11 @@ type Props = {
 };
 
 const FiltersBar:React.FC<Props> = ({
-  yCutoffHidden,
   handleArrowPointerDown,
   handleArrowPointerUp,
   handlePointerDown,
   handlePointerUp,
   state,
-  dragPoint,
-  dragLocation,
   glow,
   numCardsRow,
   onChangeNumCardsRow,
@@ -147,10 +141,9 @@ const FiltersBar:React.FC<Props> = ({
       style={{
       position:'fixed',
       top: (hidden) ? `${-80 + glow}px` :
-           (whole)  ? `${0}px` :
-                      `${dragLocation.y}px`,
-      left: (whole) ? `${20 + dragLocation.x}px` :
-                      `${5 + dragLocation.x}px`,
+                      `${0}px`,
+      left: (whole) ? `${20}px` :
+                      `${5}px`,
       width: (whole) ? 'calc(100vw - 40px)' : 'calc(100% - 10px)',
       height:(whole) ? 'calc(100vh - 40px)' : '80px',
       border: '2px solid black',
