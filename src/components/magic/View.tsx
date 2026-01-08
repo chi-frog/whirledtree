@@ -2,13 +2,13 @@
 
 import { MagicCard } from "./types/default";
 import { ImageMap } from "./SearchResults";
+import { DragState } from "@/app/page";
 
 type Props = {
   loading:boolean,
   getRef:(id:number, node:any) => () => void,
   dragging:boolean,
-  dragX:number,
-  dragY:number,
+  dragState:DragState,
   filterHidden:boolean,
   yCutoffHidden:number,
   numCardsRow:number,
@@ -25,8 +25,7 @@ const View:React.FC<Props> = ({
     loading,
     getRef,
     dragging,
-    dragX,
-    dragY,
+    dragState,
     filterHidden,
     yCutoffHidden,
     numCardsRow,
@@ -55,11 +54,13 @@ const View:React.FC<Props> = ({
             transition:(draggingCardIndex === index) ?
               '' : 'top 0.3s ease-in-out left 0.3s ease-in-out',
             minWidth:'100px',
+            transform:(draggingCardIndex === index) ?
+              `rotate3d(${dragState.velocity.x}, ${dragState.velocity.y}, 0, 60deg)` : '',
             height:'fit-content',
             position: 'relative',
             zIndex: (draggingCardIndex === index) ? 30 : 0,
-            left: (draggingCardIndex === index) ? `${dragX}px` : '0px',
-            top: (draggingCardIndex === index) ? `${dragY}px` : '0px',
+            left: (draggingCardIndex === index) ? `${dragState.point.x}px` : '0px',
+            top: (draggingCardIndex === index) ? `${dragState.point.y}px` : '0px',
             }}>
           <img src={imageMap.get(name)?.smallBlob} draggable="false" style={{
             maxWidth:'100%',

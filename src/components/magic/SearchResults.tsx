@@ -11,7 +11,8 @@ import Modal from "./Modal";
 import { transformCard } from "./transforms/transformCard";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
-import { useDragContext } from "@/app/page";
+import { _dragState, DragState, useDragContext } from "@/app/page";
+import { makeWPoint, subWPoints } from "@/helpers/wpoint";
 
 const yCutoffHidden = 10;
 const yCutoffWhole = 300;
@@ -70,7 +71,6 @@ export const SearchResults:React.FC<Props> = () => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
-  const dragPoint = useRef<{x:number, y:number}>({x:0, y:0});
   const startDragPoint = useRef<{x:number, y:number}>({x:0, y:0});
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalCard, setModalCard] = useState<MagicCard|null>(null);
@@ -80,20 +80,15 @@ export const SearchResults:React.FC<Props> = () => {
   const {url, selected, updateSelected, handlers} = useFilters();
   const [dragging, setDragging] = useState<boolean>(false);
   const draggingCard = useRef<number>(-1);
-  const {subDrag, startDragging} = useDragContext();
-  const [dragState, setDragState] = useState({
-    x: 0,
-    y: 0,
-  });
+  const {subDrag, startDragging, dragStartPointRef, dragPointRef, dragVelocityRef} = useDragContext();
+  const [dragState, setDragState] = useState<DragState>(_dragState);
 
   const onDragCards = (e:PointerEvent) => {
-    window.scrollTo(window.scrollX + dragPoint.current.x - e.clientX, window.scrollY + dragPoint.current.y - e.clientY);
-    dragPoint.current = {x:e.clientX, y:e.clientY};
+    window.scrollTo(window.scrollX + dragVelocityRef.current.x, window.scrollY - dragVelocityRef.current.y*2);
   }
 
   const onDragCardsStart = ({x, y}:PointerEvent) => {
     setDragging(true);
-    dragPoint.current = {x, y};
   }
 
   const onDragCardsEnd = (e:PointerEvent) => {
@@ -107,13 +102,7 @@ export const SearchResults:React.FC<Props> = () => {
              onDragEnd:onDragCardsEnd})
   }, []);
 
-  const onDragCard = ({x, y}:PointerEvent) => {
-    dragPoint.current = {x, y};
-  }
-
   const onDragCardStart = ({x, y}:PointerEvent) => {
-    dragPoint.current = {x, y};
-    startDragPoint.current = {x, y};
     setDragging(true);
   }
 
@@ -125,7 +114,6 @@ export const SearchResults:React.FC<Props> = () => {
   useEffect(() => {
     subDrag({tag:'card',
              onDragStart:onDragCardStart,
-             onDrag:onDragCard,
              onDragEnd:onDragCardEnd})
   }, []);
 
@@ -137,9 +125,12 @@ export const SearchResults:React.FC<Props> = () => {
     let raf: number;
 
     const tick = () => {
+      const x = dragPointRef.current.x;
+      const y = dragPointRef.current.y;
       setDragState({
-        x: dragPoint.current.x,
-        y: dragPoint.current.y,
+        point:subWPoints(dragPointRef.current, dragStartPointRef.current),
+        velocity:dragVelocityRef.current,
+        angle:Math.atan2(dragVelocityRef.current.y, dragVelocityRef.current.x),
       });
       if (dragging)
         raf = requestAnimationFrame(tick);
@@ -309,7 +300,6 @@ export const SearchResults:React.FC<Props> = () => {
 
   const handlePointerDown = (e:React.PointerEvent) => {
     startDragging(e, 'cards');
-    dragPoint.current = {x:e.clientX, y:e.clientY};
   };
 
   const handlePointerMove:PointerEventHandler = (e) => {
@@ -319,11 +309,6 @@ export const SearchResults:React.FC<Props> = () => {
   };
 
   const handlePointerUp:PointerEventHandler = (e) => {
-    const x = e.clientX;
-    const y = e.clientY;
-
-    if ((e.target as HTMLElement).tagName === "OPTION")
-      return;
   };
 
   const handleCardPointerDown = (e:React.PointerEvent, index:number) => {
@@ -331,8 +316,9 @@ export const SearchResults:React.FC<Props> = () => {
 
     startDragging(e, 'card');
     setDragState({
-      x: dragPoint.current.x,
-      y: dragPoint.current.y,
+      point:subWPoints(dragPointRef.current, dragStartPointRef.current),
+      velocity:dragVelocityRef.current,
+      angle:0,
     });
     draggingCard.current = index;
   };
@@ -350,12 +336,10 @@ export const SearchResults:React.FC<Props> = () => {
   };
   
   const handleFilterPointerDown:PointerEventHandler = (e) => {
-    
     e.stopPropagation();
   };
 
   const handleFilterPointerUp:PointerEventHandler = (e) => {
-
     if (!filterHidden &&
         e.clientY <= yCutoffHidden) {
       setFilterState(FilterState.HIDDEN);
@@ -434,8 +418,7 @@ export const SearchResults:React.FC<Props> = () => {
     {error === Error.NO_ERROR && 
       <View loading={loading} getRef={getRef}
         dragging={dragging}
-        dragX={dragState.x - startDragPoint.current.x}
-        dragY={dragState.y - startDragPoint.current.y}
+        dragState={dragState}
         filterHidden={filterHidden}
         yCutoffHidden={yCutoffHidden}
         numCardsRow={numCardsRow}
