@@ -1,19 +1,19 @@
 'use client'
 
 import { MagicCard } from "./types/default";
-import { ImageMap } from "./SearchResults";
-import { DragState } from "@/app/page";
+import { CardDragMap, CardDragState, ImageMap } from "./SearchResults";
+import { DragState, useDragContext } from "@/app/page";
 
 type Props = {
   loading:boolean,
   getRef:(id:number, node:any) => () => void,
   dragging:boolean,
   dragState:DragState,
+  cardDragMap:CardDragMap,
   filterHidden:boolean,
   yCutoffHidden:number,
   numCardsRow:number,
   cards:MagicCard[],
-  draggingCardIndex:number,
   imageMap:ImageMap,
   handleCardPointerEnter:(e:React.PointerEvent, index:number) => void,
   handleCardPointerLeave:(e:React.PointerEvent, index:number) => void,
@@ -26,11 +26,11 @@ const View:React.FC<Props> = ({
     getRef,
     dragging,
     dragState,
+    cardDragMap,
     filterHidden,
     yCutoffHidden,
     numCardsRow,
     cards,
-    draggingCardIndex,
     imageMap,
     handleCardPointerEnter,
     handleCardPointerLeave,
@@ -38,8 +38,15 @@ const View:React.FC<Props> = ({
     handleCardPointerUp,
   }:Props) => {
 
-  const card = (name:string, index:number) => (
-    <div key={name} ref={getRef.bind(null, index)}
+  const {dragStartPointRef} = useDragContext();
+
+  const card = (name:string, index:number) => {
+    const cardDragState = cardDragMap.get(index);
+    const isDragging = !!cardDragState;
+    if (isDragging) console.log('inex', name);
+
+    return (
+      <div key={name} ref={getRef.bind(null, index)}
           onPointerEnter={(e)=>handleCardPointerEnter(e, index)}
           onPointerLeave={(e)=>handleCardPointerLeave(e, index)}
           onPointerDown={(e) => handleCardPointerDown(e, index)}
@@ -51,24 +58,20 @@ const View:React.FC<Props> = ({
             overflow:'hidden',
             borderRadius:'12px',
             border:'1px solid rgba(255, 255, 255, 0.7)',
-            transition:(draggingCardIndex === index) ?
-              '' : 'top 0.3s ease-in-out left 0.3s ease-in-out',
             minWidth:'100px',
-            transform:(draggingCardIndex === index) ?
-              `rotate3d(${dragState.velocity.x}, ${dragState.velocity.y}, 0, 60deg)` : '',
+            transform:(isDragging) ?
+              `translate3d(${dragState.point.x - dragStartPointRef.current.x}px, ${dragState.point.y - dragStartPointRef.current.y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${cardDragState.angle.x}deg) rotate3d(1, 0, 0, ${cardDragState.angle.y*-1}deg)` :
+              '',
             height:'fit-content',
             position: 'relative',
-            zIndex: (draggingCardIndex === index) ? 30 : 0,
-            left: (draggingCardIndex === index) ? `${dragState.point.x}px` : '0px',
-            top: (draggingCardIndex === index) ? `${dragState.point.y}px` : '0px',
+            zIndex: (isDragging) ? 30 : 0,
             }}>
           <img src={imageMap.get(name)?.smallBlob} draggable="false" style={{
             maxWidth:'100%',
             cursor:(dragging) ? 'grabbing' : 'pointer',
             marginTop:'auto',
            }}/>
-        </div>
-  );
+        </div>)};
 
   return (
     <div className="hover:bg-blue" style={{

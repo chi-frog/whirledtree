@@ -12,10 +12,9 @@ import { transformCard } from "./transforms/transformCard";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _dragState, DragState, useDragContext } from "@/app/page";
-import { makeWPoint, subWPoints } from "@/helpers/wpoint";
+import { _wpoint, ftsubWPoints, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 
 const yCutoffHidden = 10;
-const yCutoffWhole = 300;
 
 async function fetchCards(url:string) {
   let cards:any[] = [];
@@ -61,6 +60,35 @@ type ImagePacket = {
 
 export type ImageMap = Map<string, ImagePacket>;
 
+export type CardDragMap = Map<number, CardDragState>;
+export type CardDragState = {
+  acceleration:WPoint,
+  resistance:WPoint,
+  returnSpeed:number,
+  weight:number,
+  angle:WPoint, /* 0-maxAngle */
+  maxAngle:number,
+  return:boolean,
+  terminate:boolean,
+};
+const _cardDragState:CardDragState = {
+  acceleration:_wpoint,
+  resistance:makeWPoint({x:5, y:5}),
+  returnSpeed:50,
+  weight:4,
+  angle:_wpoint,
+  maxAngle:80,
+  return:false,
+  terminate:false,
+}
+const copyMap:(map:Map<number, CardDragState>)=>Map<number, CardDragState> = (map) => {
+    const newMap = new Map<number, CardDragState>();
+
+    for (const [key, value] of map)
+      newMap.set(key, value);
+
+    return newMap;
+  };
 
 type Props = {};
 export const SearchResults:React.FC<Props> = () => {
@@ -71,7 +99,6 @@ export const SearchResults:React.FC<Props> = () => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
-  const startDragPoint = useRef<{x:number, y:number}>({x:0, y:0});
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalCard, setModalCard] = useState<MagicCard|null>(null);
   const [error, setError] = useState<Error>(Error.NO_ERROR);
@@ -80,26 +107,29 @@ export const SearchResults:React.FC<Props> = () => {
   const {url, selected, updateSelected, handlers} = useFilters();
   const [dragging, setDragging] = useState<boolean>(false);
   const draggingCard = useRef<number>(-1);
-  const {subDrag, startDragging, dragStartPointRef, dragPointRef, dragVelocityRef} = useDragContext();
+  const {subDrag, startDragging, dragStartPointRef, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
+  const [cardDragMap, setCardDragMap] = useState<CardDragMap>(new Map<number, CardDragState>());
+  const cardDragMapRef = useRef<CardDragMap>(new Map<number, CardDragState>());
 
-  const onDragCards = (e:PointerEvent) => {
-    window.scrollTo(window.scrollX + dragVelocityRef.current.x, window.scrollY - dragVelocityRef.current.y*2);
+  const onDragView = (e:PointerEvent) => {
+    window.scrollTo(window.scrollX + dragStateRef.current.delta.x, window.scrollY - dragStateRef.current.delta.y*2);
   }
 
-  const onDragCardsStart = ({x, y}:PointerEvent) => {
+  const onDragViewStart = ({x, y}:PointerEvent) => {
     setDragging(true);
   }
 
-  const onDragCardsEnd = (e:PointerEvent) => {
+  const onDragViewEnd = (e:PointerEvent) => {
     setDragging(false);
   }
 
+  const viewTag = 'view';
   useEffect(() => {
-    subDrag({tag:'cards',
-             onDragStart:onDragCardsStart,
-             onDrag:onDragCards,
-             onDragEnd:onDragCardsEnd})
+    subDrag({tag:viewTag,
+             onDragStart:onDragViewStart,
+             onDrag:onDragView,
+             onDragEnd:onDragViewEnd})
   }, []);
 
   const onDragCardStart = ({x, y}:PointerEvent) => {
@@ -107,12 +137,16 @@ export const SearchResults:React.FC<Props> = () => {
   }
 
   const onDragCardEnd = (e:PointerEvent) => {
+    const index = draggingCard.current;
+    const cardState = cardDragMap.get(index);
+
     draggingCard.current = -1;
     setDragging(false);
   }
 
+  const cardTag = 'card';
   useEffect(() => {
-    subDrag({tag:'card',
+    subDrag({tag:cardTag,
              onDragStart:onDragCardStart,
              onDragEnd:onDragCardEnd})
   }, []);
@@ -122,22 +156,88 @@ export const SearchResults:React.FC<Props> = () => {
   }, [dragging]);
 
   useEffect(() => {
+    const index = draggingCard.current;
+
+    // No card selected, so we aren't dragging a card around.
+    if (index < 0) return;
+
     let raf: number;
 
     const tick = () => {
-      const x = dragPointRef.current.x;
-      const y = dragPointRef.current.y;
-      setDragState({
-        point:subWPoints(dragPointRef.current, dragStartPointRef.current),
-        velocity:dragVelocityRef.current,
-        angle:Math.atan2(dragVelocityRef.current.y, dragVelocityRef.current.x),
-      });
-      if (dragging)
+      const state = dragStateRef.current;
+      let cardState = cardDragMapRef.current.get(index);
+      if (!cardState) {
+        cardState = _cardDragState;
+        cardDragMapRef.current.set(index, cardState);
+      }
+
+      if (cardState.return) {
+        console.log('return');
+        const start = dragStartPointRef.current;
+
+        const dx = start.x - state.point.x
+        const dy = start.y - state.point.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        let nextPoint;
+
+        if (distance < cardState.returnSpeed) {
+          nextPoint = start;
+          cardState.terminate = true;
+          console.log('set to terminate!');
+
+        } else {
+          const angle = Math.atan2(dy, dx);
+          console.log('angle', angle*180/Math.PI);
+
+          const force = {
+            x: Math.cos(angle) * cardState.returnSpeed,
+            y: Math.sin(angle) * cardState.returnSpeed,
+          };
+
+          nextPoint = {
+            x:state.point.x + force.x,
+            y:state.point.y + force.y,
+          }
+        }
+        state.point = nextPoint;
+      }
+
+      if (!state.moved)
+        state.delta = {..._wpoint};
+
+      const nextAcceleration =
+        (state.delta.x === 0 && state.delta.y === 0) ?
+          fsubWPoints(cardState.acceleration,
+                      cardState.resistance) :
+          fsubWPoints(caddWPoints(cardState.acceleration,
+                                  divWPoint(state.delta,
+                                            cardState.weight),
+                                  cardState.maxAngle),
+                      cardState.resistance);
+
+      const next = {
+        ...cardState,
+        acceleration: nextAcceleration,
+        angle: nextAcceleration,
+      };
+
+      state.moved = false;
+      if (cardState.terminate)
+        cardDragMapRef.current.delete(index);
+      else
+        cardDragMapRef.current.set(index, next);
+      setDragState({...state});
+      setCardDragMap(copyMap(cardDragMapRef.current));
+
+      if (dragging && !cardState.terminate)
         raf = requestAnimationFrame(tick);
     };
 
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    if (dragging)
+      raf = requestAnimationFrame(tick);
+    return () => {
+      //cancelAnimationFrame(raf);
+    }
   }, [dragging]);
 
   useMouseLeavePage(() => {
@@ -299,7 +399,7 @@ export const SearchResults:React.FC<Props> = () => {
   };
 
   const handlePointerDown = (e:React.PointerEvent) => {
-    startDragging(e, 'cards');
+    startDragging(e, viewTag);
   };
 
   const handlePointerMove:PointerEventHandler = (e) => {
@@ -314,19 +414,26 @@ export const SearchResults:React.FC<Props> = () => {
   const handleCardPointerDown = (e:React.PointerEvent, index:number) => {
     e.stopPropagation();
 
-    startDragging(e, 'card');
-    setDragState({
-      point:subWPoints(dragPointRef.current, dragStartPointRef.current),
-      velocity:dragVelocityRef.current,
-      angle:0,
-    });
+    startDragging(e, cardTag);
+    setDragState(dragStateRef.current);
+    cardDragMapRef.current.set(index, _cardDragState);
+    setCardDragMap(copyMap(cardDragMapRef.current));
     draggingCard.current = index;
   };
 
   const handleCardPointerUp = async (e:React.PointerEvent, index:number) => {
     e.stopPropagation();
 
-    if ((e.clientX === startDragPoint.current.x) && (e.clientY === startDragPoint.current.y)) {
+    const cardState = cardDragMapRef.current.get(index);
+
+    if (cardState) {
+      cardState.return = true;
+      setCardDragMap(copyMap(cardDragMapRef.current));
+    }
+
+    if ((e.button !== 2) &&
+        (e.clientX === dragStartPointRef.current.x) &&
+        (e.clientY === dragStartPointRef.current.y)) {
       setModalShown(true);
       setModalCard(cards[index]);
       const hydratedImageMap = await hydrateImageMap(imageMap, [cards[index]], "large");
@@ -358,7 +465,6 @@ export const SearchResults:React.FC<Props> = () => {
     let opacityGoingUp = true;
     let opacityFirstPass = true;
     let opacityRate = 0.008;
-
     element.style.border = "1px solid rgb(146, 148, 248)";
     element.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
     if (!dragging)
@@ -380,7 +486,10 @@ export const SearchResults:React.FC<Props> = () => {
           if (opacity <= 0.7)
             opacityGoingUp = true;
         }
-        element.style.boxShadow = `0px 0px 10px 3px rgba(146, 148, 248, ${opacity})`;
+
+        element.style.boxShadow = (draggingCard.current === index) ?
+          `0px 0px 15px 10px rgba(146, 255, 248, ${opacity})` :
+          `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
 
         setTimeout(change, 10);
       };
@@ -419,11 +528,11 @@ export const SearchResults:React.FC<Props> = () => {
       <View loading={loading} getRef={getRef}
         dragging={dragging}
         dragState={dragState}
+        cardDragMap={cardDragMap}
         filterHidden={filterHidden}
         yCutoffHidden={yCutoffHidden}
         numCardsRow={numCardsRow}
         cards={cards}
-        draggingCardIndex={draggingCard.current}
         imageMap={imageMap}
         handleCardPointerEnter={handleCardPointerEnter}
         handleCardPointerLeave={handleCardPointerLeave}

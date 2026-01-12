@@ -19,18 +19,17 @@ type Drag = {
   subDrag:SubDrag,
   startDragging:StartDragging,
   dragStartPointRef:React.RefObject<WPoint>,
-  dragPointRef:React.RefObject<WPoint>,
-  dragVelocityRef:React.RefObject<WPoint>,
+  dragStateRef:React.RefObject<DragState>,
 };
 export type DragState = {
   point:WPoint,
-  velocity:WPoint,
-  angle:number,
+  delta:WPoint,
+  moved:boolean,
 }
 export const _dragState = {
   point:_wpoint,
-  velocity:_wpoint,
-  angle:0,
+  delta:_wpoint,
+  moved:false,
 }
 
 const DragContext = createContext<Drag|undefined>(undefined);
@@ -69,8 +68,7 @@ export default function Home() {
   const testing:string|null = null;
   const dragTarget = useRef<string>("");
   const dragStartPoint = useRef<WPoint>(_wpoint);
-  const dragPoint = useRef<WPoint>(_wpoint);
-  const dragVelocity = useRef<WPoint>(_wpoint);
+  const dragState = useRef<DragState>(_dragState);
   const dragSubscriptions = useRef<DragSubscription[]>([]);
   const selectionSubscriptions = useRef<SelectionSubscription[]>([]);
 
@@ -152,18 +150,21 @@ export default function Home() {
     dragTarget.current = tag;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     document.body.style.cursor = "grabbing";
-    dragStartPoint.current = dragPoint.current = makeWPoint(nativeEvent);
-    dragVelocity.current = _wpoint;
+    dragStartPoint.current = dragState.current.point = makeWPoint(nativeEvent);
+    dragState.current.delta = _wpoint;
     runStartFuncs(nativeEvent, tag);
   };
 
   const drag = (e:PointerEvent) => {
-    if (dragTarget.current !== "") {
-      const point = makeWPoint(e);
-      dragVelocity.current = subWPoints(point, dragPoint.current);
-      dragPoint.current = point;
-      runFuncs(e, dragTarget.current)
+    if (dragTarget.current === "") 
+      return;
+    const point = makeWPoint(e);
+    dragState.current = {
+      point,
+      delta:subWPoints(point, dragState.current.point),
+      moved:true,
     }
+    runFuncs(e, dragTarget.current);
   };
 
   const stopDragging = (e:PointerEvent) => {
@@ -175,7 +176,6 @@ export default function Home() {
     });
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     dragTarget.current = "";
-    
   }
 
   //      {testing && <JournalWriter />}
@@ -183,7 +183,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col justify-between">
-      <DragContext value={{subDrag, startDragging, dragStartPointRef:dragStartPoint, dragPointRef:dragPoint, dragVelocityRef:dragVelocity}}>
+      <DragContext value={{subDrag, startDragging, dragStartPointRef:dragStartPoint, dragStateRef:dragState}}>
       <SelectionContext value={{subSelection}}>
       {!testing && <SearchResults />}
       {testing === 'focus' && <Focus />}
