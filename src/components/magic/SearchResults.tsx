@@ -1,7 +1,7 @@
 'use client'
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
-import { ChangeEventHandler, PointerEventHandler, useEffect, useRef, useState } from "react";
+import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, MagicFormat, } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import FiltersBar from "./filters/FiltersBar";
@@ -13,6 +13,7 @@ import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _dragState, DragState, useDragContext } from "@/app/page";
 import { _wpoint, ftsubWPoints, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
+import useMagicCards from "@/hooks/magic/useMagicCards";
 
 const yCutoffHidden = 10;
 
@@ -92,9 +93,6 @@ const copyMap:(map:Map<number, CardDragState>)=>Map<number, CardDragState> = (ma
 
 type Props = {};
 export const SearchResults:React.FC<Props> = () => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [cards, setCards] = useState<any[]>([]);
-  const [imageMap, setImageMap] = useState<Map<string, ImagePacket>>(new Map());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
@@ -111,6 +109,13 @@ export const SearchResults:React.FC<Props> = () => {
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [cardDragMap, setCardDragMap] = useState<CardDragMap>(new Map<number, CardDragState>());
   const cardDragMapRef = useRef<CardDragMap>(new Map<number, CardDragState>());
+  const [cardDataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage] = useMagicCards(url);
+
+  useMemo(() => {
+    if ((cards.length > 0) && (formats.length === 0))
+      setFormats([{name:"Any"},
+        ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
+  }, [cards]);
 
   const onDragView = (e:PointerEvent) => {
     window.scrollTo(window.scrollX + dragStateRef.current.delta.x, window.scrollY - dragStateRef.current.delta.y*2);
@@ -137,9 +142,6 @@ export const SearchResults:React.FC<Props> = () => {
   }
 
   const onDragCardEnd = (e:PointerEvent) => {
-    const index = draggingCard.current;
-    const cardState = cardDragMap.get(index);
-
     draggingCard.current = -1;
     setDragging(false);
   }
@@ -172,7 +174,6 @@ export const SearchResults:React.FC<Props> = () => {
       }
 
       if (cardState.return) {
-        console.log('return');
         const start = dragStartPointRef.current;
 
         const dx = start.x - state.point.x
@@ -183,11 +184,9 @@ export const SearchResults:React.FC<Props> = () => {
         if (distance < cardState.returnSpeed) {
           nextPoint = start;
           cardState.terminate = true;
-          console.log('set to terminate!');
 
         } else {
           const angle = Math.atan2(dy, dx);
-          console.log('angle', angle*180/Math.PI);
 
           const force = {
             x: Math.cos(angle) * cardState.returnSpeed,
@@ -243,126 +242,10 @@ export const SearchResults:React.FC<Props> = () => {
   useMouseLeavePage(() => {
     setFilterGlow(0);
   });
-
-  const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
-    const newImageMap = new Map<string, ImagePacket>();
-
-    for (const [key, value] of imageMap)
-      newImageMap.set(key, value);
-
-    return newImageMap;
-  };
-
-  const fetchImage = async (hydratedImageMap:ImageMap, name:string, type:string, uri:string) => {
-    const blob = await fetch(uri)
-      .then((response) => {
-        const reader = response.body?.getReader();
-
-        if (!reader) {
-          console.log('Reader error');
-          return;
-        }
-
-        return new ReadableStream({
-          start(controller) {
-            return pump();
-            
-            async function pump():Promise<ReadableStream<any> | undefined> {
-              return reader?.read().then(({ done, value }) => {
-                // When no more data needs to be consumed, close the stream
-                if (done) {
-                  controller.close();
-                  return;
-                }
-                // Enqueue the next data chunk into our target stream
-                controller.enqueue(value);
-                return pump();
-              });
-            }
-          },
-        })})
-      // Create a new response out of the stream
-      .then((stream) => new Response(stream))
-      // Create an object URL for the response
-      .then((response) => response.blob())
-      .then((blob) => URL.createObjectURL(blob))
-      .then((url) => url)
-      .catch((err) => console.error(err));
-
-    if (!blob) {
-      console.log('Something wrong with blob');
-      return;
-    }
-
-    let dryImagePacket = hydratedImageMap.get(name);
-
-    if (!dryImagePacket) {
-      dryImagePacket = {name:name};
-    }
-
-    let imagePacket = {...dryImagePacket};
-    if (type === 'small') imagePacket.smallBlob = blob;
-    else if (type === 'large') imagePacket.largeBlob = blob;
-    else console.log('Unknown image type', type);
-    hydratedImageMap.set(name, imagePacket);
-  }
-
-
-
-  const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:any[], type:string) => {
-    let hydratedImageMap = copyImageMap(imageMap);
-    
-    await Promise.all(cards.map(async (_card, _index) => {
-      const uri = (type === "small") ? _card.imageUris.small :
-                  (type === "large") ? _card.imageUris.large :
-                                       "";
-
-      if (!uri) {
-        console.log('Invalid Uri for ' + _card.name, uri);
-        return Promise.resolve();
-      }
-
-      return fetchImage(hydratedImageMap, _card.name, type, uri);
-    }));
-
-    return hydratedImageMap;
-  };
-
-  const search = async () => {
-    setLoading(true);
-
-    let data = await fetchCards(url);
-
-    if ((data.length <= 0) ||
-        (!data[0])) {
-      setError(Error.NOT_FOUND);
-      setCards([]);
-      return;
-    }
-
-    let cards = data.filter((_card, _index) => data.findIndex((__card) => __card.name === _card.name) === _index);
-
-    cards = cards.map(transformCard);
-
-    setCards(cards);
-    setLoading(false);
-    setError(Error.NO_ERROR);
-
-    // Do something if no cards
-
-    if (formats.length === 0)
-      setFormats([
-        {name:"Any"},
-        ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
-
-    const hydratedImageMap = await hydrateImageMap(imageMap, cards, "small");
-      
-    setImageMap(hydratedImageMap);
-  }
-
+/*
   useEffect(() => {
     search();
-  }, [selected]);
+  }, [selected]);*/
 
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
     const value = parseInt(e.target.value);
@@ -436,9 +319,7 @@ export const SearchResults:React.FC<Props> = () => {
         (e.clientY === dragStartPointRef.current.y)) {
       setModalShown(true);
       setModalCard(cards[index]);
-      const hydratedImageMap = await hydrateImageMap(imageMap, [cards[index]], "large");
-      
-      setImageMap(hydratedImageMap);
+      hydrateLargeImage(index);
     }
   };
   
@@ -525,7 +406,7 @@ export const SearchResults:React.FC<Props> = () => {
       selectedName={selected.name} onChangeName={handlers.name}
       sets={sets} cards={cards} formats={formats}/>
     {error === Error.NO_ERROR && 
-      <View loading={loading} getRef={getRef}
+      <View loaded={imagesLoaded} getRef={getRef}
         dragging={dragging}
         dragState={dragState}
         cardDragMap={cardDragMap}

@@ -5,7 +5,7 @@ import { CardDragMap, CardDragState, ImageMap } from "./SearchResults";
 import { DragState, useDragContext } from "@/app/page";
 
 type Props = {
-  loading:boolean,
+  loaded:boolean,
   getRef:(id:number, node:any) => () => void,
   dragging:boolean,
   dragState:DragState,
@@ -22,7 +22,7 @@ type Props = {
 }
 
 const View:React.FC<Props> = ({
-    loading,
+    loaded,
     getRef,
     dragging,
     dragState,
@@ -43,7 +43,6 @@ const View:React.FC<Props> = ({
   const card = (name:string, index:number) => {
     const cardDragState = cardDragMap.get(index);
     const isDragging = !!cardDragState;
-    if (isDragging) console.log('inex', name);
 
     return (
       <div key={name} ref={getRef.bind(null, index)}
@@ -89,12 +88,12 @@ const View:React.FC<Props> = ({
       display:'grid',
       gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
       }}>
-      {loading &&
+      {!loaded &&
       <h4 style={{
         textAlign:'center',
         textAnchor:'middle',
         }}>Loading...</h4>}
-      {!loading &&
+      {loaded &&
       cards.map((_card, _index)=>
         card(_card.name, _index)
       )}

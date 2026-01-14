@@ -17,10 +17,16 @@ function useExternalData<T> (
     let data:T[] = [];
 
     const fetchData = async (url:string) => {
-      await chunk(url);
+      try {
+        await chunk(url);
+      } catch (err) {
+        // Don't log abort errors - they're expected on cleanup
+        if ((err instanceof Error) && err.name !== 'AbortError')
+          console.log('error', err);
+      }
 
       async function chunk(url:string) {
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: controller.signal });
         const json = await res.json();
         const body = json.data;
 
@@ -31,13 +37,18 @@ function useExternalData<T> (
         else {
           setLoaded(true);
           setData(data);
+          console.log('-Loaded ', url);
         }
       };
     };
 
+    console.log('+Starting ', url);
     fetchData(url).catch((err) => console.log('error', err));
 
-    return controller.abort();
+    return () => {
+      console.log('Aborting fetch for', url);
+      controller.abort();
+    };
   }, [url, transform]);
 
   return [loaded, data];
