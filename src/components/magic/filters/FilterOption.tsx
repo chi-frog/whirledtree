@@ -19,7 +19,7 @@ const FilterOption:React.FC<Props> = ({text, children}:PropsWithChildren<Props>)
         textWrap:'nowrap',
         alignItems:'center',
         }}>
-        <h1 style={{fontWeight:'bold'}}>{text}</h1>
+        <h1 style={{fontWeight:'bold'}}>{text}{'\u00A0'}</h1>
         {children}
       </label>
   )

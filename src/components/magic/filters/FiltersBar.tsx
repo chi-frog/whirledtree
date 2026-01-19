@@ -3,7 +3,10 @@
 import { ChangeEventHandler, PointerEventHandler } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "../types/default";
 import { FilterState } from "../SearchResults";
-import FilterOption from "./FilterOption";
+import { CardsPerRow } from "./ViewCardsPerRow";
+import { FilterSet } from "./FilterSet";
+import { FilterFormat } from "./FilterFormat";
+import { FilterName } from "./FilterName";
 
 type Props = {
   handlePointerDown:PointerEventHandler,
@@ -49,72 +52,26 @@ const FiltersBar:React.FC<Props> = ({
   const whole = (state === FilterState.WHOLE);
 
   const filterOptions = (<>
-    <FilterOption text="Cards Per Row: ">
-        <input className="bg-white hover:bg-sky-200" name="cardsPerRow" type="number" style={{
-          width:'fit-content',
-          textAlign:'center',
-          borderRadius:'5px',
-          padding:'2px 5px 2px 5px',
-          boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
-          transition:"background-color 0.1s ease-in-out",
-          }}
-          defaultValue={numCardsRow} onChange={onChangeNumCardsRow}
-          max={cards.length} min={1}/>
-      </FilterOption>
-      <FilterOption text="Set: ">
-        <select id="set" autoComplete="on"
-          className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
-          name="set" value={selectedSet} onChange={onChangeSet}
-          style={{
-            cursor:'pointer',
-            borderRadius:'5px',
-            padding:'2px 5px 2px 5px',
-            textAlign:'center',
-            transition:'background-color 0.1s ease-in-out',
-            boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
-          }}>
-          {sets.map((_set, _index) => (
-            (_set.acronym !== selectedSet) ?
-              <option className="notselected" key={_index} value={_set.acronym}>{_set.name}</option> :
-              <option className="selected" key={_index} value={_set.acronym}>{_set.name}</option>
-          ))}
-        </select>
-      </FilterOption>
-      <FilterOption text="Format: ">
-        <select id="format"
-          className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
-          name="format" value={selectedFormat} onChange={onChangeFormat}
-          style={{
-            cursor:'pointer',
-            borderRadius:'5px',
-            padding:'2px 5px 2px 5px',
-            textAlign:'center',
-            boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
-            transition:'background-color 0.1s ease-in-out',
-          }}>
-          {formats.map((_format, _index) => (
-            (_format.name !== selectedFormat) ?
-              <option className="notselected" key={_index} value={_format.name}>{_format.name}</option> :
-              <option className="selected" key={_index} value={_format.name}>{_format.name}</option>
-          ))}
-        </select>
-      </FilterOption>
-      <FilterOption text="Name: ">
-        <input name="name" className="bg-white hover:bg-sky-200" type="text"
-          onChange={onChangeName}
-          value={selectedName}
-          style={{
-          transition:'background-color 0.1s ease-in-out',
-          borderRadius:'5px',
-          padding:'2px 5px 2px 5px',
-          boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
-        }}/>
-      </FilterOption>
+    <CardsPerRow
+      numCards={cards.length}
+      numCardsRow={numCardsRow}
+      onChangeNumCardsRow={onChangeNumCardsRow} />
+      <FilterSet
+        sets={sets}
+        selectedSet={selectedSet}
+        onChangeSet={onChangeSet}/>
+      <FilterFormat
+        formats={formats}
+        selectedFormat={selectedFormat}
+        onChangeFormat={onChangeFormat}/>
+      <FilterName
+        selectedName={selectedName}
+        onChangeName={onChangeName}/>
   </>);
 
   const arrow = (
     <svg
-      className={(whole) ? "hover:scale-130 hover:bg-gradient-to-b from-transparent to-light-red to-rgba[255, 255, 255, 0.8]" :
+      className={(whole) ? "hover:scale-130 hover:bg-gradient-to-b from-light-red to-transparent to-rgba[255, 255, 255, 0.8]" :
                            "hover:scale-130"}
       onPointerDown={handleArrowPointerDown} onPointerUp={handleArrowPointerUp}
       fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" 
@@ -155,6 +112,7 @@ const FiltersBar:React.FC<Props> = ({
       justifyContent:'space-evenly',
       flexWrap:'wrap',
       borderRadius:'5px',
+      overflow:'hidden',
       boxShadow: (hidden)   ? `0px 0px ${glow*2}px ${glow*2}px rgba(146, 148, 248, 0.8)` :
                  (glow < 0) ? `inset 0px 0px ${-glow}px ${-glow}px rgba(256, 44, 44, 0.8)` :
                               `0px 0px ${glow}px ${glow}px rgba(146, 148, 248, 0.8)`,

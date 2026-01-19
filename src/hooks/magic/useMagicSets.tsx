@@ -1,7 +1,8 @@
 'use client'
 
-import { MagicSet } from "@/components/magic/types/default";
+import { _magicSetAny, MagicSet } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
+import { WError } from "@/components/magic/SearchResults";
 
 const scryfallUrl = 'https://api.scryfall.com/';
 const urlSets = 'sets/';
@@ -12,10 +13,16 @@ const transformMagicSet:Transform<MagicSet> = (input) => ({
   type:input.set_type,
 });
 
-const useMagicSets = () => {
-  
-  return useExternalData<MagicSet>(
+type Return = [
+  error:WError,
+  loaded:boolean,
+  sets:MagicSet[],
+]
+const useMagicSets:()=>Return = () => {
+  const [error, loaded, sets] = useExternalData<MagicSet>(
     scryfallUrl + urlSets,
-    transformMagicSet)}
+    transformMagicSet);
+  
+  return [error, loaded, [_magicSetAny, ...sets]]};
 
 export default useMagicSets;

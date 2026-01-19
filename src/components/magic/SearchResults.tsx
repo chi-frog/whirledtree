@@ -8,38 +8,13 @@ import FiltersBar from "./filters/FiltersBar";
 import { capitalize } from "@/helpers/string";
 import useMagicSets from "@/hooks/magic/useMagicSets";
 import Modal from "./Modal";
-import { transformCard } from "./transforms/transformCard";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _dragState, DragState, useDragContext } from "@/app/page";
-import { _wpoint, ftsubWPoints, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
+import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
 
 const yCutoffHidden = 10;
-
-async function fetchCards(url:string) {
-  let cards:any[] = [];
-
-  await addCards(url);
-  
-  async function addCards(url:string) {
-    try {
-      const search = await fetch(url);
-      const res = await search.json();
-
-      if (res.code !== Error.NOT_FOUND) {
-        cards = cards.concat(res.data);
-
-        if (res.has_more)
-          await addCards(res.next_page);
-      }
-    } catch(e) {
-      console.log('error', e);
-    }
-  }
-
-  return cards;
-}
 
 export enum FilterState {
   HIDDEN = 'hidden',
@@ -47,13 +22,12 @@ export enum FilterState {
   WHOLE = 'whole',
 }
 
-export enum Error {
+export enum WError {
   NO_ERROR = 'no_error',
   NOT_FOUND = 'not_found',
-
 }
 
-type ImagePacket = {
+export type ImagePacket = {
   name:string,
   smallBlob?:string,
   largeBlob?:string,
@@ -99,9 +73,9 @@ export const SearchResults:React.FC<Props> = () => {
   const [filterGlow, setFilterGlow] = useState<number>(0);
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalCard, setModalCard] = useState<MagicCard|null>(null);
-  const [error, setError] = useState<Error>(Error.NO_ERROR);
+  const [error, setError] = useState<WError>(WError.NO_ERROR);
   const {getMap, getRef} = useRefMap();
-  const [setsLoaded, sets] = useMagicSets();
+  const [setsError, setsLoaded, sets] = useMagicSets();
   const {url, selected, updateSelected, handlers} = useFilters();
   const [dragging, setDragging] = useState<boolean>(false);
   const draggingCard = useRef<number>(-1);
@@ -109,13 +83,17 @@ export const SearchResults:React.FC<Props> = () => {
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [cardDragMap, setCardDragMap] = useState<CardDragMap>(new Map<number, CardDragState>());
   const cardDragMapRef = useRef<CardDragMap>(new Map<number, CardDragState>());
-  const [cardDataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage] = useMagicCards(url);
+  const [cardError, cardDataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage] = useMagicCards(url);
 
   useMemo(() => {
     if ((cards.length > 0) && (formats.length === 0))
       setFormats([{name:"Any"},
         ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
   }, [cards]);
+
+  useMemo(() => {
+    setError(cardError);
+  }, [cardError]);
 
   const onDragView = (e:PointerEvent) => {
     window.scrollTo(window.scrollX + dragStateRef.current.delta.x, window.scrollY - dragStateRef.current.delta.y*2);
@@ -242,10 +220,6 @@ export const SearchResults:React.FC<Props> = () => {
   useMouseLeavePage(() => {
     setFilterGlow(0);
   });
-/*
-  useEffect(() => {
-    search();
-  }, [selected]);*/
 
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
     const value = parseInt(e.target.value);
@@ -405,12 +379,12 @@ export const SearchResults:React.FC<Props> = () => {
       selectedFormat={selected.format} onChangeFormat={handlers.format}
       selectedName={selected.name} onChangeName={handlers.name}
       sets={sets} cards={cards} formats={formats}/>
-    {error === Error.NO_ERROR && 
+    {error === WError.NO_ERROR && 
       <View loaded={imagesLoaded} getRef={getRef}
         dragging={dragging}
         dragState={dragState}
         cardDragMap={cardDragMap}
-        filterHidden={filterHidden}
+        filterState={filterState}
         yCutoffHidden={yCutoffHidden}
         numCardsRow={numCardsRow}
         cards={cards}
@@ -420,7 +394,7 @@ export const SearchResults:React.FC<Props> = () => {
         handleCardPointerDown={handleCardPointerDown}
         handleCardPointerUp={handleCardPointerUp}/>
     }
-    {error === Error.NOT_FOUND &&
+    {error === WError.NOT_FOUND &&
       <div id="error_screen" style={{
         width:'100vw',
         height: '100vh',

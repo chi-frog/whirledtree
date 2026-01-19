@@ -3,7 +3,7 @@
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 import { ChangeEventHandler, useState } from "react";
 
-export const ANY = 'any';
+export const ANY = 'Any';
 
 type Selected = {
   name:string,

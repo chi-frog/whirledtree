@@ -1,8 +1,9 @@
 'use client'
 
-import { MagicCard } from "@/components/magic/types/default";
+import { MagicCard, MagicCardClass } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
 import { useEffect, useMemo, useState } from "react";
+import { WError } from "@/components/magic/SearchResults";
 
 type ImagePacket = {
   name:string,
@@ -11,15 +12,53 @@ type ImagePacket = {
   };
 export type ImageMap = Map<string, ImagePacket>;
 
-const transformMagicCard:Transform<MagicCard> = (card) => ({
-  name:card.name,
-  doubledfaced:(card.card_faces !== undefined),
-  legalities:card.legalities,
-  imageUris:{
-    small:card.image_uris.small,
-    large:card.image_uris.large,
+export const getImageMapKey = (card:MagicCard) => {
+  if (card.class !== MagicCardClass.DOUBLESIDED)
+    return card.name;
+}
+
+const transformMagicCard: Transform<MagicCard> = (card) => {
+  if (card.card_faces === undefined) {
+    return {
+      name: card.name,
+      legalities: card.legalities,
+      reversed:false,
+      class:MagicCardClass.NORMAL,
+      imageUris: {
+        small: card.image_uris.small,
+        large: card.image_uris.large,
+      }
+    };
+  } else if (card.image_uris === undefined) {
+    return {
+      name: card.name,
+      legalities: card.legalities,
+      reversed:false,
+      class:MagicCardClass.DOUBLESIDED,
+      imageUris: {
+        front: {
+          small: card.card_faces[0].image_uris.small,
+          large: card.card_faces[0].image_uris.large,
+        },
+        back: {
+          small: card.card_faces[1].image_uris.small,
+          large: card.card_faces[1].image_uris.large,
+        }
+      }
+    };
+  } else {
+    return {
+      name: card.name,
+      legalities: card.legalities,
+      reversed:false,
+      class:MagicCardClass.DOUBLEFACED,
+      imageUris: {
+        small: card.image_uris.small,
+        large: card.image_uris.large,
+      }
+    };
   }
-});
+};
 
 const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
   const newImageMap = new Map<string, ImagePacket>();
@@ -83,26 +122,33 @@ const fetchImage = async (hydratedImageMap:ImageMap, name:string, type:string, u
   hydratedImageMap.set(name, imagePacket);
 }
 
-const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:any[], type:string) => {
+const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:MagicCard[], size:'small'|'large') => {
     let hydratedImageMap = copyImageMap(imageMap);
     
     await Promise.all(cards.map(async (_card, _index) => {
-      const uri = (type === "small") ? _card.imageUris.small :
-                  (type === "large") ? _card.imageUris.large :
-                                       "";
+      let names = (_card.class !== MagicCardClass.DOUBLESIDED) ?
+        [_card.name] :
+        [_card.name + 'front', _card.name + 'back'];
 
-      if (!uri) {
-        console.log('Invalid Uri for ' + _card.name, uri);
+      let uris = (_card.class !== MagicCardClass.DOUBLESIDED) ?
+        [_card.imageUris[size]] :
+        [_card.imageUris.front[size], _card.imageUris.back[size]];
+
+      if (!uris[0]) {
+        console.log('Invalid Uri for ' + _card.name, uris);
         return Promise.resolve();
       }
 
-      return fetchImage(hydratedImageMap, _card.name, type, uri);
+      return Promise.all(uris.map((_uri, _index) => {
+        return fetchImage(hydratedImageMap, names[_index], size, _uri);
+      }));
     }));
 
     return hydratedImageMap;
   };
 
 export type UseMagicCards = [
+  error:WError,
   dataLoaded:boolean,
   imagesLoaded:boolean,
   cards:MagicCard[],
@@ -113,7 +159,7 @@ export type UseMagicCards = [
 const useMagicCards:(url:string)=>UseMagicCards = (url) => {
   const [imageMap, setImageMap] = useState<ImageMap>(new Map());
   const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
-  let [dataLoaded, cardData] = useExternalData<MagicCard>(
+  let [error, dataLoaded, cardData] = useExternalData<MagicCard>(
     url,
     transformMagicCard);
 
@@ -168,7 +214,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     setImageMap(hydratedImageMap);
   }
 
-  return [dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage];
+  return [error, dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage];
 };
 
 export default useMagicCards;
