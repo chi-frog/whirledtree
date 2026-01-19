@@ -51,6 +51,7 @@ const View:React.FC<Props> = ({
         x={dragState.point.x - dragStartPointRef.current.x}
         y={dragState.point.y - dragStartPointRef.current.y}
         widthString={`calc('100%/${numCardsRow}')`}
+        heightString={'fit-content'}
         angle={cardDragState?.angle}
         card={cards[index]}
         imagePacket={imageMap.get(name)}

@@ -411,10 +411,7 @@ export const SearchResults:React.FC<Props> = () => {
     <Modal
       close={()=>setModalShown(false)}
       card={modalCard}
-      imageBlob={modalCard ?
-                 imageMap.get(modalCard.name)?.largeBlob ? 
-                 imageMap.get(modalCard.name)?.largeBlob : 
-                 imageMap.get(modalCard.name)?.smallBlob :
-                 undefined}/>}
+      index={cards.findIndex((_card) => (_card === modalCard))}
+      imagePacket={(modalCard) ? imageMap.get(modalCard.name) : undefined}/>}
   </div>)
 };

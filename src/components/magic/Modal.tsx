@@ -3,6 +3,8 @@
 import { PointerEventHandler, useEffect, useRef, useState } from "react";
 import { MagicCard } from "./types/default";
 import { SelectionChangeFunc, useSelectionContext } from "@/app/page";
+import { ImagePacket } from "./SearchResults";
+import { Card } from "./Card";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -59,7 +61,8 @@ function createSearchTooltip({
 type Props = {
   close:()=>void,
   card:MagicCard|null,
-  imageBlob?:string,
+  index:number,
+  imagePacket?:ImagePacket,
 }
 
 const tooltipMargin = 5;
@@ -67,7 +70,8 @@ const tooltipMargin = 5;
 const Modal:React.FC<Props> = ({
     close,
     card,
-    imageBlob
+    index,
+    imagePacket
   }:Props) => {
   const [selection, setSelection] = useState<string>("");
   const [selectionPoint, setSelectionPoint] = useState<{x:number, y:number}>({x:0, y:0});
@@ -135,7 +139,6 @@ const Modal:React.FC<Props> = ({
   };
 
   const handlePointerDown:PointerEventHandler = (e) => {
-    console.log('modal md');
     e.stopPropagation();
 
     if ((e.target as HTMLElement).id === 'modal')
@@ -173,21 +176,19 @@ const Modal:React.FC<Props> = ({
         border: '2px solid rgba(146, 148, 248, 0.8)',
       }}>
         {card &&
-          <div style={{
-            height:'100%',
-            borderRadius:'20px',
-            width:'fit-content',
-            overflow:'hidden',
-          }}>
-          {imageBlob &&
-            <img src={imageBlob} draggable="false" style={{
-              maxWidth:'100%',
-              height:'100%',
-            }}/>}
-          {!imageBlob &&
-            <p>Image Not Found</p>
-            }
-          </div>}
+          <Card
+            x={0}
+            y={0}
+            widthString={'fit-content'}
+            heightString={'100%'}
+            imageHeightString={'100%'}
+            card={card}
+            imagePacket={imagePacket}
+            index={index}
+            dragging={false}
+            isDragging={false}
+          />
+        }
         <div id="text" style={{
           flexGrow:1,
         }}>
