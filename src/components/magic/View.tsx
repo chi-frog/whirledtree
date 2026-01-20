@@ -2,8 +2,8 @@
 
 import { MagicCard } from "./types/default";
 import { CardDragMap, CardDragState, FilterState, ImageMap } from "./SearchResults";
-import { DragState, useDragContext } from "@/app/page";
 import { Card } from "./Card";
+import { DragState, useDragContext } from "../general/DragContext";
 
 type Props = {
   loaded:boolean,

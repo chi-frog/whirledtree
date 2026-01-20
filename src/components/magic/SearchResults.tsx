@@ -10,9 +10,9 @@ import useMagicSets from "@/hooks/magic/useMagicSets";
 import Modal from "./Modal";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
-import { _dragState, DragState, useDragContext } from "@/app/page";
 import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
+import { _dragState, DragState, useDragContext } from "../general/DragContext";
 
 const yCutoffHidden = 10;
 
