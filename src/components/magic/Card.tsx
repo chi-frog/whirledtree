@@ -16,7 +16,6 @@ type Props = {
   imagePacket:ImagePacket|undefined,
   index:number,
   getRef?:(id:number, node:any) => () => void,
-  dragging:boolean,
   isDragging:boolean,
   handlePointerEnter?:(e:React.PointerEvent) => void,
   handlePointerLeave?:(e:React.PointerEvent) => void,
@@ -34,7 +33,6 @@ export const Card:React.FC<Props> = ({
     imagePacket,
     index,
     getRef,
-    dragging,
     isDragging,
     handlePointerEnter,
     handlePointerLeave,
@@ -74,7 +72,7 @@ export const Card:React.FC<Props> = ({
       <img src={imageSrc} draggable="false" style={{
         maxWidth:'100%',
         ...(imageHeightString && { height: imageHeightString }),
-        cursor:(dragging) ? 'grabbing' : 'pointer',
+        cursor:'pointer',
         marginTop:'auto',
         }}/>
     </div>);

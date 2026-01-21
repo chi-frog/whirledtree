@@ -13,6 +13,7 @@ import View from "./View";
 import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
 import { _dragState, DragState, useDragContext } from "../general/DragContext";
+import { copyMap } from "@/helpers/wmap";
 
 const yCutoffHidden = 10;
 
@@ -56,14 +57,6 @@ const _cardDragState:CardDragState = {
   return:false,
   terminate:false,
 }
-const copyMap:(map:Map<number, CardDragState>)=>Map<number, CardDragState> = (map) => {
-    const newMap = new Map<number, CardDragState>();
-
-    for (const [key, value] of map)
-      newMap.set(key, value);
-
-    return newMap;
-  };
 
 type Props = {};
 export const SearchResults:React.FC<Props> = () => {

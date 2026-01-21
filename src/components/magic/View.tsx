@@ -45,6 +45,9 @@ const View:React.FC<Props> = ({
     const cardDragState = cardDragMap.get(index);
     const isDragging = !!cardDragState;
 
+    if (cardDragState)
+      console.log('cardDragState', cardDragState);
+
     return (
       <Card
         key={name}
@@ -57,7 +60,6 @@ const View:React.FC<Props> = ({
         imagePacket={imageMap.get(name)}
         index={index}
         getRef={getRef}
-        dragging={dragging}
         isDragging={isDragging}
         handlePointerEnter={(e:React.PointerEvent)=>handleCardPointerEnter(e, index)}
         handlePointerLeave={(e:React.PointerEvent)=>handleCardPointerLeave(e, index)}

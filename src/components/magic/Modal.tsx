@@ -185,7 +185,6 @@ const Modal:React.FC<Props> = ({
             card={card}
             imagePacket={imagePacket}
             index={index}
-            dragging={false}
             isDragging={false}
           />
         }
