@@ -3,7 +3,7 @@
 import { MagicCard } from "./types/default";
 import { CardDragMap, CardDragState, FilterState, ImageMap } from "./SearchResults";
 import { Card } from "./Card";
-import { DragState, useDragContext } from "../general/DragContext";
+import { DragState, useDragContext } from "../general/DragProvider";
 
 type Props = {
   loaded:boolean,
@@ -51,6 +51,8 @@ const View:React.FC<Props> = ({
     return (
       <Card
         key={name}
+        dragState={dragState}
+        cardDragState={cardDragState}
         x={dragState.point.x - dragStartPointRef.current.x}
         y={dragState.point.y - dragStartPointRef.current.y}
         widthString={`calc('100%/${numCardsRow}')`}

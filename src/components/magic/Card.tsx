@@ -2,10 +2,13 @@
 
 import { WPoint } from "@/helpers/wpoint";
 import { MagicCard } from "./types/default";
-import { ImagePacket } from "./SearchResults";
+import { CardDragState, ImagePacket } from "./SearchResults";
 import { useMemo } from "react";
+import { DragState } from "../general/DragProvider";
 
 type Props = {
+  dragState:DragState,
+  cardDragState?:CardDragState,
   x:number,
   y:number,
   widthString:string,

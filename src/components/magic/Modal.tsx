@@ -2,9 +2,9 @@
 
 import { PointerEventHandler, useEffect, useRef, useState } from "react";
 import { MagicCard } from "./types/default";
-import { SelectionChangeFunc, useSelectionContext } from "@/app/page";
 import { ImagePacket } from "./SearchResults";
 import { Card } from "./Card";
+import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
 
 enum TooltipState {
   HIDDEN='hidden',

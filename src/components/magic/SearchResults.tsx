@@ -12,7 +12,7 @@ import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
-import { _dragState, DragState, useDragContext } from "../general/DragContext";
+import { _dragState, DragState, useDragContext } from "../general/DragProvider";
 import { copyMap } from "@/helpers/wmap";
 
 const yCutoffHidden = 10;
