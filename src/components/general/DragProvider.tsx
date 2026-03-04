@@ -16,16 +16,23 @@ export type StartDragging = (e:PointerEvent|React.PointerEvent, tag:string)=>voi
 type Drag = {
   subDrag:SubDrag,
   startDragging:StartDragging,
-  dragStartPointRef:React.RefObject<WPoint>,
   dragStateRef:React.RefObject<DragState>,
 };
+export enum DragStage {
+  INACTIVE='inactive',
+  ACTIVE='active',
+}
 export type DragState = {
+  stage:DragStage,
   point:WPoint,
+  start:WPoint,
   delta:WPoint,
   moved:boolean,
 }
 export const _dragState = {
+  stage:DragStage.INACTIVE,
   point:_wpoint,
+  start:_wpoint,
   delta:_wpoint,
   moved:false,
 }
@@ -43,7 +50,6 @@ export const useDragContext = () => {
 
 export const DragProvider = ({ children }: { children: ReactNode }) => {
   const dragTarget = useRef<string>("");
-  const dragStartPoint = useRef<WPoint>(_wpoint);
   const dragState = useRef<DragState>(_dragState);
   const dragSubscriptions = useRef<DragSubscription[]>([]);
 
@@ -77,12 +83,12 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
   const startDragging = (e:PointerEvent|React.PointerEvent, tag:string) => {
     const nativeEvent =
       "nativeEvent" in e ? e.nativeEvent : e;
-      console.log('start');
       
     dragTarget.current = tag;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     document.body.style.cursor = "grabbing";
-    dragStartPoint.current = dragState.current.point = makeWPoint(nativeEvent);
+    dragState.current.stage = DragStage.ACTIVE;
+    dragState.current.start = dragState.current.point = makeWPoint(nativeEvent);
     dragState.current.delta = _wpoint;
     runStartFuncs(nativeEvent, tag);
   };
@@ -92,25 +98,25 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
       return;
     const point = makeWPoint(e);
     dragState.current = {
+      ...dragState.current,
       point,
       delta:subWPoints(point, dragState.current.point),
       moved:true,
     }
-    console.log('in provider', dragState.current);
     runFuncs(e, dragTarget.current);
-    console.log('running!', dragTarget.current);
   };
 
   const stopDragging = (e:PointerEvent) => {
     if (dragTarget.current !== '')
       runEndFuncs(e, dragTarget.current);
 
-    console.log('stop');
-
     requestAnimationFrame(() => {
       document.body.style.cursor = "";
     });
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    dragState.current.start = _wpoint;
+    dragState.current.point = _wpoint;
+    dragState.current.stage = DragStage.INACTIVE;
     dragTarget.current = "";
   }
 
@@ -136,7 +142,6 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
     <DragContext.Provider value={{
         subDrag,
         startDragging,
-        dragStartPointRef:dragStartPoint,
         dragStateRef:dragState
         }}>
       {children}

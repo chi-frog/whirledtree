@@ -1,42 +1,36 @@
 'use client'
 
-import { WPoint } from "@/helpers/wpoint";
+import { _wpoint } from "@/helpers/wpoint";
 import { MagicCard } from "./types/default";
 import { CardDragState, ImagePacket } from "./SearchResults";
 import { useMemo } from "react";
-import { DragState } from "../general/DragProvider";
+import { DragStage, DragState } from "../general/DragProvider";
 
 type Props = {
   dragState:DragState,
   cardDragState?:CardDragState,
-  x:number,
-  y:number,
   widthString:string,
   heightString?:string,
   imageHeightString?:string,
-  angle?:WPoint,
   card:MagicCard,
   imagePacket:ImagePacket|undefined,
   index:number,
   getRef?:(id:number, node:any) => () => void,
-  isDragging:boolean,
   handlePointerEnter?:(e:React.PointerEvent) => void,
   handlePointerLeave?:(e:React.PointerEvent) => void,
   handlePointerDown?:(e:React.PointerEvent) => void,
   handlePointerUp?:(e:React.PointerEvent) => void,
 };
 export const Card:React.FC<Props> = ({
-    x,
-    y,
+    dragState,
+    cardDragState,
     widthString,
     heightString,
     imageHeightString,
-    angle,
     card,
     imagePacket,
     index,
     getRef,
-    isDragging,
     handlePointerEnter,
     handlePointerLeave,
     handlePointerDown,
@@ -49,6 +43,10 @@ export const Card:React.FC<Props> = ({
     if (imagePacket.largeBlob) return imagePacket.largeBlob;
     else return imagePacket.smallBlob;
   }, [imagePacket]);
+
+  const x = useMemo(() => dragState.point.x - dragState.start.x, [dragState]);
+  const y = useMemo(() => dragState.point.y - dragState.start.y, [dragState]);
+  const angle = useMemo(() => cardDragState ? cardDragState.angle : _wpoint, [cardDragState]);
 
   return (
     <div {...(getRef && { ref: getRef.bind(null, index) })}
@@ -64,13 +62,13 @@ export const Card:React.FC<Props> = ({
         borderRadius:'12px',
         border:'1px solid rgba(255, 255, 255, 0.7)',
         minWidth:'20px',
-        transform:(isDragging) ?
+        transform:(dragState.stage === DragStage.ACTIVE) ?
           `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
           '',
         width:widthString,
         height:heightString,
         position: 'relative',
-        zIndex: (isDragging) ? 30 : 0,
+        zIndex: (dragState.stage === DragStage.ACTIVE) ? 30 : 0,
         }}>
       <img src={imageSrc} draggable="false" style={{
         maxWidth:'100%',

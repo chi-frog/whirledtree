@@ -3,12 +3,11 @@
 import { MagicCard } from "./types/default";
 import { CardDragMap, CardDragState, FilterState, ImageMap } from "./SearchResults";
 import { Card } from "./Card";
-import { DragState, useDragContext } from "../general/DragProvider";
+import { _dragState, DragStage, DragState } from "../general/DragProvider";
 
 type Props = {
   loaded:boolean,
   getRef:(id:number, node:any) => () => void,
-  dragging:boolean,
   dragState:DragState,
   cardDragMap:CardDragMap,
   filterState:FilterState,
@@ -25,7 +24,6 @@ type Props = {
 const View:React.FC<Props> = ({
     loaded,
     getRef,
-    dragging,
     dragState,
     cardDragMap,
     filterState,
@@ -39,30 +37,23 @@ const View:React.FC<Props> = ({
     handleCardPointerUp,
   }:Props) => {
 
-  const {dragStartPointRef} = useDragContext();
-
   const card = (name:string, index:number) => {
     const cardDragState = cardDragMap.get(index);
-    const isDragging = !!cardDragState;
 
-    if (cardDragState)
-      console.log('cardDragState', cardDragState);
+    if (cardDragState) console.log('hi', dragState.stage);
+    if (dragState.stage === DragStage.ACTIVE) console.log('oh god', name);
 
     return (
       <Card
         key={name}
-        dragState={dragState}
+        dragState={(cardDragState) ? dragState : _dragState}
         cardDragState={cardDragState}
-        x={dragState.point.x - dragStartPointRef.current.x}
-        y={dragState.point.y - dragStartPointRef.current.y}
         widthString={`calc('100%/${numCardsRow}')`}
         heightString={'fit-content'}
-        angle={cardDragState?.angle}
         card={cards[index]}
         imagePacket={imageMap.get(name)}
         index={index}
         getRef={getRef}
-        isDragging={isDragging}
         handlePointerEnter={(e:React.PointerEvent)=>handleCardPointerEnter(e, index)}
         handlePointerLeave={(e:React.PointerEvent)=>handleCardPointerLeave(e, index)}
         handlePointerDown={(e:React.PointerEvent) => handleCardPointerDown(e, index)}
@@ -79,7 +70,7 @@ const View:React.FC<Props> = ({
       paddingLeft:'50px',
       paddingRight:'50px',
       backgroundColor:'black',
-      userSelect:(dragging) ? 'none' : 'auto',
+      userSelect:(dragState.stage === DragStage.ACTIVE) ? 'none' : 'auto',
       transition:'padding 0.1s ease-in-out',
       color: 'black',
       display:'grid',

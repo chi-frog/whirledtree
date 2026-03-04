@@ -30,6 +30,8 @@ export const SelectionProvider = ({ children }: {children:ReactNode}) => {
     const selection = window.getSelection();
     if (!selection) return;
 
+    console.log('event', e);
+
     selectionSubscriptions.current.forEach((_ss) => _ss.onSelectionChange(selection));
   };
 

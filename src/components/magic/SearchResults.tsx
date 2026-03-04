@@ -12,7 +12,7 @@ import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
-import { _dragState, DragState, useDragContext } from "../general/DragProvider";
+import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { copyMap } from "@/helpers/wmap";
 
 const yCutoffHidden = 10;
@@ -70,9 +70,8 @@ export const SearchResults:React.FC<Props> = () => {
   const {getMap, getRef} = useRefMap();
   const [setsError, setsLoaded, sets] = useMagicSets();
   const {url, selected, updateSelected, handlers} = useFilters();
-  const [dragging, setDragging] = useState<boolean>(false);
   const draggingCard = useRef<number>(-1);
-  const {subDrag, startDragging, dragStartPointRef, dragStateRef} = useDragContext();
+  const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [cardDragMap, setCardDragMap] = useState<CardDragMap>(new Map<number, CardDragState>());
   const cardDragMapRef = useRef<CardDragMap>(new Map<number, CardDragState>());
@@ -88,16 +87,20 @@ export const SearchResults:React.FC<Props> = () => {
     setError(cardError);
   }, [cardError]);
 
+  const dragging = useMemo(() => {
+    return dragState.stage === DragStage.ACTIVE
+  }, [dragState]);
+
   const onDragView = (e:PointerEvent) => {
     window.scrollTo(window.scrollX + dragStateRef.current.delta.x, window.scrollY - dragStateRef.current.delta.y*2);
   }
 
   const onDragViewStart = ({x, y}:PointerEvent) => {
-    setDragging(true);
+    setDragState({...dragStateRef.current});
   }
 
   const onDragViewEnd = (e:PointerEvent) => {
-    setDragging(false);
+    setDragState({...dragStateRef.current});
   }
 
   const viewTag = 'view';
@@ -109,12 +112,12 @@ export const SearchResults:React.FC<Props> = () => {
   }, []);
 
   const onDragCardStart = ({x, y}:PointerEvent) => {
-    setDragging(true);
+    setDragState({...dragStateRef.current});
   }
 
   const onDragCardEnd = (e:PointerEvent) => {
     draggingCard.current = -1;
-    setDragging(false);
+    setDragState({...dragStateRef.current});
   }
 
   const cardTag = 'card';
@@ -139,13 +142,14 @@ export const SearchResults:React.FC<Props> = () => {
     const tick = () => {
       const state = dragStateRef.current;
       let cardState = cardDragMapRef.current.get(index);
+      console.log('state', state);
       if (!cardState) {
         cardState = _cardDragState;
         cardDragMapRef.current.set(index, cardState);
       }
 
       if (cardState.return) {
-        const start = dragStartPointRef.current;
+        const start = state.start;
 
         const dx = start.x - state.point.x
         const dy = start.y - state.point.y;
@@ -231,7 +235,6 @@ export const SearchResults:React.FC<Props> = () => {
   }
 
   const handleFilterArrowPointerDown:PointerEventHandler = (e) => {
-
     e.stopPropagation();
   };
 
@@ -265,7 +268,7 @@ export const SearchResults:React.FC<Props> = () => {
     e.stopPropagation();
 
     startDragging(e, cardTag);
-    setDragState(dragStateRef.current);
+    setDragState({...dragStateRef.current});
     cardDragMapRef.current.set(index, _cardDragState);
     setCardDragMap(copyMap(cardDragMapRef.current));
     draggingCard.current = index;
@@ -282,8 +285,8 @@ export const SearchResults:React.FC<Props> = () => {
     }
 
     if ((e.button !== 2) &&
-        (e.clientX === dragStartPointRef.current.x) &&
-        (e.clientY === dragStartPointRef.current.y)) {
+        (e.clientX === dragState.start.x) &&
+        (e.clientY === dragState.start.y)) {
       setModalShown(true);
       setModalCard(cards[index]);
       hydrateLargeImage(index);
@@ -374,7 +377,6 @@ export const SearchResults:React.FC<Props> = () => {
       sets={sets} cards={cards} formats={formats}/>
     {error === WError.NO_ERROR && 
       <View loaded={imagesLoaded} getRef={getRef}
-        dragging={dragging}
         dragState={dragState}
         cardDragMap={cardDragMap}
         filterState={filterState}
