@@ -44,6 +44,9 @@ export const ftsubWPoints = (a:WPoint, target:WPoint, f:WPoint) => ({
   y: applyFrictionTo(a.y, target.y, f.y),
 });
 
+/*
+* Subtract f from a, not going below/above 0
+*/
 export const fsubWPoints = (a:WPoint, f:WPoint) => ({
   x: applyFriction(a.x, f.x),
   y: applyFriction(a.y, f.y),

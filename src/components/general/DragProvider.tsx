@@ -23,18 +23,18 @@ export enum DragStage {
   ACTIVE='active',
 }
 export type DragState = {
+  tag:string|null,
   stage:DragStage,
   point:WPoint,
   start:WPoint,
   delta:WPoint,
-  moved:boolean,
 }
 export const _dragState = {
+  tag:null,
   stage:DragStage.INACTIVE,
   point:_wpoint,
   start:_wpoint,
   delta:_wpoint,
-  moved:false,
 }
 
 const DragContext = createContext<Drag|undefined>(undefined);
@@ -49,7 +49,6 @@ export const useDragContext = () => {
 }
 
 export const DragProvider = ({ children }: { children: ReactNode }) => {
-  const dragTarget = useRef<string>("");
   const dragState = useRef<DragState>(_dragState);
   const dragSubscriptions = useRef<DragSubscription[]>([]);
 
@@ -84,40 +83,49 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
     const nativeEvent =
       "nativeEvent" in e ? e.nativeEvent : e;
       
-    dragTarget.current = tag;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     document.body.style.cursor = "grabbing";
-    dragState.current.stage = DragStage.ACTIVE;
-    dragState.current.start = dragState.current.point = makeWPoint(nativeEvent);
-    dragState.current.delta = _wpoint;
+    const point = makeWPoint(nativeEvent);
+    dragState.current = {
+      tag,
+      stage:DragStage.ACTIVE,
+      point,
+      start:point,
+      delta:_wpoint,
+    }
     runStartFuncs(nativeEvent, tag);
   };
   
   const drag = (e:PointerEvent) => {
-    if (dragTarget.current === "") 
+    const tag = dragState.current.tag;
+    if (!tag) 
       return;
     const point = makeWPoint(e);
     dragState.current = {
       ...dragState.current,
       point,
       delta:subWPoints(point, dragState.current.point),
-      moved:true,
     }
-    runFuncs(e, dragTarget.current);
+    runFuncs(e, tag);
   };
 
   const stopDragging = (e:PointerEvent) => {
-    if (dragTarget.current !== '')
-      runEndFuncs(e, dragTarget.current);
+    const tag = dragState.current.tag;
+    if (tag)
+      runEndFuncs(e, tag);
 
     requestAnimationFrame(() => {
       document.body.style.cursor = "";
     });
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    dragState.current.start = _wpoint;
-    dragState.current.point = _wpoint;
-    dragState.current.stage = DragStage.INACTIVE;
-    dragTarget.current = "";
+
+    dragState.current = {
+      tag:null,
+      stage:DragStage.INACTIVE,
+      point:_wpoint,
+      start:_wpoint,
+      delta:_wpoint,
+    }
   }
 
   const handleWindowPointerMove = (e:PointerEvent) => {

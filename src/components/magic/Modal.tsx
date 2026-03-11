@@ -1,11 +1,11 @@
 'use client'
 
-import { PointerEventHandler, useEffect, useRef, useState } from "react";
+import { PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard } from "./types/default";
 import { ImagePacket } from "./SearchResults";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
-import { _dragState, DragState, useDragContext } from "../general/DragProvider";
+import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 
 enum TooltipState {
@@ -105,19 +105,22 @@ const Modal:React.FC<Props> = ({
   const ref = useRef(null);
   const divRef = useRef(null);
   const {subDrag, startDragging, dragStateRef} = useDragContext();
-  const [dragging, setDragging] = useState<boolean>(false);
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const cardDragStateRef = useRef<CardDragState|undefined>(_cardDragState)
   const [cardDragState, setCardDragState] = useState<CardDragState|undefined>(cardDragStateRef.current);
 
+  const dragging = useMemo(() => {
+    return dragState.stage === DragStage.DRAGGING;
+  }, [dragState]);
+
   const onDragCardStart = ({x, y}:PointerEvent) => {
-    setDragging(true);
-    console.log('starting');
+    setDragState(dragStateRef.current);
+    console.log('starting', dragStateRef.current);
   }
 
   const onDragCardEnd = (e:PointerEvent) => {
-    setDragging(false);
-    console.log('stopping');
+    setDragState(dragStateRef.current);
+    console.log('stopping', dragStateRef.current);
   }
 
   const modalTag = 'modal';
@@ -141,8 +144,9 @@ const Modal:React.FC<Props> = ({
           cardState = _cardDragState;
           cardDragStateRef.current = cardState;
         }
-  
+        console.log('cardState:', cardState);
         if (cardState.return) {
+          console.log('in RETURN');
           const start = state.start;
   
           const dx = start.x - state.point.x
@@ -312,7 +316,7 @@ const Modal:React.FC<Props> = ({
         justifyContent:'center',
         alignItems:'center',
         whiteSpace:'nowrap',
-        zIndex:20,
+        zIndex:50,
       }}>
       <div id="inner" style={{
         backgroundColor:'white',
@@ -335,7 +339,6 @@ const Modal:React.FC<Props> = ({
             card={card}
             imagePacket={imagePacket}
             index={index}
-            isDragging={dragging}
             handlePointerDown={handleCardPointerDown}
             handlePointerUp={handleCardPointerUp}
           />

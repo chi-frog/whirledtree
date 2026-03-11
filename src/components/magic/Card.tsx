@@ -68,7 +68,7 @@ export const Card:React.FC<Props> = ({
         width:widthString,
         height:heightString,
         position: 'relative',
-        zIndex: (dragState.stage === DragStage.ACTIVE) ? 30 : 0,
+        zIndex: (cardDragState) ? 30 : 0,
         }}>
       <img src={imageSrc} draggable="false" style={{
         maxWidth:'100%',

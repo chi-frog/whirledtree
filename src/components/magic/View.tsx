@@ -40,9 +40,6 @@ const View:React.FC<Props> = ({
   const card = (name:string, index:number) => {
     const cardDragState = cardDragMap.get(index);
 
-    if (cardDragState) console.log('hi', dragState.stage);
-    if (dragState.stage === DragStage.ACTIVE) console.log('oh god', name);
-
     return (
       <Card
         key={name}
