@@ -43,8 +43,7 @@ const View:React.FC<Props> = ({
     return (
       <Card
         key={name}
-        dragState={(cardDragState) ? dragState : _dragState}
-        cardDragState={cardDragState}
+        dragState={cardDragState}
         widthString={`calc('100%/${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}

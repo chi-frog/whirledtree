@@ -21,6 +21,7 @@ type Drag = {
 export enum DragStage {
   INACTIVE='inactive',
   ACTIVE='active',
+  RETURNING='returning',
 }
 export type DragState = {
   tag:string|null,
@@ -121,7 +122,7 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
 
     dragState.current = {
       tag:null,
-      stage:DragStage.INACTIVE,
+      stage:DragStage.RETURNING,
       point:_wpoint,
       start:_wpoint,
       delta:_wpoint,

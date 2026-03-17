@@ -10,7 +10,7 @@ import useMagicSets from "@/hooks/magic/useMagicSets";
 import Modal from "./Modal";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
-import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
+import { _wpoint, addWPoints, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { copyMap } from "@/helpers/wmap";
@@ -36,23 +36,17 @@ export type ImagePacket = {
 
 export type ImageMap = Map<string, ImagePacket>;
 
-export enum CardDragStage {
-  INACTIVE='inactive',
-  ACTIVE='active',
-  RETURN='return',
-};
 export type CardDragMap = Map<number, CardDragState>;
-export type CardDragState = {
-  stage:CardDragStage,
-  acceleration:WPoint,
-  resistance:WPoint,
-  returnSpeed:number,
-  weight:number,
-  angle:WPoint, /* 0-maxAngle */
-  maxAngle:number,
-};
-const _cardDragState:CardDragState = {
-  stage:CardDragStage.INACTIVE,
+export interface CardDragState extends DragState {
+  acceleration: WPoint;
+  resistance: WPoint;
+  returnSpeed: number;
+  weight: number;
+  angle: WPoint; /* 0-maxAngle */
+  maxAngle: number;
+}
+export const _cardDragState:CardDragState = {
+  ..._dragState,
   acceleration:_wpoint,
   resistance:makeWPoint({x:5, y:5}),
   returnSpeed:50,
@@ -73,7 +67,7 @@ export const SearchResults:React.FC<Props> = () => {
   const {getMap, getRef} = useRefMap();
   const [setsError, setsLoaded, sets] = useMagicSets();
   const {url, selected, updateSelected, handlers} = useFilters();
-  const draggingCard = useRef<number>(-1);
+  const draggingCards = useRef<number[]>([]);
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const cardDragMapRef = useRef<CardDragMap>(new Map<number, CardDragState>());
@@ -91,7 +85,6 @@ export const SearchResults:React.FC<Props> = () => {
   }, [cardError]);
 
   const dragging = useMemo(() => {
-    console.log('here', dragState);
     return dragState.stage === DragStage.ACTIVE;
   }, [dragState.stage]);
 
@@ -116,8 +109,22 @@ export const SearchResults:React.FC<Props> = () => {
   }, []);
 
   const onDragCardEnd = (e:PointerEvent) => {
-    draggingCard.current = -1;
+    console.log('dragCardEnd', dragStateRef.current);
+    console.log('dragCard cardState', cardDragMapRef.current.get(draggingCards.current[0]));
     setDragState({...dragStateRef.current});
+    let index = draggingCards.current[0];
+    let cardDragState = cardDragMapRef.current.get(index);
+
+    if (!cardDragState) {
+      console.log('something wrong');
+      return;
+    }
+    cardDragMapRef.current.set(draggingCards.current[0], {
+      ...cardDragState,
+      ...dragStateRef.current
+    })
+    setCardDragMap(copyMap(cardDragMapRef.current));
+    draggingCards.current = [];
   }
 
   const cardTag = 'card';
@@ -131,8 +138,7 @@ export const SearchResults:React.FC<Props> = () => {
   }, [dragging]);
 
   useEffect(() => {
-    const index = draggingCard.current;
-    console.log('here', index);
+    const index = draggingCards.current[0];
 
     // No card selected, so we aren't dragging a card around.
     if (index < 0) return;
@@ -140,26 +146,29 @@ export const SearchResults:React.FC<Props> = () => {
     let raf: number;
 
     const tick = () => {
-      const state = dragStateRef.current;
+      let state = dragStateRef.current;
       let cardState = cardDragMapRef.current.get(index);
       if (!cardState) {
-        cardState = _cardDragState;
-        cardDragMapRef.current.set(index, cardState);
+        console.log('oh god why');
+        return;
       }
-      console.log('cardState', cardState);
-      console.log('state', state);
-      if (cardState.stage === CardDragStage.RETURN) {
-        console.log('returning');
-        const start = state.start;
 
-        const dx = start.x - state.point.x
-        const dy = start.y - state.point.y;
+      if (cardState.stage === DragStage.RETURNING) {
+        if (!cardState) return;
+
+        const start = cardState.start;
+        const point = cardState.point;
+
+        const dx = start.x - point.x
+        const dy = start.y - point.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         let nextPoint;
 
+          console.log('point' + cardState.point.x + "," + cardState.point.y + 'origin' + cardState.start.x + "," + cardState.start.y  );
+
         if (distance < cardState.returnSpeed) {
           nextPoint = start;
-          cardState.stage = CardDragStage.INACTIVE;
+          cardState.stage = DragStage.INACTIVE;
           console.log('terminated!');
 
         } else {
@@ -170,17 +179,13 @@ export const SearchResults:React.FC<Props> = () => {
             y: Math.sin(angle) * cardState.returnSpeed,
           };
 
-          nextPoint = {
-            x:state.point.x + force.x,
-            y:state.point.y + force.y,
-          }
+          nextPoint = addWPoints(point, force);
         }
         state.point = nextPoint;
+        cardState.point = nextPoint;
       }
 
-      let nextAcceleration, nextPoint;
-
-      nextAcceleration =
+      let nextAcceleration =
         (state.delta.x === 0 && state.delta.y === 0) ?
           fsubWPoints(cardState.acceleration,
                       cardState.resistance) :
@@ -189,19 +194,25 @@ export const SearchResults:React.FC<Props> = () => {
                                             cardState.weight),
                                   cardState.maxAngle),
                       cardState.resistance);
+      
+      dragStateRef.current.delta = _wpoint;
 
-      nextPoint = {
-        ...cardState,
-        acceleration: nextAcceleration,
-        angle: nextAcceleration,
-      };
-
-      const terminate = (cardState.stage === CardDragStage.INACTIVE);
+      const terminate = (cardState.stage === DragStage.INACTIVE);
       if (terminate)
         cardDragMapRef.current.delete(index);
+      else if (cardState.stage === DragStage.RETURNING)
+        cardDragMapRef.current.set(index, {
+          ...cardState,
+          acceleration: nextAcceleration,
+          angle: nextAcceleration,
+        });
       else
-        cardDragMapRef.current.set(index, nextPoint);
-      dragStateRef.current.delta = _wpoint;
+        cardDragMapRef.current.set(index, {
+          ...cardState,
+          ...state,
+          acceleration: nextAcceleration,
+          angle: nextAcceleration,
+        });
       setDragState({...state});
       setCardDragMap(copyMap(cardDragMapRef.current));
 
@@ -273,10 +284,10 @@ export const SearchResults:React.FC<Props> = () => {
     setDragState({...dragStateRef.current});
     cardDragMapRef.current.set(index, {
       ..._cardDragState,
-      stage:CardDragStage.ACTIVE,
+      stage:DragStage.ACTIVE,
       });
     setCardDragMap(copyMap(cardDragMapRef.current));
-    draggingCard.current = index;
+    draggingCards.current.unshift(index);
   };
 
   const handleCardPointerUp = async (e:React.PointerEvent, index:number) => {
@@ -285,7 +296,7 @@ export const SearchResults:React.FC<Props> = () => {
     const cardState = cardDragMapRef.current.get(index);
 
     if (cardState) {
-      cardState.stage = CardDragStage.RETURN;
+      cardState.stage = DragStage.RETURNING;
       setCardDragMap(copyMap(cardDragMapRef.current));
     }
 
@@ -343,7 +354,7 @@ export const SearchResults:React.FC<Props> = () => {
             opacityGoingUp = true;
         }
 
-        element.style.boxShadow = (draggingCard.current === index) ?
+        element.style.boxShadow = (draggingCards.current[0] === index) ?
           `0px 0px 15px 10px rgba(146, 255, 248, ${opacity})` :
           `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
 
