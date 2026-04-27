@@ -12,7 +12,7 @@ export type DragSubscription = {
   onDragEnd?:DragFunc,
 };
 export type SubDrag = ({tag, onDragStart, onDrag, onDragEnd}:DragSubscription)=>void;
-export type StartDragging = (e:PointerEvent|React.PointerEvent, tag:string)=>void;
+export type StartDragging = (e:PointerEvent|React.PointerEvent, tag:string)=>DragState;
 type Drag = {
   subDrag:SubDrag,
   startDragging:StartDragging,
@@ -95,6 +95,8 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
       delta:_wpoint,
     }
     runStartFuncs(nativeEvent, tag);
+
+    return dragState.current;
   };
   
   const drag = (e:PointerEvent) => {

@@ -60,27 +60,6 @@ function createSearchTooltip({
   return div;
 }
 
-export type CardDragState = {
-  acceleration:WPoint,
-  resistance:WPoint,
-  returnSpeed:number,
-  weight:number,
-  angle:WPoint, /* 0-maxAngle */
-  maxAngle:number,
-  return:boolean,
-  terminate:boolean,
-};
-const _cardDragState:CardDragState = {
-  acceleration:_wpoint,
-  resistance:makeWPoint({x:5, y:5}),
-  returnSpeed:5,
-  weight:4,
-  angle:_wpoint,
-  maxAngle:80,
-  return:false,
-  terminate:false,
-}
-
 type Props = {
   close:()=>void,
   card:MagicCard|null,
@@ -104,113 +83,6 @@ const Modal:React.FC<Props> = ({
   const {subSelection} = useSelectionContext();
   const ref = useRef(null);
   const divRef = useRef(null);
-  const {subDrag, startDragging, dragStateRef} = useDragContext();
-  const [dragState, setDragState] = useState<DragState>(_dragState);
-  const cardDragStateRef = useRef<CardDragState|undefined>(_cardDragState)
-  const [cardDragState, setCardDragState] = useState<CardDragState|undefined>(cardDragStateRef.current);
-
-  const dragging = useMemo(() => {
-    return dragState.stage === DragStage.DRAGGING;
-  }, [dragState]);
-
-  const onDragCardStart = ({x, y}:PointerEvent) => {
-    setDragState(dragStateRef.current);
-    console.log('starting', dragStateRef.current);
-  }
-
-  const onDragCardEnd = (e:PointerEvent) => {
-    setDragState(dragStateRef.current);
-    console.log('stopping', dragStateRef.current);
-  }
-
-  const modalTag = 'modal';
-  useEffect(() => {
-    subDrag({tag:modalTag,
-             onDragStart:onDragCardStart,
-             onDragEnd:onDragCardEnd})
-  }, []);
-
-  useEffect(() => {
-    document.body.classList.toggle("no-select", dragging);
-  }, [dragging]);
-
-  useEffect(() => {
-      let raf: number;
-  
-      const tick = () => {
-        const state = dragStateRef.current;
-        let cardState = cardDragStateRef.current;
-        if (!cardState) {
-          cardState = _cardDragState;
-          cardDragStateRef.current = cardState;
-        }
-        console.log('cardState:', cardState);
-        if (cardState.return) {
-          console.log('in RETURN');
-          const start = state.start;
-  
-          const dx = start.x - state.point.x
-          const dy = start.y - state.point.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          let nextPoint;
-  
-          if (distance < cardState.returnSpeed) {
-            nextPoint = start;
-            cardState.terminate = true;
-  
-          } else {
-            const angle = Math.atan2(dy, dx);
-  
-            const force = {
-              x: Math.cos(angle) * cardState.returnSpeed,
-              y: Math.sin(angle) * cardState.returnSpeed,
-            };
-  
-            nextPoint = {
-              x:state.point.x + force.x,
-              y:state.point.y + force.y,
-            }
-          }
-          state.point = nextPoint;
-        }
-  
-        if (!state.moved)
-          state.delta = {..._wpoint};
-  
-        const nextAcceleration =
-          (state.delta.x === 0 && state.delta.y === 0) ?
-            fsubWPoints(cardState.acceleration,
-                        cardState.resistance) :
-            fsubWPoints(caddWPoints(cardState.acceleration,
-                                    divWPoint(state.delta,
-                                              cardState.weight),
-                                    cardState.maxAngle),
-                        cardState.resistance);
-  
-        const next = {
-          ...cardState,
-          acceleration: nextAcceleration,
-          angle: nextAcceleration,
-        };
-  
-        state.moved = false;
-        if (cardState.terminate)
-          cardDragStateRef.current = undefined;
-        else
-          cardDragStateRef.current = next;
-        setDragState({...state});
-        setCardDragState(cardDragStateRef.current);
-  
-        if (dragging && !cardState.terminate)
-          raf = requestAnimationFrame(tick);
-      };
-  
-      if (dragging)
-        raf = requestAnimationFrame(tick);
-      return () => {
-        //cancelAnimationFrame(raf);
-      }
-    }, [dragging]);
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -280,27 +152,16 @@ const Modal:React.FC<Props> = ({
   const handlePointerUp:PointerEventHandler = (e) => {
     e.stopPropagation();
 
-    const cardState = cardDragStateRef.current;
-
-    if (cardState) {
-      cardState.return = true;
-    }
   }
 
   const handleCardPointerDown:PointerEventHandler = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    startDragging(e, modalTag);
   }
 
   const handleCardPointerUp:PointerEventHandler = (e) => {
     e.stopPropagation();
 
-    const cardState = cardDragStateRef.current;
-
-    if (cardState) {
-      cardState.return = true;
-    }
   }
 
   return (
@@ -331,8 +192,6 @@ const Modal:React.FC<Props> = ({
       }}>
         {card &&
           <Card
-            dragState={dragState}
-            cardDragState={cardDragState}
             widthString={'fit-content'}
             heightString={'100%'}
             imageHeightString={'100%'}
