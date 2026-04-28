@@ -52,6 +52,7 @@ const useCardDrag:UseCardDrag = (
     //At this point, dragStateRef contains the final point of the drag,
     //not the default value after having been zero'd out.
     let cardDragState = cardDragMapRef.current.get(index);
+    console.log('onDragCardEnd');
   
     if (!cardDragState) {
       console.log('something wrong');
@@ -79,14 +80,11 @@ const useCardDrag:UseCardDrag = (
     const tick = () => {
       let state = dragStateRef.current;
       let cardState = cardDragMapRef.current.get(index);
-      console.log('hh', cardDragMapRef.current);
       if (!cardState) {
         console.log('oh god why');
         return;
       }
-  
-      console.log('HERE BOY', cardDragMap.keys().toArray());
-  
+    
       const onReturn = () => {
         const start = cardState.start;
         const point = cardState.point;
@@ -95,9 +93,7 @@ const useCardDrag:UseCardDrag = (
         const dy = start.y - point.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         let nextPoint;
-  
-        console.log('point' + cardState.point.x + "," + cardState.point.y + 'origin' + cardState.start.x + "," + cardState.start.y  );
-  
+    
         if (distance < cardState.returnSpeed) {
           nextPoint = start;
           cardState.stage = DragStage.INACTIVE;
@@ -131,8 +127,6 @@ const useCardDrag:UseCardDrag = (
                         cardState.resistance);
         
       dragStateRef.current.delta = _wpoint;
-
-      console.log('cs', cardState);
   
       const terminate = (cardState.stage === DragStage.INACTIVE);
       if (terminate)
@@ -175,6 +169,7 @@ const useCardDrag:UseCardDrag = (
 
   const stopDraggingCard:StopDraggingCard = (e) => {
     const cardState = cardDragMapRef.current.get(index);
+    console.log('end another way!');
 
     if (cardState) {
       cardState.stage = DragStage.RETURNING;

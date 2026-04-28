@@ -10,10 +10,9 @@ import useMagicSets from "@/hooks/magic/useMagicSets";
 import Modal from "./Modal";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
-import { _wpoint, addWPoints, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
+import { _wpoint, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
-import { copyMap } from "@/helpers/wmap";
 import useCardDrag from "@/hooks/useCardDrag";
 
 const yCutoffHidden = 10;
@@ -116,9 +115,7 @@ export const SearchResults:React.FC<Props> = () => {
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
     const value = parseInt(e.target.value);
 
-    if (isNaN(value)) return;
-
-    setNumCardsRow(value);
+    if (!isNaN(value)) setNumCardsRow(value);
   };
 
 
@@ -151,9 +148,7 @@ export const SearchResults:React.FC<Props> = () => {
   };
 
   const handlePointerMove:PointerEventHandler = (e) => {
-    if (modalShown) return;
-
-    resetFilterGlow(filterState, e.clientY)
+    if (!modalShown) resetFilterGlow(filterState, e.clientY)
   };
 
   const handlePointerUp:PointerEventHandler = (e) => {
@@ -169,6 +164,7 @@ export const SearchResults:React.FC<Props> = () => {
   const handleCardPointerUp = async (e:React.PointerEvent, index:number) => {
     e.stopPropagation();
 
+    setDragState(dragStateRef.current);
     stopDraggingCard(e);
 
     if ((e.button !== 2) &&
@@ -195,8 +191,10 @@ export const SearchResults:React.FC<Props> = () => {
   };
 
   const handleCardPointerEnter = (e:React.PointerEvent, index:number) => {
-    if (dragging)
+    if (dragging) {
+      console.log('cant');
       return;
+    }
 
     const element = getMap().get(index);
     let opacity = 0;
@@ -210,7 +208,7 @@ export const SearchResults:React.FC<Props> = () => {
 
     setTimeout(() => {
       const change = () => {
-        if (element.style.boxShadow === 'none')
+        if (element.style.boxShadow === 'none') 
           return;
 
         if(opacityGoingUp) {

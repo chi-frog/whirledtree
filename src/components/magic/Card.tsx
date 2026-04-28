@@ -47,6 +47,8 @@ export const Card:React.FC<Props> = ({
   const y = useMemo(() => dragState.point.y - dragState.start.y, [dragState]);
   const angle = useMemo(() => dragState.angle, [dragState]);
 
+  
+
   return (
     <div {...(getRef && { ref: getRef.bind(null, index) })}
       onPointerEnter={(e)=>handlePointerEnter && handlePointerEnter(e)}

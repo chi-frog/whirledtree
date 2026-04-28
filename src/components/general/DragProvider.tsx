@@ -122,13 +122,7 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
     });
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
 
-    dragState.current = {
-      tag:null,
-      stage:DragStage.RETURNING,
-      point:_wpoint,
-      start:_wpoint,
-      delta:_wpoint,
-    }
+    dragState.current = _dragState;
   }
 
   const handleWindowPointerMove = (e:PointerEvent) => {
