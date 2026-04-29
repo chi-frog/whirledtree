@@ -15,8 +15,6 @@ type Props = {
   numCardsRow:number,
   cards:MagicCard[],
   imageMap:ImageMap,
-  handleCardPointerEnter:(e:React.PointerEvent, index:number) => void,
-  handleCardPointerLeave:(e:React.PointerEvent, index:number) => void,
   handleCardPointerDown:(e:React.PointerEvent, index:number) => void,
   handleCardPointerUp:(e:React.PointerEvent, index:number) => void,
 }
@@ -31,8 +29,6 @@ const View:React.FC<Props> = ({
     numCardsRow,
     cards,
     imageMap,
-    handleCardPointerEnter,
-    handleCardPointerLeave,
     handleCardPointerDown,
     handleCardPointerUp,
   }:Props) => {
@@ -50,8 +46,6 @@ const View:React.FC<Props> = ({
         imagePacket={imageMap.get(name)}
         index={index}
         getRef={getRef}
-        handlePointerEnter={(e:React.PointerEvent)=>handleCardPointerEnter(e, index)}
-        handlePointerLeave={(e:React.PointerEvent)=>handleCardPointerLeave(e, index)}
         handlePointerDown={(e:React.PointerEvent) => handleCardPointerDown(e, index)}
         handlePointerUp={(e:React.PointerEvent) => handleCardPointerUp(e, index)}
         />)};

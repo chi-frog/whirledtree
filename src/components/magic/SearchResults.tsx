@@ -190,60 +190,6 @@ export const SearchResults:React.FC<Props> = () => {
     e.stopPropagation();
   };
 
-  const handleCardPointerEnter = (e:React.PointerEvent, index:number) => {
-    if (dragging) {
-      console.log('cant');
-      return;
-    }
-
-    const element = getMap().get(index);
-    let opacity = 0;
-    let opacityGoingUp = true;
-    let opacityFirstPass = true;
-    let opacityRate = 0.008;
-    element.style.border = "1px solid rgb(146, 148, 248)";
-    element.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
-    if (!dragging)
-      element.style.top = "-3px";
-
-    setTimeout(() => {
-      const change = () => {
-        if (element.style.boxShadow === 'none') 
-          return;
-
-        if(opacityGoingUp) {
-          opacity += (opacityFirstPass) ? opacityRate*15 : opacityRate;
-          if (opacity >= 1) {
-            opacityGoingUp = false;
-            opacityFirstPass = false;
-          }
-        } else {
-          opacity -= opacityRate;
-          if (opacity <= 0.7)
-            opacityGoingUp = true;
-        }
-
-        element.style.boxShadow = (draggingCardIndex === index) ?
-          `0px 0px 15px 10px rgba(146, 255, 248, ${opacity})` :
-          `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
-
-        setTimeout(change, 10);
-      };
-
-      change();
-    }, 10);
-  };
-
-  const handleCardPointerLeave = (e:React.PointerEvent, index:number) => {
-    const element = getMap().get(index);
-
-    element.style.border = '1px solid rgba(255, 255, 255, 0.7)',
-    element.style.boxShadow = "none";
-    element.style.position = "auto";
-    element.style.top = "";
-
-  };
-
   const filterHidden = (filterState === FilterState.HIDDEN);
 
   return (
@@ -269,8 +215,6 @@ export const SearchResults:React.FC<Props> = () => {
         numCardsRow={numCardsRow}
         cards={cards}
         imageMap={imageMap}
-        handleCardPointerEnter={handleCardPointerEnter}
-        handleCardPointerLeave={handleCardPointerLeave}
         handleCardPointerDown={handleCardPointerDown}
         handleCardPointerUp={handleCardPointerUp}/>
     }

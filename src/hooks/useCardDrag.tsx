@@ -48,32 +48,14 @@ const useCardDrag:UseCardDrag = (
 
   const dragging = useMemo(() => index !== -1, [index]);
 
-  const onDragCardEnd = (e:PointerEvent) => {
-    //At this point, dragStateRef contains the final point of the drag,
-    //not the default value after having been zero'd out.
-    let cardDragState = cardDragMapRef.current.get(index);
-    console.log('onDragCardEnd');
-  
-    if (!cardDragState) {
-      console.log('something wrong');
-      return;
-    }
-    cardDragMapRef.current.set(index, {
-      ...cardDragState,
-      ...dragStateRef.current
-    })
-    setCardDragMap(copyMap(cardDragMapRef.current));
-    setIndex(-1);
-  };
-
   useEffect(() => {
-    subDrag({tag,
-             onDragEnd:onDragCardEnd})
+    subDrag({tag})
   }, []);
 
   useEffect(() => {
     // No card selected, so we aren't dragging a card around.
-    if (!dragging) return;
+    if (!dragging) {
+      console.log('not dragging');return;}
   
     let raf: number;
   
@@ -147,7 +129,7 @@ const useCardDrag:UseCardDrag = (
       if (!terminate)
         raf = requestAnimationFrame(tick);
     };
-  
+    
     if (dragging)
       raf = requestAnimationFrame(tick);
     return () => {
@@ -157,24 +139,23 @@ const useCardDrag:UseCardDrag = (
 
   const startDraggingCard:StartDraggingCard = (e, index) => {
     const dragState = startDragging(e, tag);
-    console.log('tag', tag);
     setIndex(index);
     cardDragMapRef.current.set(index, {
       ..._cardDragState,
       ...dragState,
       });
     setCardDragMap(copyMap(cardDragMapRef.current));
-    console.log('start!', cardDragMapRef.current.get(index));
   };
 
   const stopDraggingCard:StopDraggingCard = (e) => {
     const cardState = cardDragMapRef.current.get(index);
-    console.log('end another way!');
 
     if (cardState) {
       cardState.stage = DragStage.RETURNING;
       setCardDragMap(copyMap(cardDragMapRef.current));
     }
+
+    setIndex(-1);
   };
 
   return [
