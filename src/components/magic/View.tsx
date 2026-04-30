@@ -55,7 +55,6 @@ const View:React.FC<Props> = ({
       paddingTop:(filterState === FilterState.REDUCED) ? '80px' : `${Math.min(yCutoffHidden, 80)}px`,
       overflow:'scroll',
       minWidth:'100vw',
-      minHeight:'100vh',
       width:'fit-content',
       paddingLeft:'50px',
       paddingRight:'50px',
