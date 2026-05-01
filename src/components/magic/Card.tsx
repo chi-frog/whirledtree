@@ -4,29 +4,29 @@ import { _wpoint } from "@/helpers/wpoint";
 import { MagicCard } from "./types/default";
 import { _cardDragState, CardDragState, ImagePacket } from "./SearchResults";
 import { useCallback, useMemo, useRef } from "react";
-import { DragStage, DragState } from "../general/DragProvider";
+import { DragStage } from "../general/DragProvider";
 
+export type CardLocation =
+  'view' | 'modal';
 type Props = {
+  location:CardLocation,
   dragState?:CardDragState,
   widthString:string,
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
   imagePacket:ImagePacket|undefined,
-  index:number,
-  getRef?:(id:number, node:any) => () => void,
   handlePointerDown?:(e:React.PointerEvent) => void,
   handlePointerUp?:(e:React.PointerEvent) => void,
 };
 export const Card:React.FC<Props> = ({
+    location,
     dragState,
     widthString,
     heightString,
     imageHeightString,
     card,
     imagePacket,
-    index,
-    getRef,
     handlePointerDown,
     handlePointerUp,
   }:Props) => {
@@ -60,11 +60,8 @@ export const Card:React.FC<Props> = ({
     let opacityRate = 0.008;
     element.style.border = "1px solid rgb(146, 148, 248)";
     element.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
-    if (!dragging)
+    if (!dragging && (location === 'view'))
       element.style.top = "-3px";
-
-    console.log('glowing!', dragState);
-    console.table({...dragState});
 
     const change = () => {
       if (element.style.boxShadow === 'none') {
@@ -84,9 +81,12 @@ export const Card:React.FC<Props> = ({
           opacityGoingUp = true;
       }
 
+      const selectedBoxShadow = `0px 0px 15px 10px rgba(146, 255, 248, ${opacity})`;
+      const mouseoverBoxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
+
       element.style.boxShadow = (version) ?
-        `0px 0px 15px 10px rgba(146, 255, 248, ${opacity})` :
-        `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
+        selectedBoxShadow:
+        mouseoverBoxShadow;
 
       raf.current = requestAnimationFrame(change);
     };
@@ -94,7 +94,7 @@ export const Card:React.FC<Props> = ({
     raf.current = requestAnimationFrame(change);
 
     return () => cancelAnimationFrame(raf.current);
-  }, [dragState]);
+  }, []);
 
   const handleCardPointerEnter = (e:React.PointerEvent) => {
     glow(false);
@@ -134,9 +134,9 @@ export const Card:React.FC<Props> = ({
         display:'flex',
         cursor:'hand',
         flexDirection:'column',
-        margin:'5px',
+        margin:(location === 'view') ? '5px' : '0px',
         overflow:'hidden',
-        borderRadius:'12px',
+        borderRadius:(location ==='view') ? '12px' : '20px',
         border:'1px solid rgba(255, 255, 255, 0.7)',
         minWidth:'20px',
         transform:(dragState && dragState.stage !== DragStage.INACTIVE) ?

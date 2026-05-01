@@ -120,6 +120,8 @@ export const SearchResults:React.FC<Props> = () => {
 
 
   const resetFilterGlow = (filterState:FilterState, y:number) => {
+    if (filterState === FilterState.REDUCED && y <= yCutoffHidden)
+      console.log('helekjkjf');
     setFilterGlow((filterState === FilterState.HIDDEN && y <= yCutoffHidden)  ? 10 :
                   (y <= yCutoffHidden)                                        ? -3 :
                   (filterState === FilterState.REDUCED && y > 50 && y <= 80) ? 10 :

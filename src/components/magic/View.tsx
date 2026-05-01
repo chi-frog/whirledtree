@@ -39,13 +39,12 @@ const View:React.FC<Props> = ({
     return (
       <Card
         key={name}
+        location='view'
         dragState={cardDragState}
         widthString={`calc('100%/${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
         imagePacket={imageMap.get(name)}
-        index={index}
-        getRef={getRef}
         handlePointerDown={(e:React.PointerEvent) => handleCardPointerDown(e, index)}
         handlePointerUp={(e:React.PointerEvent) => handleCardPointerUp(e, index)}
         />)};
@@ -60,7 +59,7 @@ const View:React.FC<Props> = ({
       paddingRight:'50px',
       backgroundColor:'black',
       userSelect:(dragState.stage === DragStage.ACTIVE) ? 'none' : 'auto',
-      transition:'padding 0.1s ease-in-out',
+      transition:'padding 0.2s ease-in-out',
       color: 'black',
       display:'grid',
       gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,

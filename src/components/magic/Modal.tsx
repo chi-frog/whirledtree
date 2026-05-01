@@ -1,12 +1,12 @@
 'use client'
 
-import { PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { PointerEventHandler, useEffect, useRef, useState } from "react";
 import { MagicCard } from "./types/default";
 import { ImagePacket } from "./SearchResults";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
-import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
-import { _wpoint, caddWPoints, divWPoint, fsubWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
+import { _dragState, } from "../general/DragProvider";
+import { _wpoint, } from "@/helpers/wpoint";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -192,12 +192,12 @@ const Modal:React.FC<Props> = ({
       }}>
         {card &&
           <Card
+            location='modal'
             widthString={'fit-content'}
             heightString={'100%'}
             imageHeightString={'100%'}
             card={card}
             imagePacket={imagePacket}
-            index={index}
             handlePointerDown={handleCardPointerDown}
             handlePointerUp={handleCardPointerUp}
           />

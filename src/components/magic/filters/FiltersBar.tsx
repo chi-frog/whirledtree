@@ -101,12 +101,11 @@ const FiltersBar:React.FC<Props> = ({
                       `${0}px`,
       left: (whole) ? `${20}px` :
                       `${5}px`,
-      width: (whole) ? 'calc(100vw - 40px)' : 'calc(100% - 10px)',
+      width: (whole) ? 'calc(100vw - 40px)' : 'calc(100vw - 10px)',
       height:(whole) ? 'calc(100vh - 40px)' : '80px',
       border: '2px solid black',
       color: 'black',
       zIndex: '10',
-      cursor:(reduced) ? 'pointer' : '',
       display:'flex',
       alignItems:'center',
       justifyContent:'space-evenly',
@@ -118,8 +117,7 @@ const FiltersBar:React.FC<Props> = ({
                               `0px 0px ${glow}px ${glow}px rgba(146, 148, 248, 0.8)`,
                               
       backgroundColor: (whole) ? 'rgba(255, 255, 255, 0.85)' : 'white',
-      transition: (false) ? "box-shadow 0.1s ease-in-out" :
-                               "box-shadow 0.1s ease-in-out, top 0.1s ease-in-out, left 0.1s ease-in-out, height 0.1s ease-in-out",
+      transition: "box-shadow 0.2s ease-in-out, top 0.2s ease-in-out, left 0.2s ease-in-out, height 0.2s ease-in-out",
       }}>
       <div style={{
         display:'flex',
