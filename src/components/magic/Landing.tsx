@@ -1,11 +1,11 @@
 'use client'
 
-import { SearchResults } from "./SearchResults";
+import CardDisplay from "./CardDisplay";
 
 type Props = {};
 const Landing:React.FC<Props> = () => {
   return (
-    <SearchResults/>
+    <CardDisplay/>
   )
 };
 

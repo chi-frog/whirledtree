@@ -2,7 +2,7 @@
 
 import { _magicSetAny, MagicSet } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
-import { WError } from "@/components/magic/SearchResults";
+import { WError } from "@/components/magic/CardDisplay";
 
 const scryfallUrl = 'https://api.scryfall.com/';
 const urlSets = 'sets/';

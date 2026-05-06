@@ -2,7 +2,7 @@
 
 import { ChangeEventHandler, PointerEventHandler } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "../types/default";
-import { FilterState } from "../SearchResults";
+import { FilterState } from "../CardDisplay";
 import { CardsPerRow } from "./ViewCardsPerRow";
 import { FilterSet } from "./FilterSet";
 import { FilterFormat } from "./FilterFormat";
@@ -27,8 +27,7 @@ type Props = {
   cards:MagicCard[],
   formats:MagicFormat[],
 };
-
-const FiltersBar:React.FC<Props> = ({
+const Filter:React.FC<Props> = ({
   handleArrowPointerDown,
   handleArrowPointerUp,
   handlePointerDown,
@@ -142,4 +141,4 @@ const FiltersBar:React.FC<Props> = ({
   </>);
 };
 
-export default FiltersBar;
+export default Filter;

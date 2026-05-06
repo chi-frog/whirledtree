@@ -4,7 +4,7 @@ import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, MagicFormat, } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
-import FiltersBar from "./filters/FiltersBar";
+import Filter from "./filters/Filter";
 import { capitalize } from "@/helpers/string";
 import useMagicSets from "@/hooks/magic/useMagicSets";
 import Modal from "./Modal";
@@ -14,6 +14,7 @@ import { _wpoint, makeWPoint, WPoint } from "@/helpers/wpoint";
 import useMagicCards from "@/hooks/magic/useMagicCards";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import useCardDrag from "@/hooks/useCardDrag";
+import useMagicDatabase from "@/hooks/magic/useMagicDatabase";
 
 const yCutoffHidden = 10;
 
@@ -23,10 +24,19 @@ export enum FilterState {
   WHOLE = 'whole',
 }
 
-export enum WError {
+export enum WErrorCode {
   NO_ERROR = 'no_error',
   NOT_FOUND = 'not_found',
 }
+export type WError = {
+  code:WErrorCode,
+  info?:any,
+}
+export const _noError = {
+  code:WErrorCode.NO_ERROR,
+};
+export const _notFound = (info:any) =>
+  ({code:WErrorCode.NOT_FOUND, info})
 
 export type ImagePacket = {
   name:string,
@@ -54,31 +64,18 @@ export const _cardDragState:CardDragState = {
 }
 
 type Props = {};
-export const SearchResults:React.FC<Props> = () => {
-  const [formats, setFormats] = useState<MagicFormat[]>([]);
+const CardDisplay:React.FC<Props> = () => {
+  const {url, selected, updateSelected, handlers} = useFilters();
+  const [errors, loadMap, formats, sets, cards, imageMap, hydrateLargeImage] = useMagicDatabase(url);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalCard, setModalCard] = useState<MagicCard|null>(null);
-  const [error, setError] = useState<WError>(WError.NO_ERROR);
   const {getMap, getRef} = useRefMap();
-  const [setsError, setsLoaded, sets] = useMagicSets();
-  const {url, selected, updateSelected, handlers} = useFilters();
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
-  const [cardError, cardDataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage] = useMagicCards(url);
   const [draggingCardIndex, cardDragMap, startDraggingCard, stopDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
-
-  useMemo(() => {
-    if ((cards.length > 0) && (formats.length === 0))
-      setFormats([{name:"Any"},
-        ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
-  }, [cards]);
-
-  useMemo(() => {
-    setError(cardError);
-  }, [cardError]);
 
   const dragging = useMemo(() => {
     return dragState.stage === DragStage.ACTIVE;
@@ -199,7 +196,7 @@ export const SearchResults:React.FC<Props> = () => {
     onPointerUp={handlePointerUp}
     onPointerMove={handlePointerMove}
     onPointerDown={(e)=>handlePointerDown(e)}>
-    <FiltersBar
+    <Filter
       handleArrowPointerDown={handleFilterArrowPointerDown} handleArrowPointerUp={handleFilterArrowPointerUp}
       handlePointerDown={handleFilterPointerDown} handlePointerUp={handleFilterPointerUp}
       state={filterState} glow={filterGlow}
@@ -208,8 +205,8 @@ export const SearchResults:React.FC<Props> = () => {
       selectedFormat={selected.format} onChangeFormat={handlers.format}
       selectedName={selected.name} onChangeName={handlers.name}
       sets={sets} cards={cards} formats={formats}/>
-    {error === WError.NO_ERROR && 
-      <View loaded={imagesLoaded} getRef={getRef}
+    {errors.length > 0 && 
+      <View loaded={loadMap.get('images')} getRef={getRef}
         dragState={dragState}
         cardDragMap={cardDragMap}
         filterState={filterState}
@@ -220,7 +217,7 @@ export const SearchResults:React.FC<Props> = () => {
         handleCardPointerDown={handleCardPointerDown}
         handleCardPointerUp={handleCardPointerUp}/>
     }
-    {error === WError.NOT_FOUND &&
+    {cards.length === 0 &&
       <div id="error_screen" style={{
         width:'100vw',
         height: '100vh',
@@ -241,3 +238,5 @@ export const SearchResults:React.FC<Props> = () => {
       imagePacket={(modalCard) ? imageMap.get(modalCard.name) : undefined}/>}
   </div>)
 };
+
+export default CardDisplay;

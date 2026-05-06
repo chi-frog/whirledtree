@@ -3,7 +3,7 @@
 import { MagicCard, MagicCardClass } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
 import { useEffect, useMemo, useState } from "react";
-import { WError } from "@/components/magic/SearchResults";
+import { WError } from "@/components/magic/CardDisplay";
 
 type ImagePacket = {
   name:string,
@@ -155,7 +155,6 @@ export type UseMagicCards = [
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
 ]
-
 const useMagicCards:(url:string)=>UseMagicCards = (url) => {
   const [imageMap, setImageMap] = useState<ImageMap>(new Map());
   const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
@@ -194,6 +193,8 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
           setImagesLoaded(true);
         }
       } catch (error) {
+        console.log('imageFetch error', error);
+        console.log('cancelled?', cancelled);
         if (!cancelled) {
           console.error('Failed to load images:', error);
           setImagesLoaded(true);

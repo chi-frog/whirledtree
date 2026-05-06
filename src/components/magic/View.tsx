@@ -1,12 +1,12 @@
 'use client'
 
 import { MagicCard } from "./types/default";
-import { CardDragMap, CardDragState, FilterState, ImageMap } from "./SearchResults";
+import { CardDragMap, CardDragState, FilterState, ImageMap } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
 
 type Props = {
-  loaded:boolean,
+  loaded?:boolean,
   getRef:(id:number, node:any) => () => void,
   dragState:DragState,
   cardDragMap:CardDragMap,

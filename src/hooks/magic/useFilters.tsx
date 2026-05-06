@@ -31,8 +31,7 @@ const useFilters = () => {
     let newSelected = {...selected};
 
     updates.forEach((_update) => {
-      newSelected[_update.property] = _update.value;
-    });
+      newSelected[_update.property] = _update.value;});
 
     setSelected(newSelected);
   };

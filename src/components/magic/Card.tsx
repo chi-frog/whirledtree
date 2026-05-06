@@ -2,7 +2,7 @@
 
 import { _wpoint } from "@/helpers/wpoint";
 import { MagicCard } from "./types/default";
-import { _cardDragState, CardDragState, ImagePacket } from "./SearchResults";
+import { _cardDragState, CardDragState, ImagePacket } from "./CardDisplay";
 import { useCallback, useMemo, useRef } from "react";
 import { DragStage } from "../general/DragProvider";
 

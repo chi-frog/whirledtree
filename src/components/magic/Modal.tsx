@@ -2,7 +2,7 @@
 
 import { PointerEventHandler, useEffect, useRef, useState } from "react";
 import { MagicCard } from "./types/default";
-import { ImagePacket } from "./SearchResults";
+import { ImagePacket } from "./CardDisplay";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
 import { _dragState, } from "../general/DragProvider";

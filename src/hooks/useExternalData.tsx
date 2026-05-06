@@ -1,6 +1,6 @@
 'use client'
 
-import { WError } from "@/components/magic/SearchResults";
+import { _noError, _notFound, WError, WErrorCode } from "@/components/magic/CardDisplay";
 import { useEffect, useState } from "react";
 
 export type Transform<T> = (input:any)=>T;
@@ -12,7 +12,7 @@ function useExternalData<T> (
 
   const [data, setData] = useState<T[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
-  const [error, setError] = useState<WError>(WError.NO_ERROR);
+  const [error, setError] = useState<WError>(_noError);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -22,10 +22,12 @@ function useExternalData<T> (
       try {
         await chunk(url);
       } catch (err) {
+        console.log('Error with url', url);
+        console.log('err', err);
         // Don't log abort errors - they're expected on cleanup
         if ((err instanceof Error)) {
-          if (err.message === WError.NOT_FOUND) {
-            setError(WError.NOT_FOUND);
+          if (err.message === WErrorCode.NOT_FOUND) {
+            setError(_notFound);
             setLoaded(true);
             setData([]);
             return;
@@ -41,14 +43,14 @@ function useExternalData<T> (
         const body = json.data;
 
         if (!body)
-          throw Error(WError.NOT_FOUND);
+          throw Error(WErrorCode.NOT_FOUND);
 
         data.push(...body.map(transform));
 
         if (json.has_more)
           await chunk(json.next_page);
         else {
-          setError(WError.NO_ERROR);
+          setError(_noError);
           setLoaded(true);
           setData(data);
           console.log('-Loaded ', url);
