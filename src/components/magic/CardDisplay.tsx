@@ -2,16 +2,13 @@
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
-import { MagicCard, MagicFormat, } from "./types/default";
+import { MagicCard, } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import Filter from "./filters/Filter";
-import { capitalize } from "@/helpers/string";
-import useMagicSets from "@/hooks/magic/useMagicSets";
 import Modal from "./Modal";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint, makeWPoint, WPoint } from "@/helpers/wpoint";
-import useMagicCards from "@/hooks/magic/useMagicCards";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import useCardDrag from "@/hooks/useCardDrag";
 import useMagicDatabase from "@/hooks/magic/useMagicDatabase";
@@ -27,6 +24,7 @@ export enum FilterState {
 export enum WErrorCode {
   NO_ERROR = 'no_error',
   NOT_FOUND = 'not_found',
+  GENERAL = 'general',
 }
 export type WError = {
   code:WErrorCode,
@@ -36,7 +34,10 @@ export const _noError = {
   code:WErrorCode.NO_ERROR,
 };
 export const _notFound = (info:any) =>
-  ({code:WErrorCode.NOT_FOUND, info})
+  ({code:WErrorCode.NOT_FOUND, info});
+
+export const _err = (err:any) =>
+  ({code:WErrorCode.GENERAL, err});
 
 export type ImagePacket = {
   name:string,
@@ -66,7 +67,7 @@ export const _cardDragState:CardDragState = {
 type Props = {};
 const CardDisplay:React.FC<Props> = () => {
   const {url, selected, updateSelected, handlers} = useFilters();
-  const [errors, loadMap, formats, sets, cards, imageMap, hydrateLargeImage] = useMagicDatabase(url);
+  const [errorMap, loadMap, formats, sets, cards, imageMap, hydrateLargeImage] = useMagicDatabase(url);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
@@ -191,6 +192,11 @@ const CardDisplay:React.FC<Props> = () => {
 
   const filterHidden = (filterState === FilterState.HIDDEN);
 
+  const hasCardsError:boolean = useMemo(() => {
+    const cardsError = errorMap.get('cards');
+    return cardsError ? cardsError.length > 0 : true;
+  }, [errorMap]);
+
   return (
   <div
     onPointerUp={handlePointerUp}
@@ -205,7 +211,7 @@ const CardDisplay:React.FC<Props> = () => {
       selectedFormat={selected.format} onChangeFormat={handlers.format}
       selectedName={selected.name} onChangeName={handlers.name}
       sets={sets} cards={cards} formats={formats}/>
-    {errors.length > 0 && 
+    {!hasCardsError && 
       <View loaded={loadMap.get('images')} getRef={getRef}
         dragState={dragState}
         cardDragMap={cardDragMap}

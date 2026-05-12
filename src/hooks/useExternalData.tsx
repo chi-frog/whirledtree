@@ -1,6 +1,6 @@
 'use client'
 
-import { _noError, _notFound, WError, WErrorCode } from "@/components/magic/CardDisplay";
+import { _err, _noError, _notFound, WError, WErrorCode } from "@/components/magic/CardDisplay";
 import { useEffect, useState } from "react";
 
 export type Transform<T> = (input:any)=>T;
@@ -27,13 +27,17 @@ function useExternalData<T> (
         // Don't log abort errors - they're expected on cleanup
         if ((err instanceof Error)) {
           if (err.message === WErrorCode.NOT_FOUND) {
-            setError(_notFound);
+            setError(_noError);
             setLoaded(true);
             setData([]);
             return;
 
-          } else if (err.name !== 'AbortError')
-            console.log('error', err);
+          } else if (err.name !== 'AbortError') {
+            setError(_err(err));
+            setLoaded(false);
+            setData([]);
+            return;
+          }
         }
       }
 
