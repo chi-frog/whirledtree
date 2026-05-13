@@ -4,15 +4,22 @@ import { _err, _noError, _notFound, WError, WErrorCode } from "@/components/magi
 import { useEffect, useState } from "react";
 
 export type Transform<T> = (input:any)=>T;
+export type ExternalDataOptions = {
+  //Represents the amount of data to fetch before
+  // waiting for a command to fetch more.
+  dataLimit?:number,
+};
 
+type Return<T> = [WError, boolean, T[], (()=>void)|undefined]
 function useExternalData<T> (
     url:string,
     transform:Transform<T>,
-  ):[WError, boolean, T[]] {
-
+    options:ExternalDataOptions={},
+  ):Return<T> {
   const [data, setData] = useState<T[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<WError>(_noError);
+  const [fetchNext, setFetchNext] = useState<(()=>void)|undefined>();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -20,7 +27,26 @@ function useExternalData<T> (
 
     const fetchData = async (url:string) => {
       try {
-        await chunk(url);
+        let overflow = (options.dataLimit) &&
+                       (options.dataLimit <= data.length);
+        let chunkUrl:string|undefined = url;
+        while ((!overflow) && (chunkUrl)) {
+          let [chunkData, nextUrl] = await chunk(chunkUrl);
+console.log('awaiting', chunkUrl);
+          data.push(...chunkData.map(transform));
+          chunkUrl = nextUrl;
+          overflow = (options.dataLimit) &&
+                     (options.dataLimit <= data.length);
+        }
+
+        if (overflow) {
+          console.log('overflowed: ' + data.length + '/' + options.dataLimit);
+        
+        }
+        setError(_noError);
+        setLoaded(true);
+        setData(data);
+        console.log('-Loaded ', url);
       } catch (err) {
         console.log('Error with url', url);
         console.log('err', err);
@@ -41,7 +67,7 @@ function useExternalData<T> (
         }
       }
 
-      async function chunk(url:string) {
+      async function chunk(url:string):Promise<[any[], string|undefined]> {
         const res = await fetch(url, { signal: controller.signal });
         const json = await res.json();
         const body = json.data;
@@ -49,16 +75,7 @@ function useExternalData<T> (
         if (!body)
           throw Error(WErrorCode.NOT_FOUND);
 
-        data.push(...body.map(transform));
-
-        if (json.has_more)
-          await chunk(json.next_page);
-        else {
-          setError(_noError);
-          setLoaded(true);
-          setData(data);
-          console.log('-Loaded ', url);
-        }
+        return [body, json.next_page];
       };
     };
 
@@ -71,7 +88,7 @@ function useExternalData<T> (
     };
   }, [url, transform]);
 
-  return [error, loaded, data];
+  return [error, loaded, data, fetchNext];
 };
 
 export default useExternalData;

@@ -160,7 +160,8 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
   const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
   let [error, dataLoaded, cardData] = useExternalData<MagicCard>(
     url,
-    transformMagicCard);
+    transformMagicCard,
+    {dataLimit:500});
 
   // Deduplicate cards
   const cards:MagicCard[] = useMemo(() => {

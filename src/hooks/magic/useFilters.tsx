@@ -15,7 +15,7 @@ type SKey = keyof Selected;
 const defaultSelected = {
   name:'',
   format:ANY,
-  set:'aer',
+  set:ANY,
 }
 
 export type FilterUpdate = {
