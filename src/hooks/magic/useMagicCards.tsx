@@ -30,21 +30,25 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       }
     };
   } else if (card.image_uris === undefined) {
+    console.log('double sided!', card);
+    const front = card.card_faces[0];
+    const back = card.card_faces[1];
     return {
-      name: card.name,
+      name: front.name,
       legalities: card.legalities,
       reversed:false,
       class:MagicCardClass.DOUBLESIDED,
       imageUris: {
-        front: {
-          small: card.card_faces[0].image_uris.small,
-          large: card.card_faces[0].image_uris.large,
+        small: front.image_uris.small,
+        large: front.image_uris.large,
+      },
+      back:({
+        name:back.name,
+        imageUris: {
+          small: back.image_uris.small,
+          large: back.image_uris.large,
         },
-        back: {
-          small: card.card_faces[1].image_uris.small,
-          large: card.card_faces[1].image_uris.large,
-        }
-      }
+      }) as MagicCard
     };
   } else {
     return {
@@ -128,11 +132,11 @@ const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:MagicCar
     await Promise.all(cards.map(async (_card, _index) => {
       let names = (_card.class !== MagicCardClass.DOUBLESIDED) ?
         [_card.name] :
-        [_card.name + 'front', _card.name + 'back'];
+        [_card.name, _card.back.name];
 
       let uris = (_card.class !== MagicCardClass.DOUBLESIDED) ?
         [_card.imageUris[size]] :
-        [_card.imageUris.front[size], _card.imageUris.back[size]];
+        [_card.imageUris[size], _card.back.imageUris[size]];
 
       if (!uris[0]) {
         console.log('Invalid Uri for ' + _card.name, uris);

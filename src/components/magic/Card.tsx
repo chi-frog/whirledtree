@@ -34,7 +34,7 @@ export const Card:React.FC<Props> = ({
   const raf = useRef<number>(-1);
 
   const imageSrc = useMemo(() =>
-    (!imagePacket)          ? undefined :
+    (!imagePacket || !card) ? undefined :
     (imagePacket.largeBlob) ? imagePacket.largeBlob :
                               imagePacket.smallBlob
   , [imagePacket]);

@@ -10,21 +10,17 @@ export type MagicCard = {
   reversed:boolean,
   name: string,
   legalities: any,
+  imageUris: { small: string, large: string },
 } & (
   | {
       class:MagicCardClass.NORMAL,
-      imageUris: { small: string, large: string },
     }
   | {
       class:MagicCardClass.DOUBLEFACED,
-      imageUris: { small:string, large: string},
     }
   | {
       class:MagicCardClass.DOUBLESIDED,
-      imageUris: {
-        front: { small: string, large: string },
-        back: { small: string, large: string },
-      },
+      back:MagicCard,
     }
 );
 
