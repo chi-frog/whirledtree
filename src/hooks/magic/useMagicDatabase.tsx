@@ -105,6 +105,8 @@ const useMagicDatabase:UseMagicData = (url) => {
     }
   }, [cards, imagesLoaded]);
 
+  console.log(cards);
+
   return [errorMap, loadMap, formats, sets, cards, imageMap, hydrateLargeImage];
 };
 
