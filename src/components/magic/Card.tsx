@@ -1,10 +1,11 @@
 'use client'
 
 import { _wpoint } from "@/helpers/wpoint";
-import { MagicCard } from "./types/default";
+import { MagicCard, MagicCardClass } from "./types/default";
 import { _cardDragState, CardDragState, ImagePacket } from "./CardDisplay";
-import { useCallback, useMemo, useRef } from "react";
-import { DragStage } from "../general/DragProvider";
+import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DragStage, useDragContext } from "../general/DragProvider";
+import useCardRotate from "@/hooks/magic/useCardRotate";
 
 export type CardLocation =
   'view' | 'modal';
@@ -30,8 +31,36 @@ export const Card:React.FC<Props> = ({
     handlePointerDown,
     handlePointerUp,
   }:Props) => {
-  const cardRef = useRef<null|HTMLDivElement>(null);
+  const {subDrag, startDragging, dragStateRef} = useDragContext();
+  const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
+  const [mousedover, setMousedover] = useState<boolean>(false);
+  const [rotateState, startRotating] =
+    useCardRotate(dims, subDrag, startDragging, dragStateRef);
+  const ref = useRef<null|HTMLDivElement>(null);
   const raf = useRef<number>(-1);
+
+  useEffect(() => {
+    if (ref.current) {
+      const observer = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          const {x, y} = entry.target.getBoundingClientRect();
+          setDims({
+            x: x,
+            y: y,
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          });
+        }
+      });
+
+      observer.observe(ref.current);
+
+      // Cleanup function
+      return () => {
+        observer.disconnect();
+      };
+    }
+  }, []);
 
   const imageSrc = useMemo(() =>
     (!imagePacket || !card) ? undefined :
@@ -49,7 +78,7 @@ export const Card:React.FC<Props> = ({
     (dragState) ? (dragState.stage === DragStage.ACTIVE) : 0, [dragState?.stage]);
 
   const glow = useCallback((version:boolean) => {
-    const element = cardRef.current;
+    const element = ref.current;
     if (!element) return;
 
     cancelAnimationFrame(raf.current);
@@ -98,16 +127,19 @@ export const Card:React.FC<Props> = ({
 
   const handleCardPointerEnter = (e:React.PointerEvent) => {
     glow(false);
+    setMousedover(true);
   };
 
   const handleCardPointerLeave = (e:React.PointerEvent) => {
-    const element = cardRef.current;
+    const element = ref.current;
     if (!element) return;
 
     element.style.border = '1px solid rgba(255, 255, 255, 0.7)',
     element.style.boxShadow = "none";
     element.style.position = "auto";
     element.style.top = "";
+
+    setMousedover(false);
   };
 
   const handleCardPointerDown = (e:React.PointerEvent) => {
@@ -124,9 +156,65 @@ export const Card:React.FC<Props> = ({
 
   //{...(getRef && { ref: getRef.bind(null, index) })}
 
+  const tlaRatios = (dims:{width:number, height:number}) => {
+    const circleSize = 55;
+    const imgWidth = 670;
+    const imgHeight = 935;
+    const sizeRatio = circleSize/imgWidth;
+    const topRatio = 46/imgHeight;
+    const leftRatio = 39/imgWidth;
+
+    return {
+      x:dims.width*leftRatio,
+      y:dims.height*topRatio,
+      w:dims.width*sizeRatio,
+      h:dims.width*sizeRatio,
+    };
+  }
+
+  const khmRatios = (dims:{width:number, height:number}) => {
+    const circleSize = 50;
+    const imgWidth = 670;
+    const imgHeight = 935;
+    const sizeRatio = circleSize/imgWidth;
+    const topRatio = 44/imgHeight;
+    const leftRatio = 34.5/imgWidth;
+
+    return {
+      x:dims.width*leftRatio,
+      y:dims.height*topRatio,
+      w:dims.width*sizeRatio,
+      h:dims.width*sizeRatio,
+    };
+  }
+
+  const doubleSidedCircleOffset:{x:number, y:number, w:number, h:number} = useMemo(() => {
+    const def = {x:0, y:0, w:0, h:0};
+    
+    if (card.class === MagicCardClass.DOUBLESIDED) {
+      if (!ref.current) return def;
+
+      return (card.set === 'tla') ? tlaRatios(dims) :
+             (card.set === 'khm') ? khmRatios(dims) :
+                                    tlaRatios(dims);
+    }
+    return def;
+  }, [dims]);
+
+  const handleDoublesidedPointerDown:PointerEventHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    startRotating(e);
+  };
+
+  const handleDoublesidedPointerUp:PointerEventHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
     <div
-      ref={cardRef}
+      ref={ref}
       onPointerEnter={(e)=>handleCardPointerEnter(e)}
       onPointerLeave={(e)=>handleCardPointerLeave(e)}
       onPointerDown={(e) => handleCardPointerDown(e)}
@@ -139,9 +227,12 @@ export const Card:React.FC<Props> = ({
         borderRadius:(location ==='view') ? '12px' : '20px',
         border:'1px solid rgba(255, 255, 255, 0.7)',
         minWidth:'20px',
-        transform:(dragState && dragState.stage !== DragStage.INACTIVE) ?
-          `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
-          '',
+        transform:
+          (dragState && dragState.stage !== DragStage.INACTIVE) ?
+            `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
+          (rotateState.stage !== DragStage.INACTIVE) ?
+            `rotate3d(0, 1, 0, ${rotateState.angle}deg)` :
+            '',
         width:widthString,
         height:heightString,
         position: 'relative',
@@ -153,5 +244,25 @@ export const Card:React.FC<Props> = ({
         cursor:'pointer',
         marginTop:'auto',
         }}/>
+      {(card.class === MagicCardClass.DOUBLESIDED) &&
+      <div 
+        onPointerDown={handleDoublesidedPointerDown}
+        onPointerUp={handleDoublesidedPointerUp}
+        style={{
+        borderRadius:'50%',
+        position:'absolute',
+        left:doubleSidedCircleOffset.x + 'px',
+        top:doubleSidedCircleOffset.y + 'px',
+        width:doubleSidedCircleOffset.w + 'px',
+        height:doubleSidedCircleOffset.h + 'px',
+        backgroundColor:'transparent',
+        visibility:(mousedover) ? 'visible' : 'hidden',
+        transition:'box-shadow 0.3s ease',
+        boxShadow: (mousedover) ?
+          '0px 0px 5px 5px rgba(236, 236, 26), inset 0px 0px 2px 3px rgba(236, 236, 26, 1)' :
+          'none',
+        cursor:'grab',
+      }}/>
+      }
     </div>);
 };

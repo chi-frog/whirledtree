@@ -57,6 +57,21 @@ export const divWPoint = (a:WPoint, b:number) => ({
   y:a.y/b,
 });
 
+export const divWPoints = (a:WPoint, b:WPoint) => ({
+  x:a.x/b.x,
+  y:a.y/b.y,
+});
+
+export const mulWPoint = (a:WPoint, b:number) => ({
+  x:a.x*b,
+  y:a.y*b,
+});
+
+export const mulWPoints = (a:WPoint, b:WPoint) => ({
+  x:a.x*b.x,
+  y:a.y*b.y,
+});
+
 export const makeWPoint = ({x, y}:PointerEvent|WPoint) => {
   return {x, y}
 }

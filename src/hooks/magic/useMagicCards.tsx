@@ -24,13 +24,13 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       legalities: card.legalities,
       reversed:false,
       class:MagicCardClass.NORMAL,
+      set:card.set,
       imageUris: {
         small: card.image_uris.small,
         large: card.image_uris.large,
       }
     };
   } else if (card.image_uris === undefined) {
-    console.log('double sided!', card);
     const front = card.card_faces[0];
     const back = card.card_faces[1];
     return {
@@ -38,6 +38,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       legalities: card.legalities,
       reversed:false,
       class:MagicCardClass.DOUBLESIDED,
+      set:card.set,
       imageUris: {
         small: front.image_uris.small,
         large: front.image_uris.large,
@@ -56,6 +57,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       legalities: card.legalities,
       reversed:false,
       class:MagicCardClass.DOUBLEFACED,
+      set:card.set,
       imageUris: {
         small: card.image_uris.small,
         large: card.image_uris.large,
