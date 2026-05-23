@@ -2,7 +2,7 @@
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
-import { MagicCard, } from "./types/default";
+import { MagicCard, MagicCardClass, } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
@@ -195,6 +195,24 @@ const CardDisplay:React.FC<Props> = () => {
     return cardsError ? cardsError.length > 0 : true;
   }, [errorMap]);
 
+  const modal = () => {
+    if (!modalShown || !modalCard) return <></>;
+    const frontImage = imageMap.get(modalCard.name);
+    const backImage = (modalCard.class === MagicCardClass.DOUBLESIDED) ?
+      imageMap.get(modalCard.back.name) : null;
+
+    return (
+      <Modal
+      close={()=>setModalShown(false)}
+      card={modalCard}
+      index={cards.findIndex((_card) => (_card === modalCard))}
+      imagePackets={(!frontImage) ? [] :
+                    (backImage)   ? [frontImage, backImage] :
+                                    [frontImage]}
+      />
+    );
+  }
+
   return (
   <div
     onPointerUp={handlePointerUp}
@@ -234,12 +252,7 @@ const CardDisplay:React.FC<Props> = () => {
         <h1> No cards matched your search! </h1>
       </div>
     }
-    {modalShown &&
-    <Modal
-      close={()=>setModalShown(false)}
-      card={modalCard}
-      index={cards.findIndex((_card) => (_card === modalCard))}
-      imagePacket={(modalCard) ? imageMap.get(modalCard.name) : undefined}/>}
+    {modal()}
   </div>)
 };
 

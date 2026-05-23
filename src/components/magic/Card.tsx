@@ -1,6 +1,6 @@
 'use client'
 
-import { _wpoint } from "@/helpers/wpoint";
+import { _wpoint, areEqualWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import { MagicCard, MagicCardClass } from "./types/default";
 import { _cardDragState, CardDragState, ImagePacket } from "./CardDisplay";
 import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -16,7 +16,7 @@ type Props = {
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
-  imagePacket:ImagePacket|undefined,
+  imagePackets:ImagePacket[],
   handlePointerDown?:(e:React.PointerEvent) => void,
   handlePointerUp?:(e:React.PointerEvent) => void,
 };
@@ -27,17 +27,19 @@ export const Card:React.FC<Props> = ({
     heightString,
     imageHeightString,
     card,
-    imagePacket,
+    imagePackets,
     handlePointerDown,
     handlePointerUp,
   }:Props) => {
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
   const [mousedover, setMousedover] = useState<boolean>(false);
-  const [rotateState, startRotating] =
-    useCardRotate(dims, subDrag, startDragging, dragStateRef);
+  const [reversed, setReversed] = useState<boolean>(false);
+  const [rotateState, startRotating, forceRotate] =
+    useCardRotate(dims, (reversed) ? -1 : 1, subDrag, startDragging, dragStateRef);
   const ref = useRef<null|HTMLDivElement>(null);
   const raf = useRef<number>(-1);
+  const lastMousePress = useRef<WPoint>(_wpoint);
 
   useEffect(() => {
     if (ref.current) {
@@ -63,10 +65,18 @@ export const Card:React.FC<Props> = ({
   }, []);
 
   const imageSrc = useMemo(() =>
-    (!imagePacket || !card) ? undefined :
-    (imagePacket.largeBlob) ? imagePacket.largeBlob :
-                              imagePacket.smallBlob
-  , [imagePacket]);
+    (!card || imagePackets.length <= 0)    ? undefined :
+    (imagePackets[0].largeBlob)            ? imagePackets[0].largeBlob :
+                                             imagePackets[0].smallBlob
+  , [imagePackets]);
+
+  const backImageSrc = useMemo(() =>
+    ((!card) ||
+     (imagePackets.length <= 1) ||
+     (card.class !== MagicCardClass.DOUBLESIDED)) ? undefined :
+    (imagePackets[1].largeBlob)                   ? imagePackets[1].largeBlob :
+                                                    imagePackets[1].smallBlob
+    , [imagePackets, card.class]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -205,12 +215,25 @@ export const Card:React.FC<Props> = ({
     e.preventDefault();
     e.stopPropagation();
     startRotating(e);
+    lastMousePress.current = {x:e.clientX, y:e.clientY};
   };
 
   const handleDoublesidedPointerUp:PointerEventHandler = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    const point = {x:e.clientX, y:e.clientY};
+
+    if (areEqualWPoints(point, lastMousePress.current) ||
+        (rotateState.angle > 90))
+      setReversed(!reversed);
+      if (flipping)
+        forceRotate(90 - (rotateState.angle - 90));
   };
+
+  const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
+  const showFront = useMemo(() =>
+    ((!reversed && rotateState.angle <= 90) ||
+     (reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
 
   return (
     <div
@@ -231,7 +254,9 @@ export const Card:React.FC<Props> = ({
           (dragState && dragState.stage !== DragStage.INACTIVE) ?
             `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
           (rotateState.stage !== DragStage.INACTIVE) ?
+          (!flipping) ?
             `rotate3d(0, 1, 0, ${rotateState.angle}deg)` :
+            `rotate3d(0, 1, 0, ${90 - (rotateState.angle - 90)}deg)` :
             '',
         width:widthString,
         height:heightString,
@@ -243,6 +268,20 @@ export const Card:React.FC<Props> = ({
         ...(imageHeightString && { height: imageHeightString }),
         cursor:'pointer',
         marginTop:'auto',
+        visibility: (showFront) ? 'visible' : 'hidden'
+        }}/>
+      <img src={backImageSrc} draggable="false" style={{
+        maxWidth:'100%',
+        ...(imageHeightString && { height: imageHeightString }),
+        cursor:'pointer',
+        top:0,
+        left:0,
+        width:'100%',
+        height:'100%',
+        marginTop:'auto',
+        position: 'absolute',
+        visibility: (!showFront) ? 'visible' : 'hidden',
+        display:(card.class === MagicCardClass.DOUBLESIDED) ? 'block' : 'none'
         }}/>
       {(card.class === MagicCardClass.DOUBLESIDED) &&
       <div 
@@ -251,7 +290,7 @@ export const Card:React.FC<Props> = ({
         style={{
         borderRadius:'50%',
         position:'absolute',
-        left:doubleSidedCircleOffset.x + 'px',
+        left:(showFront) ? doubleSidedCircleOffset.x + 'px' : `${dims.width - doubleSidedCircleOffset.w - doubleSidedCircleOffset.x}px`,
         top:doubleSidedCircleOffset.y + 'px',
         width:doubleSidedCircleOffset.w + 'px',
         height:doubleSidedCircleOffset.h + 'px',
@@ -262,7 +301,7 @@ export const Card:React.FC<Props> = ({
           '0px 0px 5px 5px rgba(236, 236, 26), inset 0px 0px 2px 3px rgba(236, 236, 26, 1)' :
           'none',
         cursor:'grab',
-      }}/>
+      }}/>  
       }
     </div>);
 };

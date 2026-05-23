@@ -12,11 +12,6 @@ type ImagePacket = {
   };
 export type ImageMap = Map<string, ImagePacket>;
 
-export const getImageMapKey = (card:MagicCard) => {
-  if (card.class !== MagicCardClass.DOUBLESIDED)
-    return card.name;
-}
-
 const transformMagicCard: Transform<MagicCard> = (card) => {
   if (card.card_faces === undefined) {
     return {

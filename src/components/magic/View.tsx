@@ -1,6 +1,6 @@
 'use client'
 
-import { MagicCard } from "./types/default";
+import { MagicCard, MagicCardClass } from "./types/default";
 import { CardDragMap, CardDragState, FilterState, ImageMap } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
@@ -35,6 +35,13 @@ const View:React.FC<Props> = ({
 
   const card = (name:string, index:number) => {
     const cardDragState = cardDragMap.get(index);
+    const frontImagePacket = imageMap.get(name);
+    const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
+
+    if (cards[index].class === MagicCardClass.DOUBLESIDED) {
+      const backImagePacket = imageMap.get(cards[index].back.name);
+      if (backImagePacket) imagePackets.push(backImagePacket);
+    }
 
     return (
       <Card
@@ -44,7 +51,7 @@ const View:React.FC<Props> = ({
         widthString={`calc('100%/${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
-        imagePacket={imageMap.get(name)}
+        imagePackets={imagePackets}
         handlePointerDown={(e:React.PointerEvent) => handleCardPointerDown(e, index)}
         handlePointerUp={(e:React.PointerEvent) => handleCardPointerUp(e, index)}
         />)};

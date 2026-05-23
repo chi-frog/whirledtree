@@ -23,18 +23,22 @@ export const _cardRotateState:CardRotateState = {
 }
 
 type StartRotatingCard = (e:PointerEvent|React.PointerEvent)=>void;
+type ForceRotate = (angle:number)=>void;
 type UseCardRotateReturn = [
   cardRotateState:CardRotateState,
   startRotatingCard:StartRotatingCard,
+  forceRotate:ForceRotate
 ];
 type UseCardRotate = (
   dims:{x:number, y:number, width:number, height:number},
+  dir:number, // +1 = left to right, -1 = right to left
   subDrag:SubDrag,
   startDragging:StartDragging,
   dragStateRef:RefObject<DragState>,
 ) => UseCardRotateReturn;
 const useCardRotate:UseCardRotate = (
     dims,
+    dir,
     subDrag,
     startDragging,
     dragStateRef
@@ -84,14 +88,29 @@ const useCardRotate:UseCardRotate = (
       console.table(state);
 
       const terminate = (state.stage === DragStage.INACTIVE);
+      let ratio;
 
       if (terminate) state.stage = DragStage.RETURNING;
       else {
-        const normalizedXDistance = state.point.x - state.start.x;
-        const ratio = normalizedXDistance /
-                      (dims.width - (state.start.x - dims.x));
+        if (dir > 0) {
+          let normalizedXDistance = state.point.x - state.start.x;
+          if (normalizedXDistance < 0) normalizedXDistance = 0;
+          else if (normalizedXDistance > (dims.width - state.start.x + dims.x))
+            normalizedXDistance = (dims.width - state.start.x + dims.x);   
+          
+          const ratio = normalizedXDistance /
+                        (dims.width - state.start.x + dims.x);
+          state.angle = ratio * 180;
+        } else {
+          let normalizedXDistance = state.point.x - state.start.x;
+          if (normalizedXDistance > 0) normalizedXDistance = 0;
+          else if ((dir < 0) && normalizedXDistance < (-1*(dims.width - (dims.width + dims.x - state.start.x))))
+            normalizedXDistance = -1*(dims.width - (dims.width + dims.x - state.start.x));
+          const ratio = normalizedXDistance /
+                        (dims.width - (dims.width + dims.x - state.start.x));
 
-        state.angle = ratio * 2 * 90;
+          state.angle = -1 * ratio * 180;
+        }
       }
       
       console.log('terminate?', terminate);
@@ -119,9 +138,18 @@ const useCardRotate:UseCardRotate = (
     setState(ref.current)
   };
 
+  const forceRotate = (angle:number) => {
+    ref.current = {
+      ...ref.current,
+      angle:angle
+    }
+    setState(ref.current);
+  }
+
   return [
     state,
     startRotatingCard,
+    forceRotate,
   ];
 };
 

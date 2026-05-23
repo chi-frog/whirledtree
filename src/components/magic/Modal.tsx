@@ -64,7 +64,7 @@ type Props = {
   close:()=>void,
   card:MagicCard|null,
   index:number,
-  imagePacket?:ImagePacket,
+  imagePackets:ImagePacket[],
 }
 
 const tooltipMargin = 5;
@@ -73,7 +73,7 @@ const Modal:React.FC<Props> = ({
     close,
     card,
     index,
-    imagePacket
+    imagePackets
   }:Props) => {
   const [selection, setSelection] = useState<string>("");
   const [selectionPoint, setSelectionPoint] = useState<{x:number, y:number}>({x:0, y:0});
@@ -197,7 +197,7 @@ const Modal:React.FC<Props> = ({
             heightString={'100%'}
             imageHeightString={'100%'}
             card={card}
-            imagePacket={imagePacket}
+            imagePackets={imagePackets}
             handlePointerDown={handleCardPointerDown}
             handlePointerUp={handleCardPointerUp}
           />

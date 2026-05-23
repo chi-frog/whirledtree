@@ -7,7 +7,6 @@ export enum MagicCardClass {
 };
 
 export type MagicCard = {
-  reversed:boolean,
   name: string,
   legalities: any,
   set: string,

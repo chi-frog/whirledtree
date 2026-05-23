@@ -8,6 +8,9 @@ export const _wpoint:WPoint = {
   y:0,
 }
 
+export const areEqualWPoints = (a:WPoint, b:WPoint):boolean =>
+  ((a.x === b.x) && (a.y === b.y));
+
 export const addWPoints = (a:WPoint, b:WPoint) =>
   ({x:a.x+b.x, y:a.y+b.y});
 
