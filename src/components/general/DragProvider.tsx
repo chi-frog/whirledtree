@@ -95,7 +95,6 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
       delta:_wpoint,
     }
     runStartFuncs(nativeEvent, tag);
-    console.log('DragProvider start');
 
     return dragState.current;
   };
@@ -111,7 +110,6 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
       delta:subWPoints(point, dragState.current.point),
     }
     runFuncs(e, tag);
-    console.log('DragProvider drag');
   };
 
   const stopDragging = (e:PointerEvent) => {
@@ -123,7 +121,6 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
       document.body.style.cursor = "";
     });
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    console.log('DragProvider stopDragging');
     dragState.current = _dragState;
   }
 

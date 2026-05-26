@@ -70,58 +70,32 @@ const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
   return newImageMap;
 };
 
-const fetchImage = async (hydratedImageMap:ImageMap, name:string, type:string, uri:string) => {
-  const blob = await fetch(uri)
-    .then((response) => {
-      const reader = response.body?.getReader();
+type ImageSize = 'small' | 'large';
 
-      if (!reader) {
-        console.log('Reader error');
-        return;
-      }
+const blobKey: Record<ImageSize, keyof ImagePacket> = {
+  small: 'smallBlob',
+  large: 'largeBlob',
+};
 
-      return new ReadableStream({
-        start(controller) {
-          return pump();
-            
-          async function pump():Promise<ReadableStream<any> | undefined> {
-            return reader?.read().then(({ done, value }) => {
-              // When no more data needs to be consumed, close the stream
-              if (done) {
-                controller.close();
-                return;
-              }
-              // Enqueue the next data chunk into our target stream
-              controller.enqueue(value);
-              return pump();
-            });
-          }
-        },
-      })})
-    // Create a new response out of the stream
-    .then((stream) => new Response(stream))
-    // Create an object URL for the response
-    .then((response) => response.blob())
-    .then((blob) => URL.createObjectURL(blob))
-    .then((url) => url)
-    .catch((err) => console.error(err));
+const fetchImage = async (
+  hydratedImageMap: ImageMap,
+  name: string,
+  type: ImageSize,
+  uri: string
+): Promise<void> => {
+  const objectUrl = await fetch(uri)
+    .then(r => r.blob())
+    .then(blob => URL.createObjectURL(blob))
+    .catch(err => { console.error('fetchImage failed:', err); return null; });
 
-  if (!blob) {
-    console.log('Something wrong with blob');
-    return;
-  }
+  if (!objectUrl) return;
 
-  let dryImagePacket = hydratedImageMap.get(name);
-
-  if (!dryImagePacket)
-    dryImagePacket = {name:name};
-
-  let imagePacket = {...dryImagePacket};
-  if (type === 'small') imagePacket.smallBlob = blob;
-  else if (type === 'large') imagePacket.largeBlob = blob;
-  else console.log('Unknown image type', type);
-  hydratedImageMap.set(name, imagePacket);
-}
+  const existing = hydratedImageMap.get(name) ?? { name };
+  hydratedImageMap.set(name, {
+    ...existing,
+    [blobKey[type]]: objectUrl,
+  });
+};
 
 const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:MagicCard[], size:'small'|'large') => {
     let hydratedImageMap = copyImageMap(imageMap);

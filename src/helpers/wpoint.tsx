@@ -78,3 +78,9 @@ export const mulWPoints = (a:WPoint, b:WPoint) => ({
 export const makeWPoint = ({x, y}:PointerEvent|WPoint) => {
   return {x, y}
 }
+
+export const distanceBetweenWPoints = (a:WPoint, b:WPoint) => {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx*dx + dy*dy);
+};

@@ -18,7 +18,7 @@ export interface CardDragState extends DragState {
 export const _cardDragState:CardDragState = {
   ..._dragState,
   resistance:makeWPoint({x:5, y:5}),
-  returnSpeed:20,
+  returnSpeed:50,
   weight:4,
   angle:_wpoint,
   maxAngle:80,
@@ -52,89 +52,91 @@ const useCardDrag:UseCardDrag = (
     subDrag({tag})
   }, []);
 
-  useEffect(() => {
-    // No card selected, so we aren't dragging a card around.
-    if (!dragging) {
-      console.log('not dragging');return;}
+  const drag = () => {
+    let raf:number;
+
+    const returnTick = () => {
+      const cardMapEntry = cardDragMapRef.current.get(index);
+      if (!cardMapEntry) return;
+
+      let state = {...cardMapEntry};
+
+      const start = state.start;
+      const point = state.point;
   
-    let raf: number;
-  
-    const tick = () => {
-      let state = dragStateRef.current;
-      let cardState = cardDragMapRef.current.get(index);
-      if (!cardState) {
-        console.log('oh god why');
-        return;
-      }
+      const dx = start.x - point.x
+      const dy = start.y - point.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      let nextPoint;
     
-      const onReturn = () => {
-        const start = cardState.start;
-        const point = cardState.point;
+      if (distance < state.returnSpeed) {
+        nextPoint = start;
+        state.stage = DragStage.INACTIVE;
+        console.log('terminated!');
   
-        const dx = start.x - point.x
-        const dy = start.y - point.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        let nextPoint;
-    
-        if (distance < cardState.returnSpeed) {
-          nextPoint = start;
-          cardState.stage = DragStage.INACTIVE;
-          console.log('terminated!');
-  
-        } else {
-          const angle = Math.atan2(dy, dx);
+      } else {
+        const angle = Math.atan2(dy, dx);
             
-          const force = {
-            x: Math.cos(angle) * cardState.returnSpeed,
-            y: Math.sin(angle) * cardState.returnSpeed,
-          };
+        const force = {
+          x: Math.cos(angle) * state.returnSpeed,
+          y: Math.sin(angle) * state.returnSpeed,
+        };
   
-          nextPoint = addWPoints(point, force);
-        }
-        
-        cardState.point = nextPoint;
+        nextPoint = addWPoints(point, force);
       }
-  
-      if (cardState.stage === DragStage.RETURNING)
-        onReturn();
-  
-      let nextAngle =
-        (state.delta.x === 0 && state.delta.y === 0) ?
-            fsubWPoints(cardState.angle,
-                        cardState.resistance) :
-            fsubWPoints(caddWPoints(cardState.angle,
-                                    divWPoint(state.delta,
-                                              cardState.weight),
-                                    cardState.maxAngle),
-                        cardState.resistance);
         
-      dragStateRef.current.delta = _wpoint;
-  
-      const terminate = (cardState.stage === DragStage.INACTIVE);
-      if (terminate)
-        cardDragMapRef.current.delete(index);
-      else if (cardState.stage === DragStage.RETURNING)
-        cardDragMapRef.current.set(index, {
-          ...cardState,
-          angle: nextAngle,
-        });
-      else
-        cardDragMapRef.current.set(index, {
-          ...cardState,
-          ...state,
-          angle: nextAngle,
-        });
+      state.point = nextPoint;
+
+      cardDragMapRef.current.set(index, {...state});
       setCardDragMap(copyMap(cardDragMapRef.current));
-  
-      if (!terminate)
-        raf = requestAnimationFrame(tick);
-    };
-    
-    if (dragging)
-      raf = requestAnimationFrame(tick);
-    return () => {
-      //cancelAnimationFrame(raf);
     }
+
+    const dragTick = () => {
+      let contextState = dragStateRef.current;
+      let refState = cardDragMapRef.current.get(index);
+      if (!refState) return;
+      let state = {
+        ...refState,
+        ...contextState
+      };
+
+      const terminate = (state.stage === DragStage.INACTIVE);
+
+      if (terminate) state.stage = DragStage.RETURNING;
+      else {
+        contextState.delta = _wpoint;
+
+        let angle =
+          (state.delta.x === 0 && state.delta.y === 0) ?
+            fsubWPoints(state.angle,
+                        state.resistance) :
+            fsubWPoints(caddWPoints(state.angle,
+                                    divWPoint(state.delta,
+                                              state.weight),
+                                    state.maxAngle),
+                        state.resistance);
+        
+        state.angle = angle;
+      }
+      
+      cardDragMapRef.current.set(index, {...state});
+      setCardDragMap(copyMap(cardDragMapRef.current));
+
+      raf = (!terminate) ? requestAnimationFrame(dragTick) :
+                           requestAnimationFrame(returnTick);
+    };
+
+    if (dragging)
+      raf = requestAnimationFrame(dragTick);
+    return () => {
+
+    };
+  }
+
+  useEffect(() => {
+    if (dragging) 
+      drag()
+  
   }, [dragging]);
 
   const startDraggingCard:StartDraggingCard = (e, index) => {

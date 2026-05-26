@@ -69,8 +69,6 @@ const useCardRotate:UseCardRotate = (
 
       state.angle = (state.angle <= 1) ? 0 : state.angle - 5;
 
-      console.log('returnTick!', state.angle);
-
       ref.current = state;
       setState(ref.current);
 
@@ -85,7 +83,6 @@ const useCardRotate:UseCardRotate = (
         ...ref.current,
         ...dragStateRef.current,
       }
-      console.table(state);
 
       const terminate = (state.stage === DragStage.INACTIVE);
       let ratio;
@@ -113,8 +110,6 @@ const useCardRotate:UseCardRotate = (
         }
       }
       
-      console.log('terminate?', terminate);
-      console.log('ang', state.angle);
       ref.current = state;
       setState(ref.current);
   
