@@ -121,7 +121,11 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
       document.body.style.cursor = "";
     });
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    dragState.current = _dragState;
+
+    dragState.current = {
+      ..._dragState,
+      stage:DragStage.RETURNING
+    };
   }
 
   const handleWindowPointerMove = (e:PointerEvent) => {

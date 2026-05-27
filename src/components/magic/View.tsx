@@ -1,9 +1,10 @@
 'use client'
 
 import { MagicCard, MagicCardClass } from "./types/default";
-import { CardDragMap, CardDragState, FilterState, ImageMap } from "./CardDisplay";
+import { FilterState, ImageMap } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
+import { CardDragMap } from "@/hooks/useCardDrag";
 
 type Props = {
   loaded?:boolean,

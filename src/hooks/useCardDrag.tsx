@@ -2,7 +2,7 @@
 
 import { DragStage, DragState, StartDragging, SubDrag, _dragState } from "@/components/general/DragProvider";
 import { copyMap } from "@/helpers/wmap";
-import { WPoint, makeWPoint, _wpoint, addWPoints, fsubWPoints, caddWPoints, divWPoint } from "@/helpers/wpoint";
+import { WPoint, makeWPoint, _wpoint, addWPoints, fsubWPoints, caddWPoints, divWPoint, mulWPoint, subWPoints } from "@/helpers/wpoint";
 import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 
 const tag = 'card';
@@ -10,7 +10,10 @@ const tag = 'card';
 export type CardDragMap = Map<number, CardDragState>;
 export interface CardDragState extends DragState {
   resistance: WPoint;
-  returnSpeed: number;
+  returnDuration:number;
+  returnStartTime:number;
+  returnStartAngle:WPoint;
+  returnStartPoint:WPoint;
   weight: number;
   angle: WPoint; /* 0-maxAngle */
   maxAngle: number;
@@ -18,7 +21,10 @@ export interface CardDragState extends DragState {
 export const _cardDragState:CardDragState = {
   ..._dragState,
   resistance:makeWPoint({x:5, y:5}),
-  returnSpeed:50,
+  returnDuration:300,
+  returnStartTime:-1,
+  returnStartAngle:_wpoint,
+  returnStartPoint:_wpoint,
   weight:4,
   angle:_wpoint,
   maxAngle:80,
@@ -42,54 +48,64 @@ const useCardDrag:UseCardDrag = (
     startDragging,
     dragStateRef
   ) => {
-  const [index, setIndex] = useState<number>(-1);
+  const [dragging, setDragging] = useState<boolean>(false);
+  const indexRef = useRef<number>(-1);
   const cardDragMapRef = useRef<CardDragMap>(new Map<number, CardDragState>());
   const [cardDragMap, setCardDragMap] = useState<CardDragMap>(new Map<number, CardDragState>());
 
-  const dragging = useMemo(() => index !== -1, [index]);
+  const onDragEnd = () => {
+    const index = indexRef.current;
+    const cardState = cardDragMapRef.current.get(index);
+
+    if (cardState) {
+      cardState.stage = DragStage.RETURNING;
+      cardState.returnStartPoint = cardState.point;
+      cardState.returnStartAngle = cardState.angle;
+      cardDragMapRef.current.set(index, {...cardState});
+      setCardDragMap(copyMap(cardDragMapRef.current));
+    }
+
+    indexRef.current = -1;
+    setDragging(false);
+  }
 
   useEffect(() => {
-    subDrag({tag})
+    subDrag({tag, onDragEnd})
   }, []);
 
-  const drag = () => {
+  const drag = (index:number) => {
     let raf:number;
 
     const returnTick = () => {
       const cardMapEntry = cardDragMapRef.current.get(index);
       if (!cardMapEntry) return;
 
-      let state = {...cardMapEntry};
+      let state = { ...cardMapEntry };
 
-      const start = state.start;
-      const point = state.point;
-  
-      const dx = start.x - point.x
-      const dy = start.y - point.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      let nextPoint;
-    
-      if (distance < state.returnSpeed) {
-        nextPoint = start;
-        state.stage = DragStage.INACTIVE;
-        console.log('terminated!');
-  
-      } else {
-        const angle = Math.atan2(dy, dx);
-            
-        const force = {
-          x: Math.cos(angle) * state.returnSpeed,
-          y: Math.sin(angle) * state.returnSpeed,
-        };
-  
-        nextPoint = addWPoints(point, force);
+      if (state.returnStartTime < 0) state.returnStartTime = Date.now();
+
+      const now = Date.now();
+      const elapsed = now - state.returnStartTime;
+      const timeRatio = Math.min(elapsed / state.returnDuration, 1);
+      const eased = 1 - Math.pow(1 - timeRatio, 3);
+      const diff = subWPoints(state.start, state.returnStartPoint);
+
+      state.point = addWPoints(state.returnStartPoint, mulWPoint(diff, eased));
+      state.angle = mulWPoint(state.returnStartAngle, 1 - eased);
+
+      if (timeRatio >= 1) {
+        state = _cardDragState;
+        cardDragMapRef.current.delete(index);
+        setCardDragMap(copyMap(cardDragMapRef.current));
+        return;
       }
-        
-      state.point = nextPoint;
 
-      cardDragMapRef.current.set(index, {...state});
+      cardDragMapRef.current.set(index, state);
       setCardDragMap(copyMap(cardDragMapRef.current));
-    }
+
+      if (state.stage == DragStage.RETURNING)
+        raf = requestAnimationFrame(returnTick);
+    };
 
     const dragTick = () => {
       let contextState = dragStateRef.current;
@@ -100,34 +116,31 @@ const useCardDrag:UseCardDrag = (
         ...contextState
       };
 
-      const terminate = (state.stage === DragStage.INACTIVE);
+      if (state.stage === DragStage.RETURNING)
+        return raf = requestAnimationFrame(returnTick);
 
-      if (terminate) state.stage = DragStage.RETURNING;
-      else {
-        contextState.delta = _wpoint;
+      contextState.delta = _wpoint;
 
-        let angle =
-          (state.delta.x === 0 && state.delta.y === 0) ?
-            fsubWPoints(state.angle,
-                        state.resistance) :
-            fsubWPoints(caddWPoints(state.angle,
-                                    divWPoint(state.delta,
-                                              state.weight),
-                                    state.maxAngle),
-                        state.resistance);
+      let angle =
+        (state.delta.x === 0 && state.delta.y === 0) ?
+          fsubWPoints(state.angle,
+                      state.resistance) :
+          fsubWPoints(caddWPoints(state.angle,
+                                  divWPoint(state.delta,
+                                            state.weight),
+                                  state.maxAngle),
+                      state.resistance);
         
-        state.angle = angle;
-      }
+      state.angle = angle;
       
       cardDragMapRef.current.set(index, {...state});
       setCardDragMap(copyMap(cardDragMapRef.current));
 
-      raf = (!terminate) ? requestAnimationFrame(dragTick) :
-                           requestAnimationFrame(returnTick);
+      raf = requestAnimationFrame(dragTick);
     };
 
-    if (dragging)
-      raf = requestAnimationFrame(dragTick);
+    raf = requestAnimationFrame(dragTick);
+
     return () => {
 
     };
@@ -135,33 +148,39 @@ const useCardDrag:UseCardDrag = (
 
   useEffect(() => {
     if (dragging) 
-      drag()
+      drag(indexRef.current);
   
   }, [dragging]);
 
   const startDraggingCard:StartDraggingCard = (e, index) => {
     const dragState = startDragging(e, tag);
-    setIndex(index);
+    indexRef.current = index;
     cardDragMapRef.current.set(index, {
       ..._cardDragState,
       ...dragState,
       });
     setCardDragMap(copyMap(cardDragMapRef.current));
+    setDragging(true);
   };
 
   const stopDraggingCard:StopDraggingCard = (e) => {
-    const cardState = cardDragMapRef.current.get(index);
+    /*const cardState = cardDragMapRef.current.get(index);
 
     if (cardState) {
       cardState.stage = DragStage.RETURNING;
+      cardState.returnStartPoint = cardState.point;
+      cardState.returnStartAngle = cardState.angle;
+      cardDragMapRef.current.set(index, {
+      ...cardState,
+      });
       setCardDragMap(copyMap(cardDragMapRef.current));
     }
 
-    setIndex(-1);
+    setIndex(-1);*/
   };
 
   return [
-    index,
+    indexRef.current,
     cardDragMap,
     startDraggingCard,
     stopDraggingCard,

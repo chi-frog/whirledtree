@@ -47,23 +47,6 @@ export type ImagePacket = {
 
 export type ImageMap = Map<string, ImagePacket>;
 
-export type CardDragMap = Map<number, CardDragState>;
-export interface CardDragState extends DragState {
-  resistance: WPoint;
-  returnSpeed: number;
-  weight: number;
-  angle: WPoint; /* 0-maxAngle */
-  maxAngle: number;
-}
-export const _cardDragState:CardDragState = {
-  ..._dragState,
-  resistance:makeWPoint({x:5, y:5}),
-  returnSpeed:20,
-  weight:4,
-  angle:_wpoint,
-  maxAngle:80,
-}
-
 type Props = {};
 const CardDisplay:React.FC<Props> = () => {
   const {url, selected, updateSelected, handlers} = useFilters();

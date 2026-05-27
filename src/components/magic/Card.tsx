@@ -2,10 +2,11 @@
 
 import { _wpoint, areEqualWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
 import { MagicCard, MagicCardClass } from "./types/default";
-import { _cardDragState, CardDragState, ImagePacket } from "./CardDisplay";
+import { ImagePacket } from "./CardDisplay";
 import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
+import { CardDragState } from "@/hooks/useCardDrag";
 
 export type CardLocation =
   'view' | 'modal';
