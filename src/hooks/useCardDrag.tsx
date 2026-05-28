@@ -36,7 +36,6 @@ type UseCardDragReturn = [
   draggingCard:number,
   cardDragMap:CardDragMap,
   startDraggingCard:StartDraggingCard,
-  stopDraggingCard:StopDraggingCard,
 ];
 type UseCardDrag = (
   subDrag:SubDrag,
@@ -163,27 +162,10 @@ const useCardDrag:UseCardDrag = (
     setDragging(true);
   };
 
-  const stopDraggingCard:StopDraggingCard = (e) => {
-    /*const cardState = cardDragMapRef.current.get(index);
-
-    if (cardState) {
-      cardState.stage = DragStage.RETURNING;
-      cardState.returnStartPoint = cardState.point;
-      cardState.returnStartAngle = cardState.angle;
-      cardDragMapRef.current.set(index, {
-      ...cardState,
-      });
-      setCardDragMap(copyMap(cardDragMapRef.current));
-    }
-
-    setIndex(-1);*/
-  };
-
   return [
     indexRef.current,
     cardDragMap,
     startDraggingCard,
-    stopDraggingCard,
   ];
 };
 

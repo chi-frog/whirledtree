@@ -42,6 +42,11 @@ export const Card:React.FC<Props> = ({
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<WPoint>(_wpoint);
 
+  const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
+  const showFront = useMemo(() =>
+    ((!reversed && rotateState.angle <= 90) ||
+     (reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
+
   useEffect(() => {
     if (ref.current) {
       const observer = new ResizeObserver((entries) => {
@@ -225,16 +230,12 @@ export const Card:React.FC<Props> = ({
     const point = {x:e.clientX, y:e.clientY};
 
     if (areEqualWPoints(point, lastMousePress.current) ||
-        (rotateState.angle > 90))
+        (rotateState.angle > 90)) {
       setReversed(!reversed);
       if (flipping)
         forceRotate(90 - (rotateState.angle - 90));
+    }
   };
-
-  const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
-  const showFront = useMemo(() =>
-    ((!reversed && rotateState.angle <= 90) ||
-     (reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
 
   return (
     <div

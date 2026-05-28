@@ -63,17 +63,19 @@ const useCardRotate:UseCardRotate = (
     let raf: number;
 
     const returnTick = () => {
-      let state = {
-        ...ref.current,
-      }
+      let state = {...ref.current};
+      let terminate = (state.angle <= 0 && state.angle > -5) ||
+                      (state.angle > 0 && state.angle < 5);
 
-      state.angle = (state.angle <= 1) ? 0 : state.angle - 5;
+      state.angle = (terminate) ? 0 : state.angle - 5 * Math.sign(state.angle);
+
+      if (!terminate)
+        raf = requestAnimationFrame(returnTick);
+      else
+        state.stage = DragStage.INACTIVE;
 
       ref.current = state;
       setState(ref.current);
-
-      if (state.angle !== 0)
-        raf = requestAnimationFrame(returnTick);
     }
   
     const rotateTick = () => {
@@ -82,43 +84,42 @@ const useCardRotate:UseCardRotate = (
       let state = {
         ...ref.current,
         ...dragStateRef.current,
-      }
+      };
 
-      const terminate = (state.stage === DragStage.INACTIVE);
-      let ratio;
+      if (state.stage === DragStage.RETURNING)
+        return raf = requestAnimationFrame(returnTick);
 
-      if (terminate) state.stage = DragStage.RETURNING;
-      else {
-        if (dir > 0) {
-          let normalizedXDistance = state.point.x - state.start.x;
-          if (normalizedXDistance < 0) normalizedXDistance = 0;
-          else if (normalizedXDistance > (dims.width - state.start.x + dims.x))
-            normalizedXDistance = (dims.width - state.start.x + dims.x);   
+      else if (dir > 0) {
+        let normalizedXDistance = state.point.x - state.start.x;
           
-          const ratio = normalizedXDistance /
-                        (dims.width - state.start.x + dims.x);
-          state.angle = ratio * 180;
-        } else {
-          let normalizedXDistance = state.point.x - state.start.x;
-          if (normalizedXDistance > 0) normalizedXDistance = 0;
-          else if ((dir < 0) && normalizedXDistance < (-1*(dims.width - (dims.width + dims.x - state.start.x))))
-            normalizedXDistance = -1*(dims.width - (dims.width + dims.x - state.start.x));
-          const ratio = normalizedXDistance /
-                        (dims.width - (dims.width + dims.x - state.start.x));
+        if (normalizedXDistance < 0) normalizedXDistance = 0;
+        else if (normalizedXDistance > (dims.width - state.start.x + dims.x))
+          normalizedXDistance = (dims.width - state.start.x + dims.x);   
+          
+        const ratio = normalizedXDistance /
+                      (dims.width - state.start.x + dims.x);
+        state.angle = ratio * 180;
+      } else {
+        let normalizedXDistance = state.point.x - state.start.x;
 
-          state.angle = -1 * ratio * 180;
-        }
+        if (normalizedXDistance > 0) normalizedXDistance = 0;
+        else if ((dir < 0) && (normalizedXDistance < (-1*(dims.width - (dims.width + dims.x - state.start.x)))))
+          normalizedXDistance = -1*(dims.width - (dims.width + dims.x - state.start.x));
+        const ratio = normalizedXDistance /
+                      (dims.width - (dims.width + dims.x - state.start.x));
+
+        state.angle = -1 * ratio * 180;
       }
       
       ref.current = state;
       setState(ref.current);
   
-      raf = (!terminate) ? requestAnimationFrame(rotateTick) :
-                           requestAnimationFrame(returnTick);
+      raf = requestAnimationFrame(rotateTick);
     };
     
     if (rotating)
       raf = requestAnimationFrame(rotateTick);
+
     return () => {
       //cancelAnimationFrame(raf);
     }
@@ -126,18 +127,17 @@ const useCardRotate:UseCardRotate = (
 
   const startRotatingCard:StartRotatingCard = (e) => {
     const dragState = startDragging(e, tag);
+
     ref.current = {
       ...ref.current,
-      ...dragState
-    }
-    setState(ref.current)
+      ...dragState};
+    setState(ref.current);
   };
 
   const forceRotate = (angle:number) => {
     ref.current = {
       ...ref.current,
-      angle:angle
-    }
+      angle:angle};
     setState(ref.current);
   }
 

@@ -59,7 +59,7 @@ const CardDisplay:React.FC<Props> = () => {
   const {getMap, getRef} = useRefMap();
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
-  const [draggingCardIndex, cardDragMap, startDraggingCard, stopDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
+  const [draggingCardIndex, cardDragMap, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
 
   const dragging = useMemo(() => {
     return dragState.stage === DragStage.ACTIVE;
@@ -146,7 +146,6 @@ const CardDisplay:React.FC<Props> = () => {
     e.stopPropagation();
 
     setDragState(dragStateRef.current);
-    stopDraggingCard(e);
 
     if ((e.button !== 2) &&
         (e.clientX === dragState.start.x) &&
