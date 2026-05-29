@@ -22,12 +22,13 @@ export type FilterUpdate = {
   property:keyof Selected,
   value:string,
 }
+export type FilterUpdateFunction = (...updates:FilterUpdate[])=>void;
 
 const useFilters = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
   const url = constructSearchUrl(selected.set, selected.format, selected.name);
 
-  const updateSelected = (...updates:FilterUpdate[]) => {
+  const updateSelected:FilterUpdateFunction = (...updates:FilterUpdate[]) => {
     let newSelected = {...selected};
 
     updates.forEach((_update) => {

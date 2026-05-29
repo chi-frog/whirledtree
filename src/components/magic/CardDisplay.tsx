@@ -187,6 +187,7 @@ const CardDisplay:React.FC<Props> = () => {
       <Modal
       close={()=>setModalShown(false)}
       card={modalCard}
+      updateSelected={updateSelected}
       index={cards.findIndex((_card) => (_card === modalCard))}
       imagePackets={(!frontImage) ? [] :
                     (backImage)   ? [frontImage, backImage] :

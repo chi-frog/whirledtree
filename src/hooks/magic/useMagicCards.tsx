@@ -20,6 +20,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       reversed:false,
       class:MagicCardClass.NORMAL,
       set:card.set,
+      typeLine:card.type_line,
       imageUris: {
         small: card.image_uris.small,
         large: card.image_uris.large,
@@ -34,12 +35,14 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       reversed:false,
       class:MagicCardClass.DOUBLESIDED,
       set:card.set,
+      typeLine:card.type_line,
       imageUris: {
         small: front.image_uris.small,
         large: front.image_uris.large,
       },
       back:({
         name:back.name,
+        typeLine:back.type_line,
         imageUris: {
           small: back.image_uris.small,
           large: back.image_uris.large,
@@ -53,6 +56,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       reversed:false,
       class:MagicCardClass.DOUBLEFACED,
       set:card.set,
+      typeLine:card.type_line,
       imageUris: {
         small: card.image_uris.small,
         large: card.image_uris.large,
@@ -144,7 +148,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
         (!cardData[0])) return [];
     
     return cardData.filter((_card, _index) => 
-      cardData.findIndex((__card) => __card.name === _card.name) === _index);
+            cardData.findIndex((__card) => __card.name === _card.name) === _index);
   }, [cardData]);
 
   // Hydrate image map when cards change

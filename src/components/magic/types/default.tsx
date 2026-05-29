@@ -10,6 +10,7 @@ export type MagicCard = {
   name: string,
   legalities: any,
   set: string,
+  typeLine: string,
   imageUris: { small: string, large: string },
 } & (
   | {

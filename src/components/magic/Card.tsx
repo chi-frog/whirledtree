@@ -162,6 +162,7 @@ export const Card:React.FC<Props> = ({
     if (handlePointerDown)
       handlePointerDown(e);
     glow(true);
+    console.log('card', card);
   }
 
   const handleCardPointerUp = (e:React.PointerEvent) => {

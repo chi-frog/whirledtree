@@ -7,6 +7,7 @@ import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
 import { _dragState, } from "../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
+import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -63,6 +64,7 @@ function createSearchTooltip({
 type Props = {
   close:()=>void,
   card:MagicCard|null,
+  updateSelected:FilterUpdateFunction,
   index:number,
   imagePackets:ImagePacket[],
 }
@@ -72,6 +74,7 @@ const tooltipMargin = 5;
 const Modal:React.FC<Props> = ({
     close,
     card,
+    updateSelected,
     index,
     imagePackets
   }:Props) => {
@@ -131,7 +134,7 @@ const Modal:React.FC<Props> = ({
   }, [ref.current]);
 
   const handleTooltipPointerDown:PointerEventHandler = (e) => {
-    console.log('Searching for ', selection);
+    updateSelected({property:'name', value:selection});
   };
 
   const handleTooltipPointerEnter:PointerEventHandler = (e) => {
@@ -204,13 +207,21 @@ const Modal:React.FC<Props> = ({
         }
         <div id="text" style={{
           flexGrow:1,
+          display:'flex',
+          flexDirection:'column',
         }}>
-          <h3 className="selectable"
+          <h3 className="selectable name"
             style={{
             marginTop:'30px',
             fontSize:'24px',
             fontWeight:'bold',
           }}>{card?.name}</h3>
+          <h3 className="selectable typeLine"
+            style={{
+            marginTop:'30px',
+            fontSize:'24px',
+            fontWeight:'bold',
+          }}>{card?.typeLine}</h3>
         </div>
       </div>
       <div id="searchTooltip" ref={ref}
