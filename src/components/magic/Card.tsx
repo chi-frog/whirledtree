@@ -1,7 +1,7 @@
 'use client'
 
 import { _wpoint, areEqualWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
-import { MagicCard, MagicCardClass } from "./types/default";
+import { isCardDoublesided, MagicCard, MagicCardLayout } from "./types/default";
 import { ImagePacket } from "./CardDisplay";
 import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
@@ -80,10 +80,10 @@ export const Card:React.FC<Props> = ({
   const backImageSrc = useMemo(() =>
     ((!card) ||
      (imagePackets.length <= 1) ||
-     (card.class !== MagicCardClass.DOUBLESIDED)) ? undefined :
+     (!isCardDoublesided(card))) ? undefined :
     (imagePackets[1].largeBlob)                   ? imagePackets[1].largeBlob :
                                                     imagePackets[1].smallBlob
-    , [imagePackets, card.class]);
+    , [imagePackets, card.layout]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -209,7 +209,7 @@ export const Card:React.FC<Props> = ({
   const doubleSidedCircleOffset:{x:number, y:number, w:number, h:number} = useMemo(() => {
     const def = {x:0, y:0, w:0, h:0};
     
-    if (card.class === MagicCardClass.DOUBLESIDED) {
+    if (isCardDoublesided(card)) {
       if (!ref.current) return def;
 
       return (card.set === 'tla') ? tlaRatios(dims) :
@@ -288,9 +288,9 @@ export const Card:React.FC<Props> = ({
         marginTop:'auto',
         position: 'absolute',
         visibility: (!showFront) ? 'visible' : 'hidden',
-        display:(card.class === MagicCardClass.DOUBLESIDED) ? 'block' : 'none'
+        display:(isCardDoublesided(card)) ? 'block' : 'none'
         }}/>
-      {(card.class === MagicCardClass.DOUBLESIDED) &&
+      {(isCardDoublesided(card)) &&
       <div 
         onPointerDown={handleDoublesidedPointerDown}
         onPointerUp={handleDoublesidedPointerUp}

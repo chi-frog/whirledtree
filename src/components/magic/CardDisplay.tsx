@@ -2,7 +2,7 @@
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
-import { MagicCard, MagicCardClass, } from "./types/default";
+import { isCardDoublesided, MagicCard, MagicCardLayout, } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
@@ -185,7 +185,7 @@ const CardDisplay:React.FC<Props> = () => {
     if (!modalShown) return <></>;
     const card = cards[modalIndex];
     const frontImage = imageMap.get(card.name);
-    const backImage = (card.back && card.class === MagicCardClass.DOUBLESIDED) ?
+    const backImage = (card.back && isCardDoublesided(card)) ?
       imageMap.get(card.back.name) : null;
 
     return (

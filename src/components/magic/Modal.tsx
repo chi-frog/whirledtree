@@ -1,7 +1,7 @@
 'use client'
 
 import { PointerEventHandler, useEffect, useRef, useState } from "react";
-import { MagicCard, MagicCardClass } from "./types/default";
+import { MagicCard, } from "./types/default";
 import { ImagePacket } from "./CardDisplay";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";

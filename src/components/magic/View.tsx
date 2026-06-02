@@ -1,6 +1,6 @@
 'use client'
 
-import { MagicCard, MagicCardClass } from "./types/default";
+import { isCardDoublesided, MagicCard } from "./types/default";
 import { FilterState, ImageMap } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
@@ -42,7 +42,7 @@ const View:React.FC<Props> = ({
     const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
     const card = cards[index];
 
-    if (card.back && card.class === MagicCardClass.DOUBLESIDED) {
+    if (card.back && isCardDoublesided(card)) {
       const backImagePacket = imageMap.get(card.back.name);
       if (backImagePacket) imagePackets.push(backImagePacket);
     }

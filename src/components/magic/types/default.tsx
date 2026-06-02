@@ -1,33 +1,55 @@
 import { ANY } from "@/hooks/magic/useFilters"
 
-export enum MagicCardClass {
+export enum MagicCardLayout {
   NORMAL='normal',
-  DOUBLESIDED='doublesided',
-  DOUBLEFACED='doublefaced',
-};
+  SPLIT='split',
+  FLIP='flip',
+  TRANSFORM='transform',
+  MODAL_DFC='modal_dfc',
+  MELD='meld',
+  LEVELER='leveler',
+  CLASS='class',
+  CASE='case',
+  SAGA='saga',
+  ADVENTURE='adventure',
+  PREPARE='prepare',
+  MUTATE='mutate',
+  PROTOTYPE='prototype',
+  BATTLE='battle',
+  PLANAR='planar',
+  SCHEME='scheme',
+  VANGUARD='vanguard',
+  TOKEN='token',
+  DFC_TOKEN='double_faced_token',
+  EMBLEM='emblem',
+  AUGMENT='augment',
+  HOST='host',
+  ART_SERIES='art_series',
+  REVERSIBLE='reversible',
+  };
+
+export const isCardDoublesided = (card:MagicCard) =>
+  (card.layout === MagicCardLayout.MODAL_DFC) ||
+  (card.layout === MagicCardLayout.TRANSFORM);
+
+export const isCardMultiple = (card:MagicCard) =>
+  (card.layout === MagicCardLayout.ADVENTURE) ||
+  (card.layout === MagicCardLayout.PREPARE) ||
+  (card.layout === MagicCardLayout.PROTOTYPE);
 
 export type MagicCard = {
   reversed:boolean,
-  name: string,
-  legalities: any,
-  set: string,
-  typeLine: string,
+  name:string,
+  legalities:any,
+  set:string,
+  typeLine:string,
   alchemy:boolean,
   siblings:MagicCard[],
-  back:MagicCard|undefined,
-  imageUris: { small: string, large: string },
-} & (
-  | {
-      class:MagicCardClass.NORMAL,
-    }
-  | {
-      class:MagicCardClass.DOUBLEFACED,
-      extra:MagicCard,
-    }
-  | {
-      class:MagicCardClass.DOUBLESIDED,
-    }
-);
+  imageUris:{ small: string, large: string },
+  layout:MagicCardLayout,
+  extra?:MagicCard,
+  back?:MagicCard,
+  };
 
 export type MagicSet = {
   name:string,

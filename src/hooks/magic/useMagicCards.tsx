@@ -1,6 +1,6 @@
 'use client'
 
-import { MagicCard, MagicCardClass } from "@/components/magic/types/default";
+import { isCardDoublesided, isCardMultiple, MagicCard, MagicCardLayout } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
 import { useEffect, useMemo, useState } from "react";
 import { WError } from "@/components/magic/CardDisplay";
@@ -13,70 +13,57 @@ type ImagePacket = {
 export type ImageMap = Map<string, ImagePacket>;
 
 const transformMagicCard: Transform<MagicCard> = (card) => {
-  if (card.card_faces === undefined) {
-    return {
-      name: card.name,
-      legalities: card.legalities,
-      reversed:false,
-      class:MagicCardClass.NORMAL,
-      set:card.set,
-      typeLine:card.type_line,
-      alchemy:false,
-      siblings:[],
-      back:undefined,
-      imageUris: {
-        small: card.image_uris.small,
-        large: card.image_uris.large,
-      }
-    };
-  } else if (card.image_uris === undefined) {
+  let transformedCard = {
+    reversed:false,
+    name:card.name, //!
+    layout:(card.layout) as MagicCardLayout,
+    legalities:card.legalities,
+    set:card.set,
+    typeLine:card.type_line, //!
+    alchemy:false,
+    siblings:[],
+    back:({}) as MagicCard,
+    extra:({}) as MagicCard,
+    imageUris:{
+      small:card.image_uris?.small,
+      large:card.image_uris?.large,
+    }
+  };
+
+  if (isCardDoublesided(transformedCard)) {
+    console.log('Doublesided', transformedCard);
+    console.log('-----------', card);
     const front = card.card_faces[0];
     const back = card.card_faces[1];
-    return {
-      name: front.name,
-      legalities: card.legalities,
-      reversed:false,
-      class:MagicCardClass.DOUBLESIDED,
-      set:card.set,
-      typeLine:front.type_line,
-      alchemy:false,
-      siblings:[],
-      imageUris: {
-        small: front.image_uris.small,
-        large: front.image_uris.large,
+
+    transformedCard.name = front.name;
+    transformedCard.typeLine = front.type_line;
+    transformedCard.imageUris = {
+      small:front.image_uris.small,
+      large:front.image_uris.large,};
+    transformedCard.back = ({
+      name:back.name,
+      typeLine:back.type_line,
+      imageUris:{
+        small:back.image_uris.small,
+        large:back.image_uris.large,
       },
-      back:({
-        name:back.name,
-        typeLine:back.type_line,
-        imageUris: {
-          small: back.image_uris.small,
-          large: back.image_uris.large,
-        },
-      }) as MagicCard
-    };
-  } else {
-    const normal = card.card_faces[0];
+    }) as MagicCard
+  } else if (isCardMultiple(transformedCard)) {
+    console.log('Multiple', transformedCard);
+    const main = card.card_faces[0];
     const extra = card.card_faces[1];
-    return {
-      name: normal.name,
-      legalities: card.legalities,
-      reversed:false,
-      class:MagicCardClass.DOUBLEFACED,
-      set:card.set,
-      typeLine:normal.type_line,
-      alchemy:false,
-      siblings:[],
-      back:undefined,
-      imageUris: {
-        small: card.image_uris.small,
-        large: card.image_uris.large,
-      },
-      extra:({
-        name:extra.name,
-        typeLine:extra.type_line,
-      }) as MagicCard,
-    };
+
+    transformedCard.name = main.name;
+    transformedCard.typeLine = main.type_line,
+    transformedCard.extra = {
+      ...transformedCard,
+      name:extra.name,
+      typeLine:extra.type_line,
+    }
   }
+
+  return transformedCard;
 };
 
 const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
@@ -119,11 +106,11 @@ const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:MagicCar
     let hydratedImageMap = copyImageMap(imageMap);
     
     await Promise.all(cards.map(async (_card, _index) => {
-      let names = (_card.class !== MagicCardClass.DOUBLESIDED) ?
+      let names = (!isCardDoublesided(_card)) ?
         [_card.name] :
         [_card.name, (_card.back) ? _card.back.name : ""];
 
-      let uris = (_card.class !== MagicCardClass.DOUBLESIDED) ?
+      let uris = (!isCardDoublesided(_card)) ?
         [_card.imageUris[size]] :
         [_card.imageUris[size], (_card.back) ? _card.back.imageUris[size] : ""];
 
