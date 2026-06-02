@@ -1,7 +1,7 @@
 'use client'
 
 import { PointerEventHandler, useEffect, useRef, useState } from "react";
-import { MagicCard } from "./types/default";
+import { MagicCard, MagicCardClass } from "./types/default";
 import { ImagePacket } from "./CardDisplay";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
@@ -63,7 +63,8 @@ function createSearchTooltip({
 
 type Props = {
   close:()=>void,
-  card:MagicCard|null,
+  cards:MagicCard[],
+  changeCard:(index:number, card:MagicCard)=>void,
   updateSelected:FilterUpdateFunction,
   index:number,
   imagePackets:ImagePacket[],
@@ -73,7 +74,8 @@ const tooltipMargin = 5;
 
 const Modal:React.FC<Props> = ({
     close,
-    card,
+    cards,
+    changeCard,
     updateSelected,
     index,
     imagePackets
@@ -86,6 +88,8 @@ const Modal:React.FC<Props> = ({
   const {subSelection} = useSelectionContext();
   const ref = useRef(null);
   const divRef = useRef(null);
+
+  const card = cards[index];
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -200,6 +204,7 @@ const Modal:React.FC<Props> = ({
             heightString={'100%'}
             imageHeightString={'100%'}
             card={card}
+            changeCard={changeCard.bind(null, index)}
             imagePackets={imagePackets}
             handlePointerDown={handleCardPointerDown}
             handlePointerUp={handleCardPointerUp}
@@ -212,16 +217,17 @@ const Modal:React.FC<Props> = ({
         }}>
           <h3 className="selectable name"
             style={{
-            marginTop:'30px',
-            fontSize:'24px',
+            marginTop:'28px',
+            fontSize:'30px',
             fontWeight:'bold',
-          }}>{card?.name}</h3>
+          }}>{(!card?.reversed) ? card?.name :
+                                  card?.back?.name}</h3>
           <h3 className="selectable typeLine"
             style={{
-            marginTop:'30px',
-            fontSize:'24px',
+            fontSize:'20px',
             fontWeight:'bold',
-          }}>{card?.typeLine}</h3>
+          }}>{(!card?.reversed) ? card?.typeLine :
+                                  card?.back?.typeLine}</h3>
         </div>
       </div>
       <div id="searchTooltip" ref={ref}

@@ -50,20 +50,24 @@ export type ImageMap = Map<string, ImagePacket>;
 type Props = {};
 const CardDisplay:React.FC<Props> = () => {
   const {url, selected, updateSelected, handlers} = useFilters();
-  const [errorMap, loadMap, formats, sets, cards, imageMap, hydrateLargeImage] = useMagicDatabase(url);
+  const [errorMap, loadMap, formats, sets, databaseCards, imageMap, hydrateLargeImage] = useMagicDatabase(url);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
   const [modalShown, setModalShown] = useState<boolean>(false);
-  const [modalCard, setModalCard] = useState<MagicCard|null>(null);
+  const [modalIndex, setModalIndex] = useState<number>(-1);
   const {getMap, getRef} = useRefMap();
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [draggingCardIndex, cardDragMap, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
+  const [cards, setCards] = useState<MagicCard[]>(databaseCards);
 
-  const dragging = useMemo(() => {
-    return dragState.stage === DragStage.ACTIVE;
-  }, [dragState.stage]);
+  const changeCard = (index:number, card:MagicCard) =>
+    setCards(cards.map((_card, _index) => (_index === index) ? card : _card));
+
+  useEffect(() => setCards(databaseCards), [databaseCards]);
+
+  const dragging = useMemo(() => dragState.stage === DragStage.ACTIVE, [dragState.stage]);
 
   const onDragView = (e:PointerEvent) => {
     window.scrollTo(window.scrollX + dragStateRef.current.delta.x, window.scrollY - dragStateRef.current.delta.y*2);
@@ -151,7 +155,7 @@ const CardDisplay:React.FC<Props> = () => {
         (e.clientX === dragState.start.x) &&
         (e.clientY === dragState.start.y)) {
       setModalShown(true);
-      setModalCard(cards[index]);
+      setModalIndex(index);
       hydrateLargeImage(index);
     }
   };
@@ -178,17 +182,19 @@ const CardDisplay:React.FC<Props> = () => {
   }, [errorMap]);
 
   const modal = () => {
-    if (!modalShown || !modalCard) return <></>;
-    const frontImage = imageMap.get(modalCard.name);
-    const backImage = (modalCard.class === MagicCardClass.DOUBLESIDED) ?
-      imageMap.get(modalCard.back.name) : null;
+    if (!modalShown) return <></>;
+    const card = cards[modalIndex];
+    const frontImage = imageMap.get(card.name);
+    const backImage = (card.back && card.class === MagicCardClass.DOUBLESIDED) ?
+      imageMap.get(card.back.name) : null;
 
     return (
       <Modal
       close={()=>setModalShown(false)}
-      card={modalCard}
+      cards={cards}
+      changeCard={changeCard}
       updateSelected={updateSelected}
-      index={cards.findIndex((_card) => (_card === modalCard))}
+      index={modalIndex}
       imagePackets={(!frontImage) ? [] :
                     (backImage)   ? [frontImage, backImage] :
                                     [frontImage]}
@@ -218,6 +224,7 @@ const CardDisplay:React.FC<Props> = () => {
         yCutoffHidden={yCutoffHidden}
         numCardsRow={numCardsRow}
         cards={cards}
+        changeCard={changeCard}
         imageMap={imageMap}
         handleCardPointerDown={handleCardPointerDown}
         handleCardPointerUp={handleCardPointerUp}/>

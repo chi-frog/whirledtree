@@ -15,6 +15,7 @@ type Props = {
   yCutoffHidden:number,
   numCardsRow:number,
   cards:MagicCard[],
+  changeCard:(index:number, card:MagicCard)=>void,
   imageMap:ImageMap,
   handleCardPointerDown:(e:React.PointerEvent, index:number) => void,
   handleCardPointerUp:(e:React.PointerEvent, index:number) => void,
@@ -29,6 +30,7 @@ const View:React.FC<Props> = ({
     yCutoffHidden,
     numCardsRow,
     cards,
+    changeCard,
     imageMap,
     handleCardPointerDown,
     handleCardPointerUp,
@@ -38,9 +40,10 @@ const View:React.FC<Props> = ({
     const cardDragState = cardDragMap.get(index);
     const frontImagePacket = imageMap.get(name);
     const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
+    const card = cards[index];
 
-    if (cards[index].class === MagicCardClass.DOUBLESIDED) {
-      const backImagePacket = imageMap.get(cards[index].back.name);
+    if (card.back && card.class === MagicCardClass.DOUBLESIDED) {
+      const backImagePacket = imageMap.get(card.back.name);
       if (backImagePacket) imagePackets.push(backImagePacket);
     }
 
@@ -52,6 +55,7 @@ const View:React.FC<Props> = ({
         widthString={`calc('100%/${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
+        changeCard={changeCard.bind(null, index)}
         imagePackets={imagePackets}
         handlePointerDown={(e:React.PointerEvent) => handleCardPointerDown(e, index)}
         handlePointerUp={(e:React.PointerEvent) => handleCardPointerUp(e, index)}

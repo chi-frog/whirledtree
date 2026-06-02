@@ -7,10 +7,14 @@ export enum MagicCardClass {
 };
 
 export type MagicCard = {
+  reversed:boolean,
   name: string,
   legalities: any,
   set: string,
   typeLine: string,
+  alchemy:boolean,
+  siblings:MagicCard[],
+  back:MagicCard|undefined,
   imageUris: { small: string, large: string },
 } & (
   | {
@@ -18,10 +22,10 @@ export type MagicCard = {
     }
   | {
       class:MagicCardClass.DOUBLEFACED,
+      extra:MagicCard,
     }
   | {
       class:MagicCardClass.DOUBLESIDED,
-      back:MagicCard,
     }
 );
 

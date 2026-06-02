@@ -17,6 +17,7 @@ type Props = {
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
+  changeCard:(card:MagicCard)=>void,
   imagePackets:ImagePacket[],
   handlePointerDown?:(e:React.PointerEvent) => void,
   handlePointerUp?:(e:React.PointerEvent) => void,
@@ -28,6 +29,7 @@ export const Card:React.FC<Props> = ({
     heightString,
     imageHeightString,
     card,
+    changeCard,
     imagePackets,
     handlePointerDown,
     handlePointerUp,
@@ -35,17 +37,16 @@ export const Card:React.FC<Props> = ({
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
   const [mousedover, setMousedover] = useState<boolean>(false);
-  const [reversed, setReversed] = useState<boolean>(false);
   const [rotateState, startRotating, forceRotate] =
-    useCardRotate(dims, (reversed) ? -1 : 1, subDrag, startDragging, dragStateRef);
+    useCardRotate(dims, (card.reversed) ? -1 : 1, subDrag, startDragging, dragStateRef);
   const ref = useRef<null|HTMLDivElement>(null);
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<WPoint>(_wpoint);
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
-    ((!reversed && rotateState.angle <= 90) ||
-     (reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
+    ((!card.reversed && rotateState.angle <= 90) ||
+     (card.reversed && rotateState.angle > 90)), [card.reversed, rotateState.angle]);
 
   useEffect(() => {
     if (ref.current) {
@@ -229,10 +230,13 @@ export const Card:React.FC<Props> = ({
     e.preventDefault();
     e.stopPropagation();
     const point = {x:e.clientX, y:e.clientY};
+    console.log('here!');
+    console.log(point);
+    console.log(lastMousePress.current);
 
-    if (areEqualWPoints(point, lastMousePress.current) ||
+    if ((areEqualWPoints(point, lastMousePress.current)) ||
         (rotateState.angle > 90)) {
-      setReversed(!reversed);
+        changeCard({...card, reversed:!card.reversed})
       if (flipping)
         forceRotate(90 - (rotateState.angle - 90));
     }
@@ -252,7 +256,7 @@ export const Card:React.FC<Props> = ({
         overflow:'hidden',
         borderRadius:(location ==='view') ? '12px' : '20px',
         border:'1px solid rgba(255, 255, 255, 0.7)',
-        minWidth:'20px',
+        minWidth:'fit-content',
         transform:
           (dragState && dragState.stage !== DragStage.INACTIVE) ?
             `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :

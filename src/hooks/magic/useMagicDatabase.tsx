@@ -49,6 +49,7 @@ type UseMagicData = (
   url:string,
 ) => Return;
 const useMagicDatabase:UseMagicData = (url) => {
+  //const [symbols, setSymbols] = useMagicSymbols();
   const [formats, setFormats] = useState<MagicFormat[]>([]);
   const [setsError, setsLoaded, sets] = useMagicSets();
   const [cardsError, cardsLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage] = useMagicCards(url);
