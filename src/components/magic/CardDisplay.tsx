@@ -2,7 +2,7 @@
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
-import { isCardDoublesided, MagicCard, MagicCardLayout, } from "./types/default";
+import { isCardDoublesided, MagicCard, MagicCardLayout, MagicFormat, MagicSet, } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
@@ -11,7 +11,8 @@ import View from "./View";
 import { _wpoint, makeWPoint, WPoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import useCardDrag from "@/hooks/useCardDrag";
-import useMagicDatabase from "@/hooks/magic/useMagicDatabase";
+import useMagicDatabase, { ErrorMap, LoadMap } from "@/hooks/magic/useMagicDatabase";
+import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 
 const yCutoffHidden = 10;
 
@@ -47,10 +48,19 @@ export type ImagePacket = {
 
 export type ImageMap = Map<string, ImagePacket>;
 
-type Props = {};
-const CardDisplay:React.FC<Props> = () => {
-  const {url, selected, updateSelected, handlers} = useFilters();
-  const [errorMap, loadMap, formats, sets, databaseCards, imageMap, hydrateLargeImage] = useMagicDatabase(url);
+type Props = {
+  errorMap:ErrorMap,
+  loadMap:LoadMap,
+  formats:MagicFormat[],
+  sets:MagicSet[],
+  databaseCards:MagicCard[],
+  imageMap:ImageMap,
+  hydrateLargeImage:(index:number)=>void,
+};
+const CardDisplay:React.FC<Props> = ({
+  errorMap, loadMap, formats, sets, databaseCards, imageMap, hydrateLargeImage
+}) => {
+  const {selected, updateSelected, handlers} = useFilters();
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const [filterGlow, setFilterGlow] = useState<number>(0);
@@ -60,6 +70,11 @@ const CardDisplay:React.FC<Props> = () => {
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [draggingCardIndex, cardDragMap, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
+
+  const url = useMemo(() =>
+    constructSearchUrl(selected),
+    [selected]);
+
   const [cards, setCards] = useState<MagicCard[]>(databaseCards);
 
   const changeCard = (index:number, card:MagicCard) =>
@@ -181,6 +196,14 @@ const CardDisplay:React.FC<Props> = () => {
     return cardsError ? cardsError.length > 0 : true;
   }, [errorMap]);
 
+  const cardsLoaded:boolean = useMemo(() => {
+    const cardsLoaded = loadMap.get('cards');
+    console.log('loadMap', loadMap);
+    return cardsLoaded === true;
+  }, [loadMap]);
+
+  console.log('cardsLoaded', cardsLoaded);
+
   const modal = () => {
     if (!modalShown) return <></>;
     const card = cards[modalIndex];
@@ -200,7 +223,7 @@ const CardDisplay:React.FC<Props> = () => {
                                     [frontImage]}
       />
     );
-  }
+  };
 
   return (
   <div
@@ -216,7 +239,7 @@ const CardDisplay:React.FC<Props> = () => {
       selectedFormat={selected.format} onChangeFormat={handlers.format}
       selectedName={selected.name} onChangeName={handlers.name}
       sets={sets} cards={cards} formats={formats}/>
-    {!hasCardsError && 
+    {(cards.length > 0) && !hasCardsError && 
       <View loaded={loadMap.get('images')} getRef={getRef}
         dragState={dragState}
         cardDragMap={cardDragMap}
@@ -229,7 +252,7 @@ const CardDisplay:React.FC<Props> = () => {
         handleCardPointerDown={handleCardPointerDown}
         handleCardPointerUp={handleCardPointerUp}/>
     }
-    {cards.length === 0 &&
+    {(cards.length === 0) && (!hasCardsError) && (cardsLoaded) &&
       <div id="error_screen" style={{
         width:'100vw',
         height: '100vh',
@@ -240,6 +263,32 @@ const CardDisplay:React.FC<Props> = () => {
         fontWeight:'bold',
       }}>
         <h1> No cards matched your search! </h1>
+      </div>
+    }
+    {(hasCardsError) &&
+      <div id="error_screen" style={{
+        width:'100vw',
+        height: '100vh',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        fontSize:'48px',
+        fontWeight:'bold',
+      }}>
+        <h1> Error With Search! </h1>
+      </div>
+    }
+    {(!cardsLoaded) &&
+      <div id="error_screen" style={{
+        width:'100vw',
+        height: '100vh',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        fontSize:'48px',
+        fontWeight:'bold',
+      }}>
+        <h1> Loading Cards... </h1>
       </div>
     }
     {modal()}

@@ -11,17 +11,22 @@ const bitSearch = 'search?q=';
 const bitSearchFormat = 'f';
 const bitSearchSet = 's';
 
-export const constructSearchUrl = (
-    set:string,
-    format:string,
-    name:string,
-  ) => {
+type PossibleSelections = {
+  set?:string,
+  format?:string,
+  name?:string,
+}
+export const constructSearchUrl = ({
+    set,
+    format,
+    name,
+  }:PossibleSelections={}) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
 
   if (name)
     url += name;
 
-  if (set !== ANY) {
+  if (set && set !== ANY) {
     if (name)
       url += "+";
     url += bitSearchSet + ':' + set;
@@ -31,7 +36,7 @@ export const constructSearchUrl = (
     url += bitSearchSet + ':'
   }
   
-  if (format !== ANY) {
+  if (format && format !== ANY) {
     if (set !== ANY)
       url += "+";
     url += bitSearchFormat + ':' + format;

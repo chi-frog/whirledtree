@@ -22,14 +22,14 @@ type DataKeys = {
   'cards':string,
   'images':string,
 };
-type ErrorMap = Map<keyof DataKeys, WError[]>;
+export type ErrorMap = Map<keyof DataKeys, WError[]>;
 const _errorMap:ErrorMap = new Map([
   ['formats', []],
   ['sets', []],
   ['cards', []],
   ['images', []],
 ])
-type LoadMap = Map<keyof DataKeys, boolean>;
+export type LoadMap = Map<keyof DataKeys, boolean>;
 const _loadMap:LoadMap = new Map([
   ['formats', false],
   ['sets', false],
@@ -64,7 +64,7 @@ const useMagicDatabase:UseMagicData = (url) => {
 
   useMemo(() => {
     if (formats.length !== 0) 
-      setLoadMap(loadMap.set('formats', true));
+      setLoadMap(copyMap(loadMap.set('formats', true)));
     else {
       const formatsErrors = errorMap.get('formats');
       if (!formatsErrors) return;
@@ -75,7 +75,7 @@ const useMagicDatabase:UseMagicData = (url) => {
 
   useMemo(() => {
     if (setsLoaded)
-      setLoadMap(loadMap.set('sets', true));
+      setLoadMap(copyMap(loadMap.set('sets', true)));
     else {
       const setsErrors = errorMap.get('sets');
       if (!setsErrors) return;
@@ -86,7 +86,7 @@ const useMagicDatabase:UseMagicData = (url) => {
 
   useMemo(() => {
     if (cardsLoaded)
-      setLoadMap(loadMap.set('cards', true));
+      setLoadMap(copyMap(loadMap.set('cards', true)));
     else {
       const cardsErrors = errorMap.get('cards');
       if (!cardsErrors) return;
@@ -96,8 +96,8 @@ const useMagicDatabase:UseMagicData = (url) => {
   }, [cardsError, cardsLoaded]);
 
   useMemo(() => {
-    if (imagesLoaded)
-      setLoadMap(loadMap.set('images', true));
+    if (cardsLoaded && imagesLoaded)
+      setLoadMap(copyMap(loadMap.set('images', true)));
     else {
       const imagesErrors = errorMap.get('images');
       if (!imagesErrors) return;

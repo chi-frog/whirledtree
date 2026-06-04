@@ -1,6 +1,5 @@
 'use client'
 
-import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 import { ChangeEventHandler, useState } from "react";
 
 export const ANY = 'Any';
@@ -26,7 +25,6 @@ export type FilterUpdateFunction = (...updates:FilterUpdate[])=>void;
 
 const useFilters = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
-  const url = constructSearchUrl(selected.set, selected.format, selected.name);
 
   const updateSelected:FilterUpdateFunction = (...updates:FilterUpdate[]) => {
     let newSelected = {...selected};
@@ -47,7 +45,7 @@ const useFilters = () => {
       makeHandler(key),
     ])) as Record<SKey, ChangeEventHandler<HTMLInputElement>>;
 
-  return {url, selected, updateSelected, handlers};
+  return {selected, updateSelected, handlers};
 };
 
 export default useFilters;

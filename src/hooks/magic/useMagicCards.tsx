@@ -13,6 +13,8 @@ type ImagePacket = {
 export type ImageMap = Map<string, ImagePacket>;
 
 const transformMagicCard: Transform<MagicCard> = (card) => {
+  if (card.name.includes("Aang"))
+    console.log('s', card);
   let transformedCard = {
     reversed:false,
     name:card.name, //!
@@ -31,8 +33,8 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
   };
 
   if (isCardDoublesided(transformedCard)) {
-    console.log('Doublesided', transformedCard);
-    console.log('-----------', card);
+    //console.log('Doublesided', transformedCard);
+    //console.log('-----------', card);
     const front = card.card_faces[0];
     const back = card.card_faces[1];
 
@@ -50,7 +52,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       },
     }) as MagicCard
   } else if (isCardMultiple(transformedCard)) {
-    console.log('Multiple', transformedCard);
+    //console.log('Multiple', transformedCard);
     const main = card.card_faces[0];
     const extra = card.card_faces[1];
 
@@ -185,12 +187,13 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
 
   // Hydrate image map when cards change
   useEffect(() => {
-    if (cards.length === 0) {
+    if ((cards.length === 0) && (dataLoaded)) {
       setImagesLoaded(true);
       return;
     }
 
     let cancelled = false;
+    setImagesLoaded(false);
 
     const loadImages = async () => {
       try {
