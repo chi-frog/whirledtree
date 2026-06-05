@@ -6,18 +6,17 @@ import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 
 type Props = {};
 const Landing:React.FC<Props> = () => {
-  const [errorMap, loadMap, formats, sets, databaseCards, imageMap, hydrateLargeImage] =
-    useMagicDatabase(constructSearchUrl());
+  const database = useMagicDatabase(constructSearchUrl());
 
   return (
     <CardDisplay
-      errorMap={errorMap}
-      loadMap={loadMap}
-      formats={formats}
-      sets={sets}
-      databaseCards={databaseCards}
-      imageMap={imageMap}
-      hydrateLargeImage={hydrateLargeImage}
+      errorMap={database.errorMap}
+      loadMap={database.loadMap}
+      formats={database.formats}
+      sets={database.sets}
+      databaseCards={database.cards}
+      imageMap={database.imageMap}
+      hydrateLargeImage={database.hydrateLargeImage}
     />
   )
 };

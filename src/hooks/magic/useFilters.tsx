@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler, useState } from "react";
+import { ChangeEventHandler, useCallback, useMemo, useState } from "react";
 
 export const ANY = 'Any';
 
@@ -26,24 +26,29 @@ export type FilterUpdateFunction = (...updates:FilterUpdate[])=>void;
 const useFilters = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
 
-  const updateSelected:FilterUpdateFunction = (...updates:FilterUpdate[]) => {
-    let newSelected = {...selected};
+  const updateSelected: FilterUpdateFunction = useCallback((...updates) => {
+    setSelected((prev) => {
+      const newSelected = { ...prev };
+      updates.forEach(({ property, value }) => {
+        newSelected[property] = value;
+      });
+      return newSelected;
+    });
+  }, []);
 
-    updates.forEach((_update) => {
-      newSelected[_update.property] = _update.value;});
+  const makeHandler = useCallback((property: SKey): ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => {
+    return (e) => {
+      updateSelected({ property, value: e.target.value });
+    };
+  }, [updateSelected]);
 
-    setSelected(newSelected);
-  };
-
-  type MakeHandler = (property:SKey)=>ChangeEventHandler<HTMLInputElement|HTMLSelectElement>;
-  const makeHandler:MakeHandler = (property) =>
-    (e) => {updateSelected({property, value:e.target.value})};
-
-  const handlers = Object.fromEntries(
-    (Object.keys(defaultSelected) as SKey[]).map((key) => [
+  const handlers = useMemo(() => {
+    const entries: [SKey, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>][] = (Object.keys(defaultSelected) as SKey[]).map((key) => [
       key,
       makeHandler(key),
-    ])) as Record<SKey, ChangeEventHandler<HTMLInputElement>>;
+    ]);
+    return Object.fromEntries(entries) as Record<SKey, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>;
+  }, [makeHandler]);
 
   return {selected, updateSelected, handlers};
 };

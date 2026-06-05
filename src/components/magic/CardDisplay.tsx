@@ -2,16 +2,16 @@
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
-import { isCardDoublesided, MagicCard, MagicCardLayout, MagicFormat, MagicSet, } from "./types/default";
+import { isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
 import useRefMap from "@/hooks/useRefMap";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
 import useFilters from "@/hooks/magic/useFilters";
 import View from "./View";
-import { _wpoint, makeWPoint, WPoint } from "@/helpers/wpoint";
+import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import useCardDrag from "@/hooks/useCardDrag";
-import useMagicDatabase, { ErrorMap, LoadMap } from "@/hooks/magic/useMagicDatabase";
+import { ErrorMap, LoadMap } from "@/hooks/magic/useMagicDatabase";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 
 const yCutoffHidden = 10;
@@ -224,6 +224,13 @@ const CardDisplay:React.FC<Props> = ({
       />
     );
   };
+
+  if (cards.length === 0) {
+    console.log('e', errorMap);
+    console.log('l', loadMap);
+    console.log('cd', databaseCards);
+    console.log('c', cards);
+  }
 
   return (
   <div

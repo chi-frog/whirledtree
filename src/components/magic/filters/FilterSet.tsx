@@ -14,7 +14,9 @@ export const FilterSet:React.FC<Props> = ({
     sets,
     selectedSet,
     onChangeSet,
-  }:Props) => (
+  }:Props) => {
+  
+  return (
   <FilterOption text="Set">
     <select id="set" autoComplete="on"
       className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
@@ -33,5 +35,5 @@ export const FilterSet:React.FC<Props> = ({
           <option className="selected" key={_index} value={_set.acronym}>{_set.name}</option>
       ))}
     </select>
-  </FilterOption>
-);
+  </FilterOption>)
+  };

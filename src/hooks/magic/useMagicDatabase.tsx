@@ -36,7 +36,7 @@ const _loadMap:LoadMap = new Map([
   ['cards', false],
   ['images', false]
 ])
-type Return = [
+export type MagicDatabase = {
   errorMap:ErrorMap,
   loadMap:LoadMap,
   formats:MagicFormat[],
@@ -44,7 +44,8 @@ type Return = [
   cards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
-];
+}
+type Return = MagicDatabase;
 type UseMagicData = (
   url:string,
 ) => Return;
@@ -106,7 +107,7 @@ const useMagicDatabase:UseMagicData = (url) => {
     }
   }, [cards, imagesLoaded]);
 
-  return [errorMap, loadMap, formats, sets, cards, imageMap, hydrateLargeImage];
+  return {errorMap, loadMap, formats, sets, cards, imageMap, hydrateLargeImage};
 };
 
 export default useMagicDatabase;
