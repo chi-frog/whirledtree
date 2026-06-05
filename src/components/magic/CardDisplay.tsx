@@ -1,9 +1,8 @@
 'use client'
 
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
-import { ChangeEventHandler, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEventHandler, PointerEventHandler, useCallback, useEffect, useMemo, useState } from "react";
 import { isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
-import useRefMap from "@/hooks/useRefMap";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
 import useFilters from "@/hooks/magic/useFilters";
@@ -66,7 +65,6 @@ const CardDisplay:React.FC<Props> = ({
   const [filterGlow, setFilterGlow] = useState<number>(0);
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalIndex, setModalIndex] = useState<number>(-1);
-  const {getMap, getRef} = useRefMap();
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [draggingCardIndex, cardDragMap, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
@@ -112,11 +110,11 @@ const CardDisplay:React.FC<Props> = ({
     setFilterGlow(0);
   });
 
-  const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = (e) => {
+  const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
     const value = parseInt(e.target.value);
 
     if (!isNaN(value)) setNumCardsRow(value);
-  };
+  }, []);
 
 
   const resetFilterGlow = (filterState:FilterState, y:number) => {
@@ -126,22 +124,34 @@ const CardDisplay:React.FC<Props> = ({
                                                                                 0);
   }
 
-  const handleFilterArrowPointerDown:PointerEventHandler = (e) => {
+  const handleFilterPointerDown:PointerEventHandler = useCallback((e) => {
     e.stopPropagation();
-  };
+  }, []);
 
-  const handleFilterArrowPointerUp:PointerEventHandler = (e) => {
+  const handleFilterPointerUp:PointerEventHandler = useCallback((e) => {
+    if (!filterHidden &&
+        e.clientY <= yCutoffHidden) {
+      setFilterState(FilterState.HIDDEN);
+      resetFilterGlow(FilterState.HIDDEN, e.clientY);
+    }
+
+    e.stopPropagation();
+  }, []);
+
+  const handleFilterArrowPointerDown:PointerEventHandler = useCallback((e) => {
+    //e.stopPropagation();
+  }, []);
+
+  const handleFilterArrowPointerUp:PointerEventHandler = useCallback((e) => {
     e.stopPropagation();
 
-    const _filterState =
-      (filterState === FilterState.HIDDEN)  ? FilterState.REDUCED :
-      (filterState === FilterState.REDUCED) ? FilterState.WHOLE :
-      (filterState === FilterState.WHOLE)   ? FilterState.REDUCED :
-                                              filterState;
-
-    setFilterState(_filterState);
-    resetFilterGlow(_filterState, e.clientY);
-  };
+    setFilterState((prev) => {
+      resetFilterGlow(prev, e.clientY);
+      return (prev === FilterState.HIDDEN)  ? FilterState.REDUCED :
+             (prev === FilterState.REDUCED) ? FilterState.WHOLE :
+             (prev === FilterState.WHOLE)   ? FilterState.REDUCED :
+                                              prev});
+  }, []);
 
   const handlePointerDown = (e:React.PointerEvent) => {
     startDragging(e, viewTag);
@@ -173,20 +183,6 @@ const CardDisplay:React.FC<Props> = ({
       setModalIndex(index);
       hydrateLargeImage(index);
     }
-  };
-  
-  const handleFilterPointerDown:PointerEventHandler = (e) => {
-    e.stopPropagation();
-  };
-
-  const handleFilterPointerUp:PointerEventHandler = (e) => {
-    if (!filterHidden &&
-        e.clientY <= yCutoffHidden) {
-      setFilterState(FilterState.HIDDEN);
-      resetFilterGlow(FilterState.HIDDEN, e.clientY);
-    }
-
-    e.stopPropagation();
   };
 
   const filterHidden = (filterState === FilterState.HIDDEN);
@@ -247,7 +243,7 @@ const CardDisplay:React.FC<Props> = ({
       selectedName={selected.name} onChangeName={handlers.name}
       sets={sets} cards={cards} formats={formats}/>
     {(cards.length > 0) && !hasCardsError && 
-      <View loaded={loadMap.get('images')} getRef={getRef}
+      <View loaded={loadMap.get('images')}
         dragState={dragState}
         cardDragMap={cardDragMap}
         filterState={filterState}

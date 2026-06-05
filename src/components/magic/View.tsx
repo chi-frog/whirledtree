@@ -8,7 +8,6 @@ import { CardDragMap } from "@/hooks/useCardDrag";
 
 type Props = {
   loaded?:boolean,
-  getRef:(id:number, node:any) => () => void,
   dragState:DragState,
   cardDragMap:CardDragMap,
   filterState:FilterState,
@@ -23,7 +22,6 @@ type Props = {
 
 const View:React.FC<Props> = ({
     loaded,
-    getRef,
     dragState,
     cardDragMap,
     filterState,
