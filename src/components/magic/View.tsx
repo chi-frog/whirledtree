@@ -4,38 +4,36 @@ import { isCardDoublesided, MagicCard } from "./types/default";
 import { FilterState, ImageMap } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
-import { CardDragMap } from "@/hooks/useCardDrag";
+import { useCallback } from "react";
 
 type Props = {
   loaded?:boolean,
   dragState:DragState,
-  cardDragMap:CardDragMap,
+  //cardDragMap:CardDragMap,
   filterState:FilterState,
   yCutoffHidden:number,
   numCardsRow:number,
   cards:MagicCard[],
   changeCard:(index:number, card:MagicCard)=>void,
   imageMap:ImageMap,
-  handleCardPointerDown:(e:React.PointerEvent, index:number) => void,
-  handleCardPointerUp:(e:React.PointerEvent, index:number) => void,
+  handleCardPointerUp:(e:React.PointerEvent, index:number, x:number, y:number) => void,
 }
 
 const View:React.FC<Props> = ({
     loaded,
     dragState,
-    cardDragMap,
+    //cardDragMap,
     filterState,
     yCutoffHidden,
     numCardsRow,
     cards,
     changeCard,
     imageMap,
-    handleCardPointerDown,
     handleCardPointerUp,
   }:Props) => {
 
-  const card = (name:string, index:number) => {
-    const cardDragState = cardDragMap.get(index);
+  const card = useCallback((name:string, index:number) => {
+    //const cardDragState = cardDragMap.get(index);
     const frontImagePacket = imageMap.get(name);
     const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
     const card = cards[index];
@@ -49,15 +47,14 @@ const View:React.FC<Props> = ({
       <Card
         key={name}
         location='view'
-        dragState={cardDragState}
+        //dragState={cardDragState}
         widthString={`calc('100%/${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
-        changeCard={changeCard.bind(null, index)}
+        changeCard={(card:MagicCard) => changeCard(index, card)}
         imagePackets={imagePackets}
-        handlePointerDown={(e:React.PointerEvent) => handleCardPointerDown(e, index)}
-        handlePointerUp={(e:React.PointerEvent) => handleCardPointerUp(e, index)}
-        />)};
+        handlePointerUp={(e:React.PointerEvent, x:number, y:number) => handleCardPointerUp(e, index, x, y)}
+        />)}, [imageMap, cards, changeCard]);
 
   return (
     <div className="hover:bg-blue" style={{

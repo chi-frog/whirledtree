@@ -67,7 +67,6 @@ const CardDisplay:React.FC<Props> = ({
   const [modalIndex, setModalIndex] = useState<number>(-1);
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
-  const [draggingCardIndex, cardDragMap, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
 
   const url = useMemo(() =>
     constructSearchUrl(selected),
@@ -75,8 +74,8 @@ const CardDisplay:React.FC<Props> = ({
 
   const [cards, setCards] = useState<MagicCard[]>(databaseCards);
 
-  const changeCard = (index:number, card:MagicCard) =>
-    setCards(cards.map((_card, _index) => (_index === index) ? card : _card));
+  const changeCard = useCallback((index:number, card:MagicCard) =>
+    setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
 
   useEffect(() => setCards(databaseCards), [databaseCards]);
 
@@ -153,37 +152,29 @@ const CardDisplay:React.FC<Props> = ({
                                               prev});
   }, []);
 
-  const handlePointerDown = (e:React.PointerEvent) => {
+  const handlePointerDown = useCallback((e:React.PointerEvent) => {
     startDragging(e, viewTag);
-  };
+  }, [viewTag]);
 
-  const handlePointerMove:PointerEventHandler = (e) => {
+  const handlePointerMove:PointerEventHandler = useCallback((e) => {
     if (!modalShown) resetFilterGlow(filterState, e.clientY)
-  };
+  }, [modalShown, filterState]);
 
-  const handlePointerUp:PointerEventHandler = (e) => {
-  };
+  const handlePointerUp:PointerEventHandler = useCallback((e) => {
+  }, []);
 
-  const handleCardPointerDown = (e:React.PointerEvent, index:number) => {
+
+  const handleCardPointerUp = useCallback(async (e:React.PointerEvent, index:number, x:number, y:number) => {
     e.stopPropagation();
-
-    startDraggingCard(e, index);
-    setDragState({...dragStateRef.current});
-  };
-
-  const handleCardPointerUp = async (e:React.PointerEvent, index:number) => {
-    e.stopPropagation();
-
-    setDragState(dragStateRef.current);
 
     if ((e.button !== 2) &&
-        (e.clientX === dragState.start.x) &&
-        (e.clientY === dragState.start.y)) {
+        (e.clientX === x) &&
+        (e.clientY === y)) {
       setModalShown(true);
       setModalIndex(index);
       hydrateLargeImage(index);
     }
-  };
+  }, []);
 
   const filterHidden = (filterState === FilterState.HIDDEN);
 
@@ -197,8 +188,6 @@ const CardDisplay:React.FC<Props> = ({
     console.log('loadMap', loadMap);
     return cardsLoaded === true;
   }, [loadMap]);
-
-  console.log('cardsLoaded', cardsLoaded);
 
   const modal = () => {
     if (!modalShown) return <></>;
@@ -221,13 +210,6 @@ const CardDisplay:React.FC<Props> = ({
     );
   };
 
-  if (cards.length === 0) {
-    console.log('e', errorMap);
-    console.log('l', loadMap);
-    console.log('cd', databaseCards);
-    console.log('c', cards);
-  }
-
   return (
   <div
     onPointerUp={handlePointerUp}
@@ -245,14 +227,13 @@ const CardDisplay:React.FC<Props> = ({
     {(cards.length > 0) && !hasCardsError && 
       <View loaded={loadMap.get('images')}
         dragState={dragState}
-        cardDragMap={cardDragMap}
+        //cardDragMap={cardDragMap}
         filterState={filterState}
         yCutoffHidden={yCutoffHidden}
         numCardsRow={numCardsRow}
         cards={cards}
         changeCard={changeCard}
         imageMap={imageMap}
-        handleCardPointerDown={handleCardPointerDown}
         handleCardPointerUp={handleCardPointerUp}/>
     }
     {(cards.length === 0) && (!hasCardsError) && (cardsLoaded) &&

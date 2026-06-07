@@ -1,37 +1,33 @@
 'use client'
 
-import { _wpoint, areEqualWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
-import { isCardDoublesided, MagicCard, MagicCardLayout } from "./types/default";
+import { _wpoint, areEqualWPoints, WPoint } from "@/helpers/wpoint";
+import { isCardDoublesided, MagicCard } from "./types/default";
 import { ImagePacket } from "./CardDisplay";
 import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
-import { CardDragState } from "@/hooks/useCardDrag";
+import useCardDrag from "@/hooks/useCardDrag";
 
 export type CardLocation =
   'view' | 'modal';
 type Props = {
   location:CardLocation,
-  dragState?:CardDragState,
   widthString:string,
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
   changeCard:(card:MagicCard)=>void,
   imagePackets:ImagePacket[],
-  handlePointerDown?:(e:React.PointerEvent) => void,
-  handlePointerUp?:(e:React.PointerEvent) => void,
+  handlePointerUp?:(e:React.PointerEvent, x:number, y:number) => void,
 };
 export const Card:React.FC<Props> = ({
     location,
-    dragState,
     widthString,
     heightString,
     imageHeightString,
     card,
     changeCard,
     imagePackets,
-    handlePointerDown,
     handlePointerUp,
   }:Props) => {
   const {subDrag, startDragging, dragStateRef} = useDragContext();
@@ -42,6 +38,7 @@ export const Card:React.FC<Props> = ({
   const ref = useRef<null|HTMLDivElement>(null);
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<WPoint>(_wpoint);
+  const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
@@ -160,15 +157,15 @@ export const Card:React.FC<Props> = ({
   };
 
   const handleCardPointerDown = (e:React.PointerEvent) => {
-    if (handlePointerDown)
-      handlePointerDown(e);
+    e.stopPropagation();
+    startDraggingCard(e);
     glow(true);
     console.log('card', card);
   }
 
   const handleCardPointerUp = (e:React.PointerEvent) => {
     if (handlePointerUp)
-      handlePointerUp(e);
+      handlePointerUp(e, lastMousePress.current.x, lastMousePress.current.y);
     glow(false);
   }
 
@@ -230,9 +227,6 @@ export const Card:React.FC<Props> = ({
     e.preventDefault();
     e.stopPropagation();
     const point = {x:e.clientX, y:e.clientY};
-    console.log('here!');
-    console.log(point);
-    console.log(lastMousePress.current);
 
     if ((areEqualWPoints(point, lastMousePress.current)) ||
         (rotateState.angle > 90)) {
@@ -268,7 +262,7 @@ export const Card:React.FC<Props> = ({
         width:widthString,
         height:heightString,
         position: 'relative',
-        zIndex: (dragState && dragState.stage !== DragStage.INACTIVE) ? 30 : 0,
+        zIndex: (dragState.stage !== DragStage.INACTIVE) ? 30 : 0,
         }}>
       <img src={imageSrc} draggable="false" style={{
         maxWidth:'100%',
