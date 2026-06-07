@@ -86,13 +86,17 @@ const useCardRotate:UseCardRotate = (
         ...dragStateRef.current,
       };
 
-      if (state.stage === DragStage.RETURNING)
+      if (state.stage === DragStage.INACTIVE) {
+        state.stage = DragStage.RETURNING;
+        ref.current = state;
+        setState(ref.current);
         return raf = requestAnimationFrame(returnTick);
 
-      else if (dir > 0) {
+      } else if (dir > 0) {
         let normalizedXDistance = state.point.x - state.start.x;
           
-        if (normalizedXDistance < 0) normalizedXDistance = 0;
+        if (normalizedXDistance < 0)
+          normalizedXDistance = 0;
         else if (normalizedXDistance > (dims.width - state.start.x + dims.x))
           normalizedXDistance = (dims.width - state.start.x + dims.x);   
           
@@ -102,7 +106,8 @@ const useCardRotate:UseCardRotate = (
       } else {
         let normalizedXDistance = state.point.x - state.start.x;
 
-        if (normalizedXDistance > 0) normalizedXDistance = 0;
+        if (normalizedXDistance > 0)
+          normalizedXDistance = 0;
         else if ((dir < 0) && (normalizedXDistance < (-1*(dims.width - (dims.width + dims.x - state.start.x)))))
           normalizedXDistance = -1*(dims.width - (dims.width + dims.x - state.start.x));
         const ratio = normalizedXDistance /

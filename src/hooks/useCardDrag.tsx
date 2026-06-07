@@ -50,7 +50,6 @@ const useCardDrag:UseCardDrag = (
   const [dragState, setDragState] = useState<CardDragState>(cardDragStateRef.current);
 
   useEffect(() => {
-    console.log('HEREE', dragging);
     document.body.classList.toggle("no-select", dragging);
   }, [dragging]);
   
@@ -146,13 +145,11 @@ const useCardDrag:UseCardDrag = (
 
   const startDraggingCard:StartDraggingCard = (e) => {
     const dragState = startDragging(e, tag);
-    console.log('starting');
-    console.table(dragState)
+
     cardDragStateRef.current = {
       ..._cardDragState,
       ...dragState,
       };
-      console.table(cardDragStateRef.current);
     setDragState(cardDragStateRef.current)
     setDragging(true);
   };

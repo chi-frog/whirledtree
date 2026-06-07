@@ -22,7 +22,6 @@ type Props = {
 const View:React.FC<Props> = ({
     loaded,
     dragState,
-    //cardDragMap,
     filterState,
     yCutoffHidden,
     numCardsRow,
@@ -33,7 +32,6 @@ const View:React.FC<Props> = ({
   }:Props) => {
 
   const card = useCallback((name:string, index:number) => {
-    //const cardDragState = cardDragMap.get(index);
     const frontImagePacket = imageMap.get(name);
     const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
     const card = cards[index];
@@ -47,7 +45,6 @@ const View:React.FC<Props> = ({
       <Card
         key={name}
         location='view'
-        //dragState={cardDragState}
         widthString={`calc('100%/${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}

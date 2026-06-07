@@ -114,7 +114,6 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
 
   const stopDragging = (e:PointerEvent) => {
     const tag = dragState.current.tag;
-    console.log('stopping', tag);
     if (tag)
       runEndFuncs(e, tag);
 

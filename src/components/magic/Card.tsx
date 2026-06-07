@@ -160,6 +160,7 @@ export const Card:React.FC<Props> = ({
     e.stopPropagation();
     startDraggingCard(e);
     glow(true);
+    lastMousePress.current = {x:e.clientX, y:e.clientY}; 
     console.log('card', card);
   }
 
