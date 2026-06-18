@@ -32,7 +32,7 @@ function useExternalData<T> (
         let chunkUrl:string|undefined = url;
         while ((!overflow) && (chunkUrl)) {
           let [chunkData, nextUrl] = await chunk(chunkUrl);
-console.log('awaiting', chunkUrl);
+
           data.push(...chunkData.map(transform));
           chunkUrl = nextUrl;
           overflow = (options.dataLimit) &&
@@ -40,16 +40,14 @@ console.log('awaiting', chunkUrl);
         }
 
         if (overflow) {
-          console.log('overflowed: ' + data.length + '/' + options.dataLimit);
+          console.info('overflowed: ' + data.length + '/' + options.dataLimit);
         
         }
         setError(_noError);
         setLoaded(true);
         setData(data);
-        console.log('-Loaded ', url);
+        console.info('-Loaded ', url);
       } catch (err) {
-        console.log('Error with url', url);
-        console.log('err', err);
         // Don't log abort errors - they're expected on cleanup
         if ((err instanceof Error)) {
           if (err.message === WErrorCode.NOT_FOUND) {
@@ -63,6 +61,8 @@ console.log('awaiting', chunkUrl);
             setLoaded(false);
             setData([]);
             return;
+          } else {
+            console.error('Error with url ' + url, err);
           }
         }
       }
@@ -79,11 +79,9 @@ console.log('awaiting', chunkUrl);
       };
     };
 
-    console.log('+Starting ', url);
-    fetchData(url).catch((err) => console.log('error', err));
+    fetchData(url).catch((err) => console.error('error', err));
 
     return () => {
-      console.log('Aborting fetch for', url);
       controller.abort();
     };
   }, [url, transform]);

@@ -1,20 +1,21 @@
 'use client'
 
-import { ChangeEventHandler, PointerEventHandler } from "react";
+import { ChangeEventHandler, Dispatch, PointerEventHandler, SetStateAction, useCallback, useState } from "react";
 import { MagicCard, MagicFormat, MagicSet } from "../types/default";
 import { FilterState } from "../CardDisplay";
 import { CardsPerRow } from "./ViewCardsPerRow";
 import { FilterSet } from "./FilterSet";
 import { FilterFormat } from "./FilterFormat";
 import { FilterName } from "./FilterName";
+import useMouseLeavePage from "@/hooks/useMouseLeavePage";
+
+const yCutoffHidden = 15;
 
 type Props = {
-  handlePointerDown:PointerEventHandler,
   handlePointerUp:PointerEventHandler,
-  handleArrowPointerDown:PointerEventHandler,
   handleArrowPointerUp:PointerEventHandler,
   state:FilterState,
-  glow:number,
+  setState:Dispatch<SetStateAction<FilterState>>,
   numCardsRow:number,
   onChangeNumCardsRow:ChangeEventHandler,
   selectedSet:string,
@@ -28,12 +29,10 @@ type Props = {
   formats:MagicFormat[],
 };
 const Filter:React.FC<Props> = ({
-  handleArrowPointerDown,
   handleArrowPointerUp,
-  handlePointerDown,
   handlePointerUp,
   state,
-  glow,
+  setState,
   numCardsRow,
   onChangeNumCardsRow,
   selectedSet,
@@ -45,6 +44,19 @@ const Filter:React.FC<Props> = ({
   cards,
   sets,
   formats}:Props) => {
+    
+  const [glow, setGlow] = useState<number>(0);
+
+  useMouseLeavePage(() => {
+    setGlow(0);
+  });
+
+  const resetFilterGlow = (filterState:FilterState, y:number) => {
+      setGlow((filterState === FilterState.HIDDEN && y <= yCutoffHidden)  ? 10 :
+              (y <= yCutoffHidden)                                        ? -3 :
+               (filterState === FilterState.REDUCED && y > 50 && y <= 80) ? 10 :
+                                                                            0);
+    }
 
   const hidden = (state === FilterState.HIDDEN);
   const reduced = (state === FilterState.REDUCED);
@@ -68,6 +80,13 @@ const Filter:React.FC<Props> = ({
         onChangeName={onChangeName}/>
   </>);
 
+  const handleArrowPointerDown:PointerEventHandler = useCallback((e) => {
+    setState((prev) =>
+      (prev === FilterState.HIDDEN)  ? FilterState.REDUCED :
+      (prev === FilterState.REDUCED) ? FilterState.WHOLE :
+                                       FilterState.REDUCED);
+  }, []);
+
   const arrow = (
     <svg
       className={(whole) ? "hover:scale-130 hover:bg-gradient-to-b from-light-red to-transparent to-rgba[255, 255, 255, 0.8]" :
@@ -90,10 +109,41 @@ const Filter:React.FC<Props> = ({
     </svg>
   );
 
+  const handlePointerUpF:PointerEventHandler = (e) => {
+    if (!hidden &&
+        e.clientY <= yCutoffHidden) {
+      resetFilterGlow(FilterState.HIDDEN, e.clientY);
+    }
+    handlePointerUp(e);
+  };
+
+  const handleArrowPointerUpF:PointerEventHandler = useCallback((e) => {
+    resetFilterGlow(state, e.clientY);
+  }, [state]);
+
+  const handlePointerEnter:PointerEventHandler = useCallback((e) => {
+    setGlow(10);
+  }, []);
+
+  const handlePointerLeave:PointerEventHandler = useCallback((e) => {
+    setGlow(0);
+  }, []);
+
   return (<>
     <div
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onPointerDown={handleArrowPointerDown}
+      style= {{
+      position:'fixed',
+      backgroundColor:'transparent',
+      zIndex:999,
+      height:10,
+      width:'100%',
+      cursor:'pointer',
+    }}/>
+    <div
+      onPointerUp={handlePointerUpF}
       style={{
       position:'fixed',
       top: (hidden) ? `${-80 + glow}px` :

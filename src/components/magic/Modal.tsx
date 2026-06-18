@@ -103,8 +103,6 @@ const Modal:React.FC<Props> = ({
     if (!ref.current) return;
     if (!divRef.current) return;
 
-    console.log('e', e);
-
     const range = e.getRangeAt(0);
     const selectionBox = range?.getBoundingClientRect();
 
@@ -206,7 +204,6 @@ const Modal:React.FC<Props> = ({
             card={card}
             changeCard={changeCard.bind(null, index)}
             imagePackets={imagePackets}
-            handlePointerDown={handleCardPointerDown}
             handlePointerUp={handleCardPointerUp}
           />
         }

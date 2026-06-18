@@ -4,7 +4,7 @@ import { ChangeEventHandler, useCallback, useMemo, useState } from "react";
 
 export const ANY = 'Any';
 
-type Selected = {
+export type Selected = {
   name:string,
   format:string,
   set:string, //acronym

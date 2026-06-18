@@ -1,19 +1,15 @@
 'use client'
 
-import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { ChangeEventHandler, PointerEventHandler, useCallback, useEffect, useMemo, useState } from "react";
 import { isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
-import useFilters from "@/hooks/magic/useFilters";
+import useFilters, { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
-import useCardDrag from "@/hooks/useCardDrag";
 import { ErrorMap, LoadMap } from "@/hooks/magic/useMagicDatabase";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
-
-const yCutoffHidden = 10;
 
 export enum FilterState {
   HIDDEN = 'hidden',
@@ -55,29 +51,30 @@ type Props = {
   databaseCards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
+  selected:Selected,
+  updateSelected:FilterUpdateFunction,
+  handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>
 };
 const CardDisplay:React.FC<Props> = ({
-  errorMap, loadMap, formats, sets, databaseCards, imageMap, hydrateLargeImage
+  errorMap, loadMap, formats, sets, databaseCards, imageMap, hydrateLargeImage,
+  selected, updateSelected, handlers
 }) => {
-  const {selected, updateSelected, handlers} = useFilters();
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
-  const [filterGlow, setFilterGlow] = useState<number>(0);
   const [modalShown, setModalShown] = useState<boolean>(false);
   const [modalIndex, setModalIndex] = useState<number>(-1);
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
-
-  const url = useMemo(() =>
-    constructSearchUrl(selected),
-    [selected]);
 
   const [cards, setCards] = useState<MagicCard[]>(databaseCards);
 
   const changeCard = useCallback((index:number, card:MagicCard) =>
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
 
-  useEffect(() => setCards(databaseCards), [databaseCards]);
+  useEffect(() => {
+    console.info('setting cards:', databaseCards);
+    setCards(databaseCards);
+  } , [databaseCards]);
 
   const dragging = useMemo(() => dragState.stage === DragStage.ACTIVE, [dragState.stage]);
 
@@ -105,47 +102,25 @@ const CardDisplay:React.FC<Props> = ({
     document.body.classList.toggle("no-select", dragging);
   }, [dragging]);
 
-  useMouseLeavePage(() => {
-    setFilterGlow(0);
-  });
-
   const onChangeNumCardsRow:ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
     const value = parseInt(e.target.value);
 
     if (!isNaN(value)) setNumCardsRow(value);
   }, []);
 
-
-  const resetFilterGlow = (filterState:FilterState, y:number) => {
-    setFilterGlow((filterState === FilterState.HIDDEN && y <= yCutoffHidden)  ? 10 :
-                  (y <= yCutoffHidden)                                        ? -3 :
-                  (filterState === FilterState.REDUCED && y > 50 && y <= 80) ? 10 :
-                                                                                0);
-  }
-
-  const handleFilterPointerDown:PointerEventHandler = useCallback((e) => {
-    e.stopPropagation();
-  }, []);
-
   const handleFilterPointerUp:PointerEventHandler = useCallback((e) => {
     if (!filterHidden &&
-        e.clientY <= yCutoffHidden) {
+        e.clientY <= 5) {
       setFilterState(FilterState.HIDDEN);
-      resetFilterGlow(FilterState.HIDDEN, e.clientY);
     }
 
     e.stopPropagation();
-  }, []);
-
-  const handleFilterArrowPointerDown:PointerEventHandler = useCallback((e) => {
-    //e.stopPropagation();
   }, []);
 
   const handleFilterArrowPointerUp:PointerEventHandler = useCallback((e) => {
     e.stopPropagation();
 
     setFilterState((prev) => {
-      resetFilterGlow(prev, e.clientY);
       return (prev === FilterState.HIDDEN)  ? FilterState.REDUCED :
              (prev === FilterState.REDUCED) ? FilterState.WHOLE :
              (prev === FilterState.WHOLE)   ? FilterState.REDUCED :
@@ -155,10 +130,6 @@ const CardDisplay:React.FC<Props> = ({
   const handlePointerDown = useCallback((e:React.PointerEvent) => {
     startDragging(e, viewTag);
   }, [viewTag]);
-
-  const handlePointerMove:PointerEventHandler = useCallback((e) => {
-    if (!modalShown) resetFilterGlow(filterState, e.clientY)
-  }, [modalShown, filterState]);
 
   const handlePointerUp:PointerEventHandler = useCallback((e) => {
   }, []);
@@ -174,7 +145,7 @@ const CardDisplay:React.FC<Props> = ({
       setModalIndex(index);
       hydrateLargeImage(index);
     }
-  }, []);
+  }, [cards, imageMap]);
 
   const filterHidden = (filterState === FilterState.HIDDEN);
 
@@ -185,7 +156,6 @@ const CardDisplay:React.FC<Props> = ({
 
   const cardsLoaded:boolean = useMemo(() => {
     const cardsLoaded = loadMap.get('cards');
-    console.log('loadMap', loadMap);
     return cardsLoaded === true;
   }, [loadMap]);
 
@@ -213,12 +183,12 @@ const CardDisplay:React.FC<Props> = ({
   return (
   <div
     onPointerUp={handlePointerUp}
-    onPointerMove={handlePointerMove}
     onPointerDown={(e)=>handlePointerDown(e)}>
     <Filter
-      handleArrowPointerDown={handleFilterArrowPointerDown} handleArrowPointerUp={handleFilterArrowPointerUp}
-      handlePointerDown={handleFilterPointerDown} handlePointerUp={handleFilterPointerUp}
-      state={filterState} glow={filterGlow}
+      setState={setFilterState}
+      handleArrowPointerUp={handleFilterArrowPointerUp}
+      handlePointerUp={handleFilterPointerUp}
+      state={filterState}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
       selectedSet={selected.set} onChangeSet={handlers.set}
       selectedFormat={selected.format} onChangeFormat={handlers.format}
@@ -227,9 +197,7 @@ const CardDisplay:React.FC<Props> = ({
     {(cards.length > 0) && !hasCardsError && 
       <View loaded={loadMap.get('images')}
         dragState={dragState}
-        //cardDragMap={cardDragMap}
         filterState={filterState}
-        yCutoffHidden={yCutoffHidden}
         numCardsRow={numCardsRow}
         cards={cards}
         changeCard={changeCard}

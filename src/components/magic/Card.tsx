@@ -161,7 +161,7 @@ export const Card:React.FC<Props> = ({
     startDraggingCard(e);
     glow(true);
     lastMousePress.current = {x:e.clientX, y:e.clientY}; 
-    console.log('card', card);
+    console.info('card', card);
   }
 
   const handleCardPointerUp = (e:React.PointerEvent) => {

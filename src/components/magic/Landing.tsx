@@ -3,10 +3,14 @@
 import useMagicDatabase from "@/hooks/magic/useMagicDatabase";
 import CardDisplay from "./CardDisplay";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
+import useFilters from "@/hooks/magic/useFilters";
+import { useMemo } from "react";
 
 type Props = {};
 const Landing:React.FC<Props> = () => {
-  const database = useMagicDatabase(constructSearchUrl());
+  const {selected, updateSelected, handlers} = useFilters();
+  const url = useMemo(() => constructSearchUrl(selected), [selected]);
+  const database = useMagicDatabase(url);
 
   return (
     <CardDisplay
@@ -17,6 +21,9 @@ const Landing:React.FC<Props> = () => {
       databaseCards={database.cards}
       imageMap={database.imageMap}
       hydrateLargeImage={database.hydrateLargeImage}
+      selected={selected}
+      updateSelected={updateSelected}
+      handlers={handlers}
     />
   )
 };

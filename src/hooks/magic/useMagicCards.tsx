@@ -2,7 +2,7 @@
 
 import { isCardDoublesided, isCardMultiple, MagicCard, MagicCardLayout } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { WError } from "@/components/magic/CardDisplay";
 
 type ImagePacket = {
@@ -13,8 +13,6 @@ type ImagePacket = {
 export type ImageMap = Map<string, ImagePacket>;
 
 const transformMagicCard: Transform<MagicCard> = (card) => {
-  if (card.name.includes("Aang"))
-    console.log('s', card);
   let transformedCard = {
     reversed:false,
     name:card.name, //!
@@ -33,8 +31,6 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
   };
 
   if (isCardDoublesided(transformedCard)) {
-    //console.log('Doublesided', transformedCard);
-    //console.log('-----------', card);
     const front = card.card_faces[0];
     const back = card.card_faces[1];
 
@@ -52,7 +48,6 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       },
     }) as MagicCard
   } else if (isCardMultiple(transformedCard)) {
-    //console.log('Multiple', transformedCard);
     const main = card.card_faces[0];
     const extra = card.card_faces[1];
 
@@ -117,13 +112,15 @@ const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:MagicCar
         [_card.imageUris[size], (_card.back) ? _card.back.imageUris[size] : ""];
 
       if (!uris[0]) {
-        console.log('Invalid Uri for ' + _card.name, uris);
+        console.error('Invalid Uri for ' + _card.name, uris);
         return Promise.resolve();
       }
 
-      return Promise.all(uris.map((_uri, _index) => {
-        return fetchImage(hydratedImageMap, names[_index], size, _uri);
+      const res = await Promise.all(uris.map(async (_uri, _index) => {
+        return await fetchImage(hydratedImageMap, names[_index], size, _uri);
       }));
+
+      console.log('Loaded ' + _card.name, res);
     }));
 
     return hydratedImageMap;
@@ -208,8 +205,6 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
           setImagesLoaded(true);
         }
       } catch (error) {
-        console.log('imageFetch error', error);
-        console.log('cancelled?', cancelled);
         if (!cancelled) {
           console.error('Failed to load images:', error);
           setImagesLoaded(true);
@@ -224,11 +219,11 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     };
   }, [cards]); // Re-run when cards change
 
-  const hydrateLargeImage = async (index:number) => {
+  const hydrateLargeImage = useCallback(async (index:number) => {
     const hydratedImageMap = await hydrateImageMap(imageMap, [cards[index]], "large");
       
     setImageMap(hydratedImageMap);
-  }
+  }, [cards, imageMap]);
 
   return [error, dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage];
 };

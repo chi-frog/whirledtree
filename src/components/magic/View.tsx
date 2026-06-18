@@ -9,9 +9,7 @@ import { useCallback } from "react";
 type Props = {
   loaded?:boolean,
   dragState:DragState,
-  //cardDragMap:CardDragMap,
   filterState:FilterState,
-  yCutoffHidden:number,
   numCardsRow:number,
   cards:MagicCard[],
   changeCard:(index:number, card:MagicCard)=>void,
@@ -23,7 +21,6 @@ const View:React.FC<Props> = ({
     loaded,
     dragState,
     filterState,
-    yCutoffHidden,
     numCardsRow,
     cards,
     changeCard,
@@ -55,7 +52,7 @@ const View:React.FC<Props> = ({
 
   return (
     <div className="hover:bg-blue" style={{
-      paddingTop:(filterState === FilterState.REDUCED) ? '80px' : `${Math.min(yCutoffHidden, 80)}px`,
+      paddingTop:(filterState === FilterState.REDUCED) ? '80px' : `${Math.min(10, 80)}px`,
       overflow:'scroll',
       minWidth:'100vw',
       width:'fit-content',
