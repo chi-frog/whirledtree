@@ -2,7 +2,7 @@
 
 import { isCardDoublesided, isCardMultiple, MagicCard, MagicCardLayout } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 import { WError } from "@/components/magic/CardDisplay";
 
 type ImagePacket = {
@@ -80,30 +80,34 @@ const blobKey: Record<ImageSize, keyof ImagePacket> = {
 };
 
 const fetchImage = async (
-  hydratedImageMap: ImageMap,
-  name: string,
-  type: ImageSize,
   uri: string
-): Promise<void> => {
+): Promise<string|undefined> => {
   const objectUrl = await fetch(uri)
     .then(r => r.blob())
     .then(blob => URL.createObjectURL(blob))
     .catch(err => { console.error('fetchImage failed:', err); return null; });
 
-  if (!objectUrl) return;
+  if (!objectUrl) return Promise.resolve("");
 
-  const existing = hydratedImageMap.get(name) ?? { name };
-  hydratedImageMap.set(name, {
-    ...existing,
-    [blobKey[type]]: objectUrl,
-  });
+  return Promise.resolve(objectUrl);
 };
 
-const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:MagicCard[], size:'small'|'large') => {
-    let hydratedImageMap = copyImageMap(imageMap);
-    
+const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, cards:MagicCard[], size:'small'|'large') => {
+    const hydrateCard = async (names:string[], uris:string[]) => {
+      let imageUrls = await Promise.all(uris.map(async (_uri, _index) => {
+        const imageUrl = await fetchImage(_uri);
+        console.log('image! ' + imageUrl);
+
+        return imageUrl;
+      }));
+
+      console.log('imageUrls', imageUrls);
+
+      return imageUrls;
+    };
+  
     await Promise.all(cards.map(async (_card, _index) => {
-      let names = (!isCardDoublesided(_card)) ?
+      let names = (isCardDoublesided(_card)) ?
         [_card.name] :
         [_card.name, (_card.back) ? _card.back.name : ""];
 
@@ -111,19 +115,29 @@ const hydrateImageMap = async (imageMap:Map<string, ImagePacket>, cards:MagicCar
         [_card.imageUris[size]] :
         [_card.imageUris[size], (_card.back) ? _card.back.imageUris[size] : ""];
 
-      if (!uris[0]) {
-        console.error('Invalid Uri for ' + _card.name, uris);
-        return Promise.resolve();
-      }
+      const imageUrls = await hydrateCard(names, uris);
+      
+      setImageMap((prev) => {
+        let imageMap = copyImageMap(prev);
+        const frontExisting = prev.get(names[0]) ?? {name:names[0]};
+        const backExisting = (names[1]) ? (prev.get(names[1])) ?? {name:names[1]} : null;
+      
+        if (frontExisting) {
+          imageMap.set(names[0], {
+            ...frontExisting,
+            [blobKey[size]]:imageUrls[0],
+          });
+        }
+        if (backExisting) {
+          imageMap.set(names[1], {
+            ...backExisting,
+            [blobKey[size]]:imageUrls[1],
+          });
+        }
 
-      const res = await Promise.all(uris.map(async (_uri, _index) => {
-        return await fetchImage(hydratedImageMap, names[_index], size, _uri);
-      }));
-
-      console.log('Loaded ' + _card.name, res);
+        return imageMap;
+      });
     }));
-
-    return hydratedImageMap;
   };
 
 export type UseMagicCards = [
@@ -194,20 +208,19 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
 
     const loadImages = async () => {
       try {
-        const hydratedImageMap = await hydrateImageMap(
-          imageMap, 
+        await hydrateImageMap(
+          setImageMap,
           cards, 
           "small"
         );
         
         if (!cancelled) {
-          setImageMap(hydratedImageMap);
           setImagesLoaded(true);
         }
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to load images:', error);
-          setImagesLoaded(true);
+          setImagesLoaded(false);
         }
       }
     };
@@ -220,9 +233,9 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
   }, [cards]); // Re-run when cards change
 
   const hydrateLargeImage = useCallback(async (index:number) => {
-    const hydratedImageMap = await hydrateImageMap(imageMap, [cards[index]], "large");
+    const hydratedImageMap = await hydrateImageMap(setImageMap, [cards[index]], "large");
       
-    setImageMap(hydratedImageMap);
+    //setImageMap(hydratedImageMap);
   }, [cards, imageMap]);
 
   return [error, dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage];

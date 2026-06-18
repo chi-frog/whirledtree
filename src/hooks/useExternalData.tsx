@@ -48,21 +48,22 @@ function useExternalData<T> (
         setData(data);
         console.info('-Loaded ', url);
       } catch (err) {
-        // Don't log abort errors - they're expected on cleanup
         if ((err instanceof Error)) {
+          // Don't log abort errors.
           if (err.message === WErrorCode.NOT_FOUND) {
+            //Not an error - just means the search was empty
             setError(_noError);
             setLoaded(true);
             setData([]);
             return;
 
           } else if (err.name !== 'AbortError') {
+            console.error('Error with url ' + url, err);
             setError(_err(err));
             setLoaded(false);
             setData([]);
             return;
-          } else {
-            console.error('Error with url ' + url, err);
+
           }
         }
       }
