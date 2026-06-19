@@ -32,11 +32,10 @@ const View:React.FC<Props> = ({
     const frontImagePacket = imageMap.get(name);
     const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
     const card = cards[index];
-
-    if (card.back && isCardDoublesided(card)) {
-      const backImagePacket = imageMap.get(card.back.name);
-      if (backImagePacket) imagePackets.push(backImagePacket);
-    }
+    const backImagePacket = ((card.back) && isCardDoublesided(card)) ?
+      imageMap.get(card.back.name) :
+      imageMap.get("");
+    if (backImagePacket) imagePackets.push(backImagePacket);
 
     return (
       <Card

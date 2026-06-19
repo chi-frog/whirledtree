@@ -96,12 +96,9 @@ const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, c
     const hydrateCard = async (names:string[], uris:string[]) => {
       let imageUrls = await Promise.all(uris.map(async (_uri, _index) => {
         const imageUrl = await fetchImage(_uri);
-        console.log('image! ' + imageUrl);
 
         return imageUrl;
       }));
-
-      console.log('imageUrls', imageUrls);
 
       return imageUrls;
     };
@@ -195,6 +192,32 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     
     return cards;
   }, [cardData]);
+
+  // Get the card back image
+  useEffect(() => {
+    const getBackImage = async () => {
+      const backUrl = await fetchImage('https://cards.scryfall.io/back.png');
+
+      setImageMap((prev) => {
+        let imageMap = copyImageMap(prev);
+        let name = "";
+        const existing = prev.get(name) ?? {name};
+      
+        if (existing) {
+          imageMap.set(name, {
+            ...existing,
+            [blobKey.large]:backUrl,
+          });
+        }
+
+        return imageMap;
+      });
+      
+      return backUrl;
+    };
+
+    getBackImage();
+  }, []);
 
   // Hydrate image map when cards change
   useEffect(() => {

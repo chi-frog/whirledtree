@@ -76,8 +76,7 @@ export const Card:React.FC<Props> = ({
 
   const backImageSrc = useMemo(() =>
     ((!card) ||
-     (imagePackets.length <= 1) ||
-     (!isCardDoublesided(card))) ? undefined :
+     (imagePackets.length <= 1)) ? undefined :
     (imagePackets[1].largeBlob)                   ? imagePackets[1].largeBlob :
                                                     imagePackets[1].smallBlob
     , [imagePackets, card.layout]);
@@ -169,8 +168,6 @@ export const Card:React.FC<Props> = ({
       handlePointerUp(e, lastMousePress.current.x, lastMousePress.current.y);
     glow(false);
   }
-
-  //{...(getRef && { ref: getRef.bind(null, index) })}
 
   const tlaRatios = (dims:{width:number, height:number}) => {
     const circleSize = 55;
@@ -283,9 +280,8 @@ export const Card:React.FC<Props> = ({
         marginTop:'auto',
         position: 'absolute',
         visibility: (!showFront) ? 'visible' : 'hidden',
-        display:(isCardDoublesided(card)) ? 'block' : 'none'
         }}/>
-      {(isCardDoublesided(card)) &&
+      { isCardDoublesided(card) &&
       <div 
         onPointerDown={handleDoublesidedPointerDown}
         onPointerUp={handleDoublesidedPointerUp}
@@ -305,5 +301,30 @@ export const Card:React.FC<Props> = ({
         cursor:'grab',
       }}/>  
       }
+      <div
+        className="leftSideRotate"
+        onPointerDown={handleDoublesidedPointerDown}
+        onPointerUp={handleDoublesidedPointerUp}
+        style={{
+          width:"10px",
+          height:"100%",
+          backgroundColor:'transparent',
+          position:'absolute',
+          cursor:'cell'
+        }}
+        />
+      <div
+        className="rightSideRotate"
+        onPointerDown={handleDoublesidedPointerDown}
+        onPointerUp={handleDoublesidedPointerUp}
+        style={{
+          width:"10px",
+          height:"100%",
+          left:"calc(100% - 10px)",
+          backgroundColor:'transparent',
+          position:'absolute',
+          cursor:'cell'
+        }}
+        />
     </div>);
 };
