@@ -164,7 +164,7 @@ const CardDisplay:React.FC<Props> = ({
     const card = cards[modalIndex];
     const frontImage = imageMap.get(card.name);
     const backImage = (card.back && isCardDoublesided(card)) ?
-      imageMap.get(card.back.name) : null;
+      imageMap.get(card.back.name) : imageMap.get("");
 
     return (
       <Modal
