@@ -22,7 +22,7 @@ export const _cardRotateState:CardRotateState = {
   maxAngle:80,
 }
 
-type StartRotatingCard = (e:PointerEvent|React.PointerEvent)=>void;
+type StartRotatingCard = (e:PointerEvent|React.PointerEvent, dir:-1|1)=>void;
 type ForceRotate = (angle:number)=>void;
 type UseCardRotateReturn = [
   cardRotateState:CardRotateState,
@@ -31,18 +31,17 @@ type UseCardRotateReturn = [
 ];
 type UseCardRotate = (
   dims:{x:number, y:number, width:number, height:number},
-  dir:number, // +1 = left to right, -1 = right to left
   subDrag:SubDrag,
   startDragging:StartDragging,
   dragStateRef:RefObject<DragState>,
 ) => UseCardRotateReturn;
 const useCardRotate:UseCardRotate = (
     dims,
-    dir,
     subDrag,
     startDragging,
     dragStateRef
   ) => {
+  const dirRef = useRef<-1|1>(1);
   const ref = useRef<CardRotateState>(_cardRotateState);
   const [state, setState] = useState<CardRotateState>(ref.current);
 
@@ -85,6 +84,7 @@ const useCardRotate:UseCardRotate = (
         ...ref.current,
         ...dragStateRef.current,
       };
+      let dir = dirRef.current;
 
       if (state.stage === DragStage.INACTIVE) {
         state.stage = DragStage.RETURNING;
@@ -130,7 +130,8 @@ const useCardRotate:UseCardRotate = (
     }
   }
 
-  const startRotatingCard:StartRotatingCard = (e) => {
+  const startRotatingCard:StartRotatingCard = (e, dir) => {
+    dirRef.current = dir;
     const dragState = startDragging(e, tag);
 
     ref.current = {

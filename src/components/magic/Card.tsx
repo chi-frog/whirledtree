@@ -34,7 +34,7 @@ export const Card:React.FC<Props> = ({
   const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
   const [mousedover, setMousedover] = useState<boolean>(false);
   const [rotateState, startRotating, forceRotate] =
-    useCardRotate(dims, (card.reversed) ? -1 : 1, subDrag, startDragging, dragStateRef);
+    useCardRotate(dims, subDrag, startDragging, dragStateRef);
   const ref = useRef<null|HTMLDivElement>(null);
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<WPoint>(_wpoint);
@@ -214,10 +214,11 @@ export const Card:React.FC<Props> = ({
     return def;
   }, [dims]);
 
-  const handleDoublesidedPointerDown:PointerEventHandler = (e) => {
+  const handleDoublesidedPointerDown = (e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
     e.stopPropagation();
-    startRotating(e);
+    if (!dir) dir = (card.reversed) ? -1 : 1
+    startRotating(e, dir);
     lastMousePress.current = {x:e.clientX, y:e.clientY};
   };
 
@@ -283,7 +284,7 @@ export const Card:React.FC<Props> = ({
         }}/>
       { isCardDoublesided(card) &&
       <div 
-        onPointerDown={handleDoublesidedPointerDown}
+        onPointerDown={(e) => handleDoublesidedPointerDown(e)}
         onPointerUp={handleDoublesidedPointerUp}
         style={{
         borderRadius:'50%',
@@ -303,7 +304,7 @@ export const Card:React.FC<Props> = ({
       }
       <div
         className="leftSideRotate"
-        onPointerDown={handleDoublesidedPointerDown}
+        onPointerDown={(e) => handleDoublesidedPointerDown(e, 1)}
         onPointerUp={handleDoublesidedPointerUp}
         style={{
           width:"10px",
@@ -315,7 +316,7 @@ export const Card:React.FC<Props> = ({
         />
       <div
         className="rightSideRotate"
-        onPointerDown={handleDoublesidedPointerDown}
+        onPointerDown={(e) => handleDoublesidedPointerDown(e, -1)}
         onPointerUp={handleDoublesidedPointerUp}
         style={{
           width:"10px",

@@ -4,12 +4,11 @@ import { ChangeEventHandler, PointerEventHandler, useCallback, useEffect, useMem
 import { isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
-import useFilters, { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
+import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { ErrorMap, LoadMap } from "@/hooks/magic/useMagicDatabase";
-import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 
 export enum FilterState {
   HIDDEN = 'hidden',
@@ -108,32 +107,9 @@ const CardDisplay:React.FC<Props> = ({
     if (!isNaN(value)) setNumCardsRow(value);
   }, []);
 
-  const handleFilterPointerUp:PointerEventHandler = useCallback((e) => {
-    if (!filterHidden &&
-        e.clientY <= 5) {
-      setFilterState(FilterState.HIDDEN);
-    }
-
-    e.stopPropagation();
-  }, []);
-
-  const handleFilterArrowPointerUp:PointerEventHandler = useCallback((e) => {
-    e.stopPropagation();
-
-    setFilterState((prev) => {
-      return (prev === FilterState.HIDDEN)  ? FilterState.REDUCED :
-             (prev === FilterState.REDUCED) ? FilterState.WHOLE :
-             (prev === FilterState.WHOLE)   ? FilterState.REDUCED :
-                                              prev});
-  }, []);
-
   const handlePointerDown = useCallback((e:React.PointerEvent) => {
     startDragging(e, viewTag);
   }, [viewTag]);
-
-  const handlePointerUp:PointerEventHandler = useCallback((e) => {
-  }, []);
-
 
   const handleCardPointerUp = useCallback(async (e:React.PointerEvent, index:number, x:number, y:number) => {
     e.stopPropagation();
@@ -146,8 +122,6 @@ const CardDisplay:React.FC<Props> = ({
       hydrateLargeImage(index);
     }
   }, [cards, imageMap]);
-
-  const filterHidden = (filterState === FilterState.HIDDEN);
 
   const hasCardsError:boolean = useMemo(() => {
     const cardsError = errorMap.get('cards');
@@ -182,12 +156,9 @@ const CardDisplay:React.FC<Props> = ({
 
   return (
   <div
-    onPointerUp={handlePointerUp}
-    onPointerDown={(e)=>handlePointerDown(e)}>
+    onPointerDown={handlePointerDown}>
     <Filter
       setState={setFilterState}
-      handleArrowPointerUp={handleFilterArrowPointerUp}
-      handlePointerUp={handleFilterPointerUp}
       state={filterState}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
       selectedSet={selected.set} onChangeSet={handlers.set}

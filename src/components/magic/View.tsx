@@ -47,7 +47,8 @@ const View:React.FC<Props> = ({
         changeCard={(card:MagicCard) => changeCard(index, card)}
         imagePackets={imagePackets}
         handlePointerUp={(e:React.PointerEvent, x:number, y:number) => handleCardPointerUp(e, index, x, y)}
-        />)}, [imageMap, cards, changeCard]);
+        />)},
+    [imageMap, cards, changeCard]);
 
   return (
     <div className="hover:bg-blue" style={{
