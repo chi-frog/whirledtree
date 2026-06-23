@@ -13,6 +13,13 @@ type ImagePacket = {
   };
 export type ImageMap = Map<string, ImagePacket>;
 
+const tokenizeOracleText:(text:string)=>string = (text="") => {
+  if (text.includes('\n')) {
+    console.log('found it!', text);
+  }
+  return text;
+};
+
 const transformMagicCard: Transform<MagicCard> = (card) => {
   let transformedCard = ({
     reversed:false,
@@ -21,7 +28,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
     legalities:card.legalities,
     set:card.set,
     typeLine:card.type_line, //!
-    oracleText:card.oracle_text,
+    oracleText:tokenizeOracleText(card.oracle_text),
     power:card.power,
     toughness:card.toughness,
     alchemy:false,
@@ -91,14 +98,16 @@ const blobKey: Record<ImageSize, keyof ImagePacket> = {
 const fetchImage = async (
   uri: string
 ): Promise<string|undefined> => {
-  const objectUrl = await fetch(uri)
-    .then(r => r.blob())
-    .then(blob => URL.createObjectURL(blob))
-    .catch(err => { console.error('fetchImage failed:', err); return null; });
+  try {
+    const response = await fetch(uri);
+    if (!response.ok) return "";
+    const blob = await response.blob();
 
-  if (!objectUrl) return Promise.resolve("");
-
-  return Promise.resolve(objectUrl);
+    return URL.createObjectURL(blob);
+  } catch(err) {
+    console.log('fetchImageFailed:', err);
+    return "";
+  }
 };
 
 const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, cards:MagicCard[], size:'small'|'large') => {
@@ -219,10 +228,22 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     return normalCards;
   }, [cardData]);
 
+  async function fileExists(url: string) {
+    const response = await fetch(url, {
+      method: "HEAD",
+    });
+
+    return response.ok;
+  }
+
   // Get the card back image
   useEffect(() => {
     const getBackImage = async () => {
-      const backUrl = await fetchImage('https://cards.scryfall.io/back.png');
+      let backUrl;
+      if (await fileExists('magic/defaultCardBack.png'))
+        backUrl = 'magic/defaultCardBack.png';
+      else
+        backUrl = await fetchImage('https://cards.scryfall.io/back.png');
 
       setImageMap((prev) => {
         let imageMap = copyImageMap(prev);
@@ -282,9 +303,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
   }, [cards]); // Re-run when cards change
 
   const hydrateLargeImage = useCallback(async (index:number) => {
-    const hydratedImageMap = await hydrateImageMap(setImageMap, [cards[index]], "large");
-      
-    //setImageMap(hydratedImageMap);
+    hydrateImageMap(setImageMap, [cards[index]], "large");
   }, [cards, imageMap]);
 
   return [error, dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage];

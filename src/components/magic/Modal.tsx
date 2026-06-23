@@ -1,6 +1,6 @@
 'use client'
 
-import { PointerEventHandler, useEffect, useRef, useState } from "react";
+import { PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, } from "./types/default";
 import { ImagePacket } from "./CardDisplay";
 import { Card } from "./Card";
@@ -8,6 +8,7 @@ import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionPr
 import { _dragState, } from "../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
 import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
+import OracleText from "./OracleText";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -169,6 +170,12 @@ const Modal:React.FC<Props> = ({
 
   }
 
+  const oracleText = useMemo(() =>
+    (!card?.reversed) ? card?.oracleText :
+    (card?.back)      ? card?.back?.oracleText :
+                        ""
+  , [card.reversed]);
+
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
       onPointerDown={handlePointerDown}
@@ -226,14 +233,8 @@ const Modal:React.FC<Props> = ({
             fontWeight:'bold',
           }}>{(!card?.reversed) ? card?.typeLine :
                                   card?.back?.typeLine}</h3>
-          <h3 className="selectable oracleText"
-            style={{
-            fontSize:'20px',
-            fontWeight:'bold',
-            flex:1,
-            alignContent:'center',
-          }}>{(!card?.reversed) ? card?.oracleText :
-                                  card?.back?.oracleText}</h3>
+          <OracleText
+            oracleText={oracleText} />
           <h3 className="selectable powerAndToughness"
             style={{
             fontSize:'30px',
