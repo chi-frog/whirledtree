@@ -10,8 +10,6 @@ import { FilterName } from "./FilterName";
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 
-const yCutoffHidden = 15;
-
 type Props = {
   state:FilterState,
   setState:Dispatch<SetStateAction<FilterState>>,
@@ -49,6 +47,7 @@ const Filter:React.FC<Props> = ({
   });
 
   const hidden = useMemo(() => (state === FilterState.HIDDEN), [state]);
+  const reduced = useMemo(() => (state === FilterState.REDUCED), [state]);
   const whole = useMemo(() => (state === FilterState.WHOLE), [state]);
 
   const filterOptions = (<>
@@ -81,16 +80,17 @@ const Filter:React.FC<Props> = ({
   }, []);
 
   const handleArrowPointerEnter:PointerEventHandler = useCallback((e) => {
-
+    if (reduced) setGlow(10);
   }, []);
 
   const handleArrowPointerLeave:PointerEventHandler = useCallback((e) => {
-
+    setGlow(0);
   }, []);
 
   const arrow = (
     <svg
-      className={`hover:scale-130 hover:bg-gradient-to-b hover:from-[#FF0000]/80 hover:to-transparent`}
+      className={(whole) ? "hover:scale-130 hover:bg-gradient-to-b hover:from-[#FF0000]/80 hover:to-transparent" :
+                           "hover:scale-130"}
       onPointerDown={stopPropagationHandler}
       onPointerUp={handleArrowPointerUp}
       onPointerEnter={handleArrowPointerEnter}

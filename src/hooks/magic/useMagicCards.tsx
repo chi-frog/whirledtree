@@ -2,8 +2,9 @@
 
 import { isCardDoublesided, isCardMultiple, MagicCard, MagicCardLayout } from "@/components/magic/types/default";
 import useExternalData, { Transform } from "../useExternalData";
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WError } from "@/components/magic/CardDisplay";
+import { partition } from "@/helpers/arrays";
 
 type ImagePacket = {
   name:string,
@@ -13,22 +14,23 @@ type ImagePacket = {
 export type ImageMap = Map<string, ImagePacket>;
 
 const transformMagicCard: Transform<MagicCard> = (card) => {
-  let transformedCard = {
+  let transformedCard = ({
     reversed:false,
     name:card.name, //!
     layout:(card.layout) as MagicCardLayout,
     legalities:card.legalities,
     set:card.set,
     typeLine:card.type_line, //!
+    oracleText:card.oracle_text,
+    power:card.power,
+    toughness:card.toughness,
     alchemy:false,
     siblings:[],
-    back:({}) as MagicCard,
-    extra:({}) as MagicCard,
     imageUris:{
       small:card.image_uris?.small,
       large:card.image_uris?.large,
     }
-  };
+  }) as MagicCard;
 
   if (isCardDoublesided(transformedCard)) {
     const front = card.card_faces[0];
@@ -36,17 +38,23 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
 
     transformedCard.name = front.name;
     transformedCard.typeLine = front.type_line;
+    transformedCard.oracleText = front.oracle_text;
+    transformedCard.power = front.power;
+    transformedCard.toughness = front.toughness;
     transformedCard.imageUris = {
       small:front.image_uris.small,
       large:front.image_uris.large,};
     transformedCard.back = ({
       name:back.name,
       typeLine:back.type_line,
+      oracleText:back.oracle_text,
+      power:back.power,
+      toughness:back.toughness,
       imageUris:{
         small:back.image_uris.small,
         large:back.image_uris.large,
       },
-    }) as MagicCard
+    }) as MagicCard;
   } else if (isCardMultiple(transformedCard)) {
     const main = card.card_faces[0];
     const extra = card.card_faces[1];
@@ -57,6 +65,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       ...transformedCard,
       name:extra.name,
       typeLine:extra.type_line,
+      oracleText:extra.oracle_text,
     }
   }
 
@@ -93,7 +102,7 @@ const fetchImage = async (
 };
 
 const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, cards:MagicCard[], size:'small'|'large') => {
-    const hydrateCard = async (names:string[], uris:string[]) => {
+    const hydrateCard = async (uris:string[]) => {
       let imageUrls = await Promise.all(uris.map(async (_uri, _index) => {
         const imageUrl = await fetchImage(_uri);
 
@@ -104,7 +113,7 @@ const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, c
     };
   
     await Promise.all(cards.map(async (_card, _index) => {
-      let names = (isCardDoublesided(_card)) ?
+      let names = (!isCardDoublesided(_card)) ?
         [_card.name] :
         [_card.name, (_card.back) ? _card.back.name : ""];
 
@@ -112,7 +121,7 @@ const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, c
         [_card.imageUris[size]] :
         [_card.imageUris[size], (_card.back) ? _card.back.imageUris[size] : ""];
 
-      const imageUrls = await hydrateCard(names, uris);
+      const imageUrls = await hydrateCard(uris);
       
       setImageMap((prev) => {
         let imageMap = copyImageMap(prev);
@@ -152,6 +161,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     url,
     transformMagicCard,
     {dataLimit:500});
+  const reserveCards = useRef<MagicCard[]>([]);
 
   // Filter card data
   const cards:MagicCard[] = useMemo(() => {
@@ -164,24 +174,40 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
         cardData.findIndex((__card) => __card.name === _card.name) === _index);
 
     //Set aside Alchemy cards
-    const alchemyCards = cards.filter((_card) => _card.name.substring(0, 2) === 'A-');
+    let [alchemyCards, normalCards] = partition(cards, (_card) =>
+      (_card.name.substring(0, 2) === 'A-'));
 
+    console.log('Alchemy Cards:', alchemyCards);
+    console.log('Normal Cards:', normalCards);
+ 
     //If an Alchemy card has a normal card in existence as well, fold it inside.
-    //If an Alchemy card does not have a normal card, keep it separate.
+    //If an Alchemy card does not have a normal card, keep it in reserve.
     alchemyCards.forEach((_card, _index) => {
       let shortenedName = _card.name.substring(2);
-      let originalCard = cards.find((__card) => __card.name === shortenedName);
+      let originalCard = normalCards.find((__card) => __card.name === shortenedName);
 
       _card.alchemy = true;
       _card.name = shortenedName;
 
+      if (_card.back) {
+        shortenedName = _card.back.name.substring(2);
+        _card.back.alchemy = true;
+        _card.back.name = shortenedName;
+      }
+
+      if (_card.extra) {
+        shortenedName = _card.extra.name.substring(2);
+        _card.extra.alchemy = true;
+        _card.extra.name = shortenedName;
+      }
+
       if (originalCard) {
+        console.log('o', originalCard);
         originalCard.siblings.push(_card);
-        cards.splice(_index, 1);
       }
     });
 
-    cards = cards.sort((a, b) => {
+    normalCards = normalCards.sort((a, b) => {
       const nameA = a.name.toUpperCase(); // ignore upper and lowercase
       const nameB = b.name.toUpperCase(); // ignore upper and lowercase
 
@@ -190,7 +216,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
                                0;
       });
     
-    return cards;
+    return normalCards;
   }, [cardData]);
 
   // Get the card back image

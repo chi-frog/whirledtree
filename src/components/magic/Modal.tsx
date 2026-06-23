@@ -211,6 +211,7 @@ const Modal:React.FC<Props> = ({
           flexGrow:1,
           display:'flex',
           flexDirection:'column',
+          textWrap:'wrap',
         }}>
           <h3 className="selectable name"
             style={{
@@ -225,6 +226,20 @@ const Modal:React.FC<Props> = ({
             fontWeight:'bold',
           }}>{(!card?.reversed) ? card?.typeLine :
                                   card?.back?.typeLine}</h3>
+          <h3 className="selectable oracleText"
+            style={{
+            fontSize:'20px',
+            fontWeight:'bold',
+            flex:1,
+            alignContent:'center',
+          }}>{(!card?.reversed) ? card?.oracleText :
+                                  card?.back?.oracleText}</h3>
+          <h3 className="selectable powerAndToughness"
+            style={{
+            fontSize:'30px',
+            fontWeight:'bold',
+          }}>{(!card?.reversed) ? "" + card?.power + "/" + card?.toughness:
+                                  "" + card?.back?.power + "/" + card?.back?.toughness}</h3>
         </div>
       </div>
       <div id="searchTooltip" ref={ref}
