@@ -299,7 +299,7 @@ export const Card:React.FC<Props> = ({
         boxShadow: (mousedover) ?
           '0px 0px 5px 5px rgba(236, 236, 26), inset 0px 0px 2px 3px rgba(236, 236, 26, 1)' :
           'none',
-        cursor:'grab',
+        cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
       }}/>  
       }
       <div
@@ -311,7 +311,7 @@ export const Card:React.FC<Props> = ({
           height:"100%",
           backgroundColor:'transparent',
           position:'absolute',
-          cursor:'cell'
+          cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
         }}
         />
       <div
@@ -324,7 +324,7 @@ export const Card:React.FC<Props> = ({
           left:"calc(100% - 10px)",
           backgroundColor:'transparent',
           position:'absolute',
-          cursor:'cell'
+          cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
         }}
         />
     </div>);
