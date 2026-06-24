@@ -33,10 +33,10 @@ export const Card:React.FC<Props> = ({
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
   const [mousedover, setMousedover] = useState<boolean>(false);
-  const [rotateState, startRotating, forceRotate] =
-    useCardRotate(dims, subDrag, startDragging, dragStateRef);
   const ref = useRef<null|HTMLDivElement>(null);
   const raf = useRef<number>(-1);
+  const [rotateState, startRotating, forceRotate] =
+    useCardRotate(ref.current, subDrag, startDragging, dragStateRef);
   const lastMousePress = useRef<WPoint>(_wpoint);
   const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
 
@@ -56,6 +56,7 @@ export const Card:React.FC<Props> = ({
             width: entry.contentRect.width,
             height: entry.contentRect.height,
           });
+          console.log('Resizing:' + card.name);
         }
       });
 
@@ -217,6 +218,7 @@ export const Card:React.FC<Props> = ({
   const handleDoublesidedPointerDown = (e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('here in pointer down', e);
     if (!dir) dir = (card.reversed) ? -1 : 1
     startRotating(e, dir);
     lastMousePress.current = {x:e.clientX, y:e.clientY};
@@ -226,6 +228,7 @@ export const Card:React.FC<Props> = ({
     e.preventDefault();
     e.stopPropagation();
     const point = {x:e.clientX, y:e.clientY};
+    console.log('DoublesidedPointerUp', e);
 
     if ((areEqualWPoints(point, lastMousePress.current)) ||
         (rotateState.angle > 90)) {

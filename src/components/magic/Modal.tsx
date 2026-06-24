@@ -235,12 +235,14 @@ const Modal:React.FC<Props> = ({
                                   card?.back?.typeLine}</h3>
           <OracleText
             oracleText={oracleText} />
+          {card?.power && card?.toughness &&
           <h3 className="selectable powerAndToughness"
             style={{
             fontSize:'30px',
             fontWeight:'bold',
           }}>{(!card?.reversed) ? "" + card?.power + "/" + card?.toughness:
                                   "" + card?.back?.power + "/" + card?.back?.toughness}</h3>
+          }
         </div>
       </div>
       <div id="searchTooltip" ref={ref}

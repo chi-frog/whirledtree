@@ -31,9 +31,8 @@ export const constructSearchUrl = ({
       url += "+";
     url += bitSearchSet + ':' + set;
   } else {
-    if (name)
-      url += "+";
-    url += bitSearchSet + ':'
+    if (!name)
+      url += bitSearchSet + ':'
   }
   
   if (format && format !== ANY) {

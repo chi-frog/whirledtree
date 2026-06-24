@@ -14,9 +14,6 @@ type ImagePacket = {
 export type ImageMap = Map<string, ImagePacket>;
 
 const tokenizeOracleText:(text:string)=>string = (text="") => {
-  if (text.includes('\n')) {
-    console.log('found it!', text);
-  }
   return text;
 };
 

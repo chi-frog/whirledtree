@@ -7,18 +7,20 @@ import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 const tag = 'cardRotate';
 
 export interface CardRotateState extends DragState {
-  resistance: WPoint;
-  returnSpeed: number;
-  weight: number;
-  angle: number; 
-  maxAngle: number;
+  angle:number; 
+  axis:{x:number, width:number};
+  resistance:WPoint;
+  returnSpeed:number;
+  weight:number;
+  maxAngle:number;
 }
 export const _cardRotateState:CardRotateState = {
   ..._dragState,
+  angle:0,
+  axis:{x:0, width:0},
   resistance:makeWPoint({x:5, y:5}),
   returnSpeed:20,
   weight:4,
-  angle:0,
   maxAngle:80,
 }
 
@@ -30,13 +32,13 @@ type UseCardRotateReturn = [
   forceRotate:ForceRotate
 ];
 type UseCardRotate = (
-  dims:{x:number, y:number, width:number, height:number},
+  elementRef:HTMLDivElement|null,
   subDrag:SubDrag,
   startDragging:StartDragging,
   dragStateRef:RefObject<DragState>,
 ) => UseCardRotateReturn;
 const useCardRotate:UseCardRotate = (
-    dims,
+    elementRef,
     subDrag,
     startDragging,
     dragStateRef
@@ -85,6 +87,7 @@ const useCardRotate:UseCardRotate = (
         ...dragStateRef.current,
       };
       let dir = dirRef.current;
+      let dims = state.axis;
 
       if (state.stage === DragStage.INACTIVE) {
         state.stage = DragStage.RETURNING;
@@ -132,10 +135,14 @@ const useCardRotate:UseCardRotate = (
 
   const startRotatingCard:StartRotatingCard = (e, dir) => {
     dirRef.current = dir;
+    const dims = elementRef?.getBoundingClientRect();
+    if (!dims) return;
+
     const dragState = startDragging(e, tag);
 
     ref.current = {
       ...ref.current,
+      axis: {x:dims.x, width:dims.width},
       ...dragState};
     setState(ref.current);
   };

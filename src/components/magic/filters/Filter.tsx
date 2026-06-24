@@ -112,7 +112,7 @@ const Filter:React.FC<Props> = ({
     </svg>
   );
 
-  const handlePointerUp:PointerEventHandler = useCallback((e) => {
+  const handleHiddenBoxPointerUp:PointerEventHandler = useCallback((e) => {
     console.log('pointerUp');
     if(hidden) {
       setState(FilterState.REDUCED);
@@ -123,23 +123,30 @@ const Filter:React.FC<Props> = ({
     }
   }, [hidden]);
 
-  const handlePointerEnter:PointerEventHandler = useCallback((e) => {
+  const handleHiddenBoxPointerEnter:PointerEventHandler = useCallback((e) => {
     if (hidden)
       setGlow(10);
     else
       setGlow(-3);
   }, [state]);
 
-  const handlePointerLeave:PointerEventHandler = useCallback((e) => {
+  const handleHiddenBoxPointerLeave:PointerEventHandler = useCallback((e) => {
     setGlow(0);
+  }, []);
+
+  const handlePointerDown:PointerEventHandler = useCallback((e) => {
+    console.log('here in down', e);
+    if (e.button !== 0) return;
+
+    e.stopPropagation();
   }, []);
 
   return (<>
     <div
       onPointerDown={stopPropagationHandler}
-      onPointerUp={handlePointerUp}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
+      onPointerUp={handleHiddenBoxPointerUp}
+      onPointerEnter={handleHiddenBoxPointerEnter}
+      onPointerLeave={handleHiddenBoxPointerLeave}
       style= {{
       position:'fixed',
       backgroundColor:'transparent',
@@ -149,6 +156,7 @@ const Filter:React.FC<Props> = ({
       cursor:'pointer',
     }}/>
     <div
+      onPointerDown={handlePointerDown}
       style={{
       position:'fixed',
       top: (hidden) ? `${-80 + glow}px` :

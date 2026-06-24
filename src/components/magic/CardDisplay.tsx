@@ -71,7 +71,6 @@ const CardDisplay:React.FC<Props> = ({
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
 
   useEffect(() => {
-    console.info('setting cards:', databaseCards);
     setCards(databaseCards);
   } , [databaseCards]);
 
