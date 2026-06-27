@@ -70,7 +70,6 @@ const Filter:React.FC<Props> = ({
 
   const handleArrowPointerUp:PointerEventHandler = useCallback((e) => {
     e.stopPropagation();
-    console.log('arrowPointerUp');
 
     setState((prev) => {
       return (prev === FilterState.HIDDEN)  ? FilterState.REDUCED :
@@ -113,7 +112,6 @@ const Filter:React.FC<Props> = ({
   );
 
   const handleHiddenBoxPointerUp:PointerEventHandler = useCallback((e) => {
-    console.log('pointerUp');
     if(hidden) {
       setState(FilterState.REDUCED);
       setGlow(-3);
@@ -135,7 +133,6 @@ const Filter:React.FC<Props> = ({
   }, []);
 
   const handlePointerDown:PointerEventHandler = useCallback((e) => {
-    console.log('here in down', e);
     if (e.button !== 0) return;
 
     e.stopPropagation();

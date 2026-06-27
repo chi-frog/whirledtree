@@ -76,7 +76,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
   return transformedCard;
 };
 
-const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
+export const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
   const newImageMap = new Map<string, ImagePacket>();
 
   for (const [key, value] of imageMap)
@@ -92,7 +92,7 @@ const blobKey: Record<ImageSize, keyof ImagePacket> = {
   large: 'largeBlob',
 };
 
-const fetchImage = async (
+export const fetchImage = async (
   uri: string
 ): Promise<string|undefined> => {
   try {
@@ -102,7 +102,7 @@ const fetchImage = async (
 
     return URL.createObjectURL(blob);
   } catch(err) {
-    console.log('fetchImageFailed:', err);
+    console.error('fetchImageFailed:', err);
     return "";
   }
 };
@@ -183,8 +183,6 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     let [alchemyCards, normalCards] = partition(cards, (_card) =>
       (_card.name.substring(0, 2) === 'A-'));
 
-    console.log('Alchemy Cards:', alchemyCards);
-    console.log('Normal Cards:', normalCards);
  
     //If an Alchemy card has a normal card in existence as well, fold it inside.
     //If an Alchemy card does not have a normal card, keep it in reserve.
@@ -207,10 +205,8 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
         _card.extra.name = shortenedName;
       }
 
-      if (originalCard) {
-        console.log('o', originalCard);
+      if (originalCard)
         originalCard.siblings.push(_card);
-      }
     });
 
     normalCards = normalCards.sort((a, b) => {

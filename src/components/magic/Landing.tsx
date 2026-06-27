@@ -18,6 +18,8 @@ const Landing:React.FC<Props> = () => {
       loadMap={database.loadMap}
       formats={database.formats}
       sets={database.sets}
+      symbols={database.symbols}
+      symbolImageMap={database.symbolImageMap}
       databaseCards={database.cards}
       imageMap={database.imageMap}
       hydrateLargeImage={database.hydrateLargeImage}

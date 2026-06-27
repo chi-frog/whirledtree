@@ -56,7 +56,6 @@ export const Card:React.FC<Props> = ({
             width: entry.contentRect.width,
             height: entry.contentRect.height,
           });
-          console.log('Resizing:' + card.name);
         }
       });
 
@@ -218,7 +217,6 @@ export const Card:React.FC<Props> = ({
   const handleDoublesidedPointerDown = (e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('here in pointer down', e);
     if (!dir) dir = (card.reversed) ? -1 : 1
     startRotating(e, dir);
     lastMousePress.current = {x:e.clientX, y:e.clientY};
@@ -228,7 +226,6 @@ export const Card:React.FC<Props> = ({
     e.preventDefault();
     e.stopPropagation();
     const point = {x:e.clientX, y:e.clientY};
-    console.log('DoublesidedPointerUp', e);
 
     if ((areEqualWPoints(point, lastMousePress.current)) ||
         (rotateState.angle > 90)) {

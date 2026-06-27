@@ -5,12 +5,13 @@
 'use client'
 
 import { useMemo, useState } from "react";
-import useMagicCards, { ImageMap } from "./useMagicCards";
+import useMagicCards, { copyImageMap, fetchImage, ImageMap } from "./useMagicCards";
 import useMagicSets from "./useMagicSets";
 import { MagicCard, MagicFormat, MagicSet } from "@/components/magic/types/default";
 import { capitalize } from "@/helpers/string";
 import { _noError, _notFound, WError } from "@/components/magic/CardDisplay";
 import { copyMap } from "@/helpers/wmap";
+import useMagicSymbols, { MagicSymbol } from "./useMagicSymbols";
 
 /*
 * Everything listed here has both a loaded/unloaded state,
@@ -41,6 +42,8 @@ export type MagicDatabase = {
   loadMap:LoadMap,
   formats:MagicFormat[],
   sets:MagicSet[],
+  symbols:MagicSymbol[],
+  symbolImageMap:Map<string, string>,
   cards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
@@ -50,12 +53,31 @@ type UseMagicData = (
   url:string,
 ) => Return;
 const useMagicDatabase:UseMagicData = (url) => {
-  //const [symbols, setSymbols] = useMagicSymbols();
+  const [symbolsError, symbolsLoaded, symbols] = useMagicSymbols();
+  const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
   const [setsError, setsLoaded, sets] = useMagicSets();
   const [cardsError, cardsLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage] = useMagicCards(url);
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
+
+  useMemo(() => {
+    if (!symbolsLoaded) return;
+
+    symbols.forEach(async (_symbol) => {
+      const url = await fetchImage(_symbol.imageUri);
+      if (!url) return;
+
+      setSymbolImageMap((prev) => {
+        const updated = new Map<string, string>();
+        for (const [key, value] of prev)
+          updated.set(key, value);
+        updated.set(_symbol.symbol, url);
+
+        return updated;
+      });
+    });
+  }, [symbolsLoaded]);
 
   useMemo(() => {
     if ((cards.length > 0) && (formats.length === 0))
@@ -107,7 +129,7 @@ const useMagicDatabase:UseMagicData = (url) => {
     }
   }, [cards, imagesLoaded]);
 
-  return {errorMap, loadMap, formats, sets, cards, imageMap, hydrateLargeImage};
+  return {errorMap, loadMap, formats, sets, symbols, symbolImageMap, cards, imageMap, hydrateLargeImage};
 };
 
 export default useMagicDatabase;

@@ -9,6 +9,7 @@ import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { ErrorMap, LoadMap } from "@/hooks/magic/useMagicDatabase";
+import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 
 export enum FilterState {
   HIDDEN = 'hidden',
@@ -47,6 +48,8 @@ type Props = {
   loadMap:LoadMap,
   formats:MagicFormat[],
   sets:MagicSet[],
+  symbols:MagicSymbol[],
+  symbolImageMap:Map<string, string>,
   databaseCards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
@@ -55,7 +58,7 @@ type Props = {
   handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>
 };
 const CardDisplay:React.FC<Props> = ({
-  errorMap, loadMap, formats, sets, databaseCards, imageMap, hydrateLargeImage,
+  errorMap, loadMap, formats, sets, symbols, symbolImageMap, databaseCards, imageMap, hydrateLargeImage,
   selected, updateSelected, handlers
 }) => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
@@ -142,6 +145,8 @@ const CardDisplay:React.FC<Props> = ({
     return (
       <Modal
       close={()=>setModalShown(false)}
+      symbols={symbols}
+      symbolImageMap={symbolImageMap}
       cards={cards}
       changeCard={changeCard}
       updateSelected={updateSelected}

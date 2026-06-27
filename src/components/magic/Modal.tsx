@@ -9,6 +9,7 @@ import { _dragState, } from "../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
 import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
 import OracleText from "./OracleText";
+import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -64,6 +65,8 @@ function createSearchTooltip({
 
 type Props = {
   close:()=>void,
+  symbols:MagicSymbol[],
+  symbolImageMap:Map<string, string>,
   cards:MagicCard[],
   changeCard:(index:number, card:MagicCard)=>void,
   updateSelected:FilterUpdateFunction,
@@ -75,6 +78,8 @@ const tooltipMargin = 5;
 
 const Modal:React.FC<Props> = ({
     close,
+    symbols,
+    symbolImageMap,
     cards,
     changeCard,
     updateSelected,
@@ -234,7 +239,9 @@ const Modal:React.FC<Props> = ({
           }}>{(!card?.reversed) ? card?.typeLine :
                                   card?.back?.typeLine}</h3>
           <OracleText
-            oracleText={oracleText} />
+            oracleText={oracleText}
+            symbols={symbols}
+            symbolImageMap={symbolImageMap}/>
           {card?.power && card?.toughness &&
           <h3 className="selectable powerAndToughness"
             style={{
