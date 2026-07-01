@@ -31,11 +31,10 @@ const OracleText:React.FC<Props> = ({oracleText, symbols, symbolImageMap}) => {
     if (openingParenthesis < 0) helperTextTokens = [magicParagraph];
 
     const endingParenthesis = magicParagraph.content.indexOf(')');
-    if (endingParenthesis < 0) {
-      console.log('Weird! No Ending', magicParagraph);
+    if (endingParenthesis < 0)
       helperTextTokens = [magicParagraph];
 
-    } else {
+    else {
       const start = magicParagraph.content.substring(0, openingParenthesis);
       const helper = magicParagraph.content.substring(openingParenthesis, endingParenthesis + 1);
       const end = magicParagraph.content.substring(endingParenthesis + 1);
@@ -55,14 +54,11 @@ const OracleText:React.FC<Props> = ({oracleText, symbols, symbolImageMap}) => {
                               paragraph.includes(symbol));
 
     const tokenizedParagraph = relevantSymbols.reduce<Paragraph>(
-      (remaining, symbol) => {
-        console.log('Remaining', remaining);
-
+      (remaining, symbol) => {  
         const parts = remaining.map((part) =>
           isMagicText(part) ? part.content.split(symbol.symbol).map(
                                 (_part) => ({type:part.type, content:_part})) :
                               [part]);
-        console.log('Parts', parts);
         const partsExpanded = parts.map((part) => {
           if (part.length <= 1) return part;
           let result = part.reduce<Paragraph>((expanded, phrase) =>
@@ -72,9 +68,7 @@ const OracleText:React.FC<Props> = ({oracleText, symbols, symbolImageMap}) => {
           result.splice(result.length - 1);
           return result;
         });
-        console.log('partsExpanded', partsExpanded);
         const partsFlat = partsExpanded.flat();
-        console.log('partsFlat', partsFlat);
 
         return partsFlat.filter((part) => !isMagicText(part) || part.content !== '');
       }, helperTextTokens);
@@ -83,7 +77,6 @@ const OracleText:React.FC<Props> = ({oracleText, symbols, symbolImageMap}) => {
   }
 
   const tokenizedParagraphs = paragraphs.map(tokenizeParagraph);
-  console.log('tokenizedParagraphs', tokenizedParagraphs);
 
   const transformToken:(token:MagicText|MagicSymbol, index:number)=>React.ReactNode = (token, index) => {
     if (isMagicText(token))
@@ -111,9 +104,6 @@ const OracleText:React.FC<Props> = ({oracleText, symbols, symbolImageMap}) => {
   }
 
   const transformedOracleText = tokenizedParagraphs.map(transformParagraph);
-
-  console.log('transformedOracleText', transformedOracleText);
-  console.log('imageMap', symbolImageMap);
   
   return (
     <h3 className="selectable oracleText"

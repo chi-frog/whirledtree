@@ -13,8 +13,8 @@ type ImagePacket = {
   };
 export type ImageMap = Map<string, ImagePacket>;
 
-const tokenizeOracleText:(text:string)=>string = (text="") => {
-  return text;
+const convertToManaCost = (manaCost:string) => {
+  return manaCost;
 };
 
 const transformMagicCard: Transform<MagicCard> = (card) => {
@@ -25,9 +25,10 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
     legalities:card.legalities,
     set:card.set,
     typeLine:card.type_line, //!
-    oracleText:tokenizeOracleText(card.oracle_text),
+    oracleText:card.oracle_text,
     power:card.power,
     toughness:card.toughness,
+    manaCost:convertToManaCost(card.mana_cost),
     alchemy:false,
     siblings:[],
     imageUris:{
@@ -45,6 +46,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
     transformedCard.oracleText = front.oracle_text;
     transformedCard.power = front.power;
     transformedCard.toughness = front.toughness;
+    transformedCard.manaCost = front.mana_cost;
     transformedCard.imageUris = {
       small:front.image_uris.small,
       large:front.image_uris.large,};
@@ -54,6 +56,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       oracleText:back.oracle_text,
       power:back.power,
       toughness:back.toughness,
+      manaCost:back.mana_cost,
       imageUris:{
         small:back.image_uris.small,
         large:back.image_uris.large,
@@ -70,6 +73,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       name:extra.name,
       typeLine:extra.type_line,
       oracleText:extra.oracle_text,
+      manaCost:extra.mana_cost,
     }
   }
 

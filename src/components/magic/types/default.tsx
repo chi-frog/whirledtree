@@ -1,4 +1,5 @@
 import { ANY } from "@/hooks/magic/useFilters"
+import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 
 export enum MagicCardLayout {
   NORMAL='normal',
@@ -46,6 +47,7 @@ export type MagicCard = {
   oracleText:string,
   power:string,
   toughness:string,
+  manaCost:string,
   alchemy:boolean,
   siblings:MagicCard[],
   imageUris:{ small: string, large: string },

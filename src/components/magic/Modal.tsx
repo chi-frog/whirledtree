@@ -94,6 +94,7 @@ const Modal:React.FC<Props> = ({
   const {subSelection} = useSelectionContext();
   const ref = useRef(null);
   const divRef = useRef(null);
+  const nameRef = useRef(null);
 
   const card = cards[index];
 
@@ -172,14 +173,42 @@ const Modal:React.FC<Props> = ({
 
   const handleCardPointerUp:PointerEventHandler = (e) => {
     e.stopPropagation();
-
   }
+
+  const nameFontSize = useMemo(() => {
+    console.log('Changing Name Font Size');
+    console.log('Name Ref:', nameRef.current);
+    console.log('Div Ref', divRef.current);
+    return 30;
+  }, [card.name, card.reversed]);
 
   const oracleText = useMemo(() =>
     (!card?.reversed) ? card?.oracleText :
     (card?.back)      ? card?.back?.oracleText :
                         ""
   , [card.reversed]);
+
+  const manaCostImages = useMemo(() => {
+    if (!card) return [];
+
+    let face = (card.reversed) ? card.back : card;
+
+    const manaCost = (face) ? face.manaCost : "";
+    const manaSymbols = symbols.filter((symbol) => card.manaCost.includes(symbol.symbol));
+    const indices = manaSymbols.reduce<{manaCostIndex:number, symbol:MagicSymbol}[]>((indices, symbol) => {
+      let newIndices = [...indices];
+      let index = -1;
+      while ((index = manaCost.indexOf(symbol.symbol, index + 1)) >= 0)
+        newIndices.push({manaCostIndex:index, symbol});
+
+      return newIndices;
+    }, []);
+
+    const orderedIndices = indices.toSorted((a, b) => a.manaCostIndex - b.manaCostIndex);
+    const orderedSymbols = orderedIndices.map((index) => index.symbol);
+    return orderedSymbols;
+
+  }, [symbols, card.manaCost, card.reversed, symbolImageMap])
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -225,13 +254,30 @@ const Modal:React.FC<Props> = ({
           flexDirection:'column',
           textWrap:'wrap',
         }}>
+          <div className="nameDiv" ref={nameRef} style={{
+            display:"flex",
+            flexDirection:'row',
+            marginTop:28,
+            justifyContent:'center',
+            alignItems:'center',
+          }}>
           <h3 className="selectable name"
             style={{
-            marginTop:'28px',
-            fontSize:'30px',
+            fontSize:nameFontSize,
             fontWeight:'bold',
+            paddingRight:'10px',
           }}>{(!card?.reversed) ? card?.name :
                                   card?.back?.name}</h3>
+          {...manaCostImages?.map((symbol, index) => (
+            <img key={index} src={symbol.imageUri}  alt="" className="icon" style={{
+              width:'24px',
+              height:'24px',
+              borderRadius:'50%',
+              boxShadow:'-0.8px 1.5px black',
+              margin:'1px',
+            }}/>
+          ))}
+          </div>
           <h3 className="selectable typeLine"
             style={{
             fontSize:'20px',
