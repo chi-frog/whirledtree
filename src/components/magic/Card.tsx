@@ -222,17 +222,22 @@ export const Card:React.FC<Props> = ({
     lastMousePress.current = {x:e.clientX, y:e.clientY};
   };
 
+
+
   const handleDoublesidedPointerUp:PointerEventHandler = (e) => {
     e.preventDefault();
     e.stopPropagation();
     const point = {x:e.clientX, y:e.clientY};
 
-    if ((areEqualWPoints(point, lastMousePress.current)) ||
-        (rotateState.angle > 90)) {
+    if (areEqualWPoints(point, lastMousePress.current)) {
       changeCard({...card, reversed:!card.reversed});
+      console.table(rotateState);
+      forceRotate(180);
+    }
 
-      if (flipping)
-        forceRotate(90 - (rotateState.angle - 90));
+    if (flipping) {
+      changeCard({...card, reversed:!card.reversed});
+      forceRotate(90 - (rotateState.angle - 90));
     }
   };
 
