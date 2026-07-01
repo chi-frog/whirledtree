@@ -106,7 +106,7 @@ const OracleText:React.FC<Props> = ({oracleText, symbols, symbolImageMap}) => {
   const transformedOracleText = tokenizedParagraphs.map(transformParagraph);
   
   return (
-    <h3 className="selectable oracleText"
+    <h3 className="selectable oracleText" title="Search By Oracle Text"
       style={{
         fontSize:'18px',
         flex:1,

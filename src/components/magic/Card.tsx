@@ -229,7 +229,8 @@ export const Card:React.FC<Props> = ({
 
     if ((areEqualWPoints(point, lastMousePress.current)) ||
         (rotateState.angle > 90)) {
-        changeCard({...card, reversed:!card.reversed})
+      changeCard({...card, reversed:!card.reversed});
+
       if (flipping)
         forceRotate(90 - (rotateState.angle - 90));
     }

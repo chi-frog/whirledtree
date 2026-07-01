@@ -208,7 +208,23 @@ const Modal:React.FC<Props> = ({
     const orderedSymbols = orderedIndices.map((index) => index.symbol);
     return orderedSymbols;
 
-  }, [symbols, card.manaCost, card.reversed, symbolImageMap])
+  }, [symbols, card.manaCost, card.reversed, symbolImageMap]);
+
+  const power = useMemo(() => {
+    if (card.reversed) {
+      if (!card.back) return null;
+      else return card.back.power;
+    } else
+      return card.power;
+  }, [card.power, card.reversed]);
+
+  const toughness = useMemo(() => {
+    if (card.reversed) {
+      if (!card.back) return null;
+      else return card.back.toughness;
+    } else
+      return card.toughness;
+  }, [card.toughness, card.reversed]);
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -261,7 +277,7 @@ const Modal:React.FC<Props> = ({
             justifyContent:'center',
             alignItems:'center',
           }}>
-          <h3 className="selectable name"
+          <h3 className="selectable name" title="Search By Name"
             style={{
             fontSize:nameFontSize,
             fontWeight:'bold',
@@ -269,7 +285,8 @@ const Modal:React.FC<Props> = ({
           }}>{(!card?.reversed) ? card?.name :
                                   card?.back?.name}</h3>
           {...manaCostImages?.map((symbol, index) => (
-            <img key={index} src={symbol.imageUri}  alt="" className="icon" style={{
+            <img key={index} src={symbol.imageUri} alt={symbol.symbol} className="icon" 
+             title="Search By Mana Cost" style={{
               width:'24px',
               height:'24px',
               borderRadius:'50%',
@@ -278,7 +295,7 @@ const Modal:React.FC<Props> = ({
             }}/>
           ))}
           </div>
-          <h3 className="selectable typeLine"
+          <h3 className="selectable typeLine" title="Search By Type"
             style={{
             fontSize:'20px',
             fontWeight:'bold',
@@ -288,13 +305,12 @@ const Modal:React.FC<Props> = ({
             oracleText={oracleText}
             symbols={symbols}
             symbolImageMap={symbolImageMap}/>
-          {card?.power && card?.toughness &&
-          <h3 className="selectable powerAndToughness"
+          {power && toughness &&
+          <h3 className="selectable powerAndToughness" title="Search By Power/Toughness"
             style={{
             fontSize:'30px',
             fontWeight:'bold',
-          }}>{(!card?.reversed) ? "" + card?.power + "/" + card?.toughness:
-                                  "" + card?.back?.power + "/" + card?.back?.toughness}</h3>
+          }}>{power}/{toughness}</h3>
           }
         </div>
       </div>
