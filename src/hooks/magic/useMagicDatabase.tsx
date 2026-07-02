@@ -23,6 +23,7 @@ type DataKeys = {
   'sets':string,
   'cards':string,
   'images':string,
+  'types':string,
 };
 export type ErrorMap = Map<keyof DataKeys, WError[]>;
 const _errorMap:ErrorMap = new Map([
@@ -30,19 +31,22 @@ const _errorMap:ErrorMap = new Map([
   ['sets', []],
   ['cards', []],
   ['images', []],
+  ['types', []],
 ])
 export type LoadMap = Map<keyof DataKeys, boolean>;
 const _loadMap:LoadMap = new Map([
   ['formats', false],
   ['sets', false],
   ['cards', false],
-  ['images', false]
+  ['images', false],
+  ['types', false],
 ])
 export type MagicDatabase = {
   errorMap:ErrorMap,
   loadMap:LoadMap,
   formats:MagicFormat[],
   sets:MagicSet[],
+  types:string[],
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
   cards:MagicCard[],
@@ -83,8 +87,7 @@ const useMagicDatabase:UseMagicData = (url) => {
 
   useMemo(() => {
     if ((cards.length > 0) && (formats.length === 0))
-      setFormats([{name:"Any"},
-        ...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
+      setFormats([...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
   }, [cards]);
 
   useMemo(() => {
@@ -131,7 +134,7 @@ const useMagicDatabase:UseMagicData = (url) => {
     }
   }, [cards, imagesLoaded]);
 
-  return {errorMap, loadMap, formats, sets, symbols, symbolImageMap, cards, imageMap, hydrateLargeImage};
+  return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, cards, imageMap, hydrateLargeImage};
 };
 
 export default useMagicDatabase;

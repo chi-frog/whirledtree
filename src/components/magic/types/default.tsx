@@ -64,10 +64,14 @@ export type MagicSet = {
 
 export const _magicSetAny = {
   name:ANY,
-  acronym:'',
-  type:'',
+  acronym:ANY,
+  type:ANY,
 }
 
 export type MagicFormat = {
   name:string,
+}
+
+export const _magicFormatAny = {
+  name:ANY,
 }

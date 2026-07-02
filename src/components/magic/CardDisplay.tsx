@@ -48,6 +48,7 @@ type Props = {
   loadMap:LoadMap,
   formats:MagicFormat[],
   sets:MagicSet[],
+  types:string[],
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
   databaseCards:MagicCard[],
@@ -58,7 +59,7 @@ type Props = {
   handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>
 };
 const CardDisplay:React.FC<Props> = ({
-  errorMap, loadMap, formats, sets, symbols, symbolImageMap, databaseCards, imageMap, hydrateLargeImage,
+  errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, databaseCards, imageMap, hydrateLargeImage,
   selected, updateSelected, handlers
 }) => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
@@ -169,7 +170,7 @@ const CardDisplay:React.FC<Props> = ({
       selectedFormat={selected.format} onChangeFormat={handlers.format}
       selectedName={selected.name} onChangeName={handlers.name}
       selectedType={selected.type} onChangeType={handlers.type}
-      sets={sets} cards={cards} formats={formats}/>
+      sets={sets} cards={cards} formats={formats} types={types}/>
     {(cards.length > 0) && !hasCardsError && 
       <View loaded={loadMap.get('images')}
         dragState={dragState}

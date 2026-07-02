@@ -10,7 +10,7 @@ export type Selected = {
   set?:string, //acronym
   type?:string,
 }
-type SKey = keyof Selected;
+export type SKey = keyof Selected;
 
 const defaultSelected = {
   name:ANY,

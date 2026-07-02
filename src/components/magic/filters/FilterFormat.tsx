@@ -1,8 +1,9 @@
 'use client'
 
-import { ChangeEventHandler } from "react";
-import { MagicFormat } from "../types/default";
+import { ChangeEventHandler, useMemo } from "react";
+import { _magicFormatAny, MagicFormat } from "../types/default";
 import FilterOption from "./FilterOption";
+import { ANY } from "@/hooks/magic/useFilters";
 
 type Props = {
   formats:MagicFormat[],
@@ -12,9 +13,13 @@ type Props = {
 
 export const FilterFormat:React.FC<Props> = ({
     formats,
-    selectedFormat="",
+    selectedFormat=ANY,
     onChangeFormat,
-  }:Props) => (
+  }:Props) => {
+
+  formats = useMemo(() => [_magicFormatAny].concat(formats), [formats]);
+    
+  return (
   <FilterOption text="Format">
     <select id="format"
       className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
@@ -29,10 +34,12 @@ export const FilterFormat:React.FC<Props> = ({
         boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
         transition:'background-color 0.1s ease-in-out',
       }}>
-      {formats.map((_format, _index) => (
-        (_format.name !== selectedFormat) ?
-          <option className="notselected" key={_index} value={_format.name}>{_format.name}</option> :
-          <option className="selected" key={_index} value={_format.name}>{_format.name}</option>
-      ))}
+      {formats.map((_format, _index) => {
+        const className = (_format.name !== selectedFormat) ? "notselected" : "selected";
+        const displayText = (_format.name !== ANY) ? _format.name : "Any";
+
+        return (
+          <option className={className} key={_index} value={_format.name}>{displayText}</option>
+      )})}
     </select>
-  </FilterOption>);
+  </FilterOption>)};

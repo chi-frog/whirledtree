@@ -27,6 +27,7 @@ type Props = {
   sets:MagicSet[],
   cards:MagicCard[],
   formats:MagicFormat[],
+  types:string[],
 };
 const Filter:React.FC<Props> = ({
   state,
@@ -43,7 +44,8 @@ const Filter:React.FC<Props> = ({
   onChangeType,
   cards,
   sets,
-  formats}:Props) => {
+  formats,
+  types}:Props) => {
     
   const [glow, setGlow] = useState<number>(0);
 
@@ -68,6 +70,7 @@ const Filter:React.FC<Props> = ({
       selectedName={selectedName}
       onChangeName={onChangeName}/>
     <FilterType
+      types={types}
       selectedType={selectedType}
       onChangeType={onChangeType}/>
     <FilterFormat

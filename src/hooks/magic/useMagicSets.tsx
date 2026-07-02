@@ -23,6 +23,6 @@ const useMagicSets:()=>Return = () => {
     scryfallUrl + urlSets,
     transformMagicSet);
   
-  return [error, loaded, [_magicSetAny, ...sets]]};
+  return [error, loaded, [...sets]]};
 
 export default useMagicSets;

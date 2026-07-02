@@ -2,14 +2,11 @@
 * Functions to construct valid scryfall requests
 */
 
-import { ANY, Selected } from "@/hooks/magic/useFilters";
+import { ANY, Selected, SKey } from "@/hooks/magic/useFilters";
 
 const scryfallUrl = 'https://api.scryfall.com';
-const bitSets = 'sets';
 const bitCards = 'cards';
-const bitSearch = 'search?q=';
-const bitSearchFormat = 'f';
-const bitSearchSet = 's';
+const bitSearch = 'search?include_extras=true&q=';
 
 export const constructSearchUrl = (selected:Selected={}) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
@@ -18,23 +15,26 @@ export const constructSearchUrl = (selected:Selected={}) => {
   let format = selected.format;
   let type = selected.type;
 
-  if (name)
-    url += name;
+  const keys = (Object.keys(selected) as SKey[]);
+  const relevantKeys = keys.filter(
+    (key) => Object.hasOwn(selected, key) && selected[key] !== ANY);
+  console.log('keys', keys);
+  console.log('relevantKeys', relevantKeys);
 
-  if (set && set !== ANY) {
-    if (name)
-      url += "+";
-    url += bitSearchSet + ':' + set;
-  } else {
-    if (!name)
-      url += bitSearchSet + ':'
+  if (relevantKeys.length === 0) {
+    return 'https://api.scryfall.com/cards/search?q=game:paper';
   }
-  
-  if (format && format !== ANY) {
-    if (set !== ANY)
-      url += "+";
-    url += bitSearchFormat + ':' + format;
-  }
+
+  url = relevantKeys.reduce<string>((url, key) => {
+    switch(key) {
+    case 'name': return url + key + ':' + selected[key] + '+';
+    case 'type': return url + key + ':' + selected[key] + '+';
+    case 'set': return url + key + ':' + selected[key] + '+';
+    case 'format': return url + key + ':' + selected[key] + '+';
+    }
+  }, url);
+
+  url.substring(0, url.length - 1);
 
   return url;
 };
