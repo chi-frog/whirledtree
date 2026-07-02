@@ -4,20 +4,20 @@ import { ChangeEventHandler } from "react";
 import FilterOption from "./FilterOption";
 
 type Props = {
-  selectedName?:string,
-  onChangeName:ChangeEventHandler,
+  selectedType?:string,
+  onChangeType:ChangeEventHandler,
 }
 
-export const FilterName:React.FC<Props> = ({
-    selectedName="",
-    onChangeName,
+export const FilterType:React.FC<Props> = ({
+    selectedType="",
+    onChangeType,
   }:Props) => (
-  <FilterOption text="Name">
+  <FilterOption text="Type">
     <input type="text"
     className="bg-white hover:bg-sky-200"
       name="name"
-      onChange={onChangeName}
-      value={selectedName}
+      onChange={onChangeType}
+      value={selectedType}
       style={{
         transition:'background-color 0.1s ease-in-out',
         borderRadius:'5px',

@@ -2,26 +2,21 @@
 * Functions to construct valid scryfall requests
 */
 
-import { ANY } from "@/hooks/magic/useFilters";
+import { ANY, Selected } from "@/hooks/magic/useFilters";
 
-const scryfallUrl = 'https://api.scryfall.com'
+const scryfallUrl = 'https://api.scryfall.com';
 const bitSets = 'sets';
 const bitCards = 'cards';
 const bitSearch = 'search?q=';
 const bitSearchFormat = 'f';
 const bitSearchSet = 's';
 
-type PossibleSelections = {
-  set?:string,
-  format?:string,
-  name?:string,
-}
-export const constructSearchUrl = ({
-    set,
-    format,
-    name,
-  }:PossibleSelections={}) => {
+export const constructSearchUrl = (selected:Selected={}) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
+  let name = selected.name;
+  let set = selected.set;
+  let format = selected.format;
+  let type = selected.type;
 
   if (name)
     url += name;

@@ -6,13 +6,13 @@ import FilterOption from "./FilterOption";
 
 type Props = {
   sets:MagicSet[],
-  selectedSet:string,
+  selectedSet?:string,
   onChangeSet:ChangeEventHandler,
 }
 
 export const FilterSet:React.FC<Props> = ({
     sets,
-    selectedSet,
+    selectedSet="",
     onChangeSet,
   }:Props) => {
   

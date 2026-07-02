@@ -2,19 +2,21 @@
 
 import { ChangeEventHandler, useCallback, useMemo, useState } from "react";
 
-export const ANY = 'Any';
+export const ANY = '';
 
 export type Selected = {
-  name:string,
-  format:string,
-  set:string, //acronym
+  name?:string,
+  format?:string,
+  set?:string, //acronym
+  type?:string,
 }
 type SKey = keyof Selected;
 
 const defaultSelected = {
-  name:'',
+  name:ANY,
   format:ANY,
   set:ANY,
+  type:ANY,
 }
 
 export type FilterUpdate = {

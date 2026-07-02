@@ -168,6 +168,7 @@ const CardDisplay:React.FC<Props> = ({
       selectedSet={selected.set} onChangeSet={handlers.set}
       selectedFormat={selected.format} onChangeFormat={handlers.format}
       selectedName={selected.name} onChangeName={handlers.name}
+      selectedType={selected.type} onChangeType={handlers.type}
       sets={sets} cards={cards} formats={formats}/>
     {(cards.length > 0) && !hasCardsError && 
       <View loaded={loadMap.get('images')}

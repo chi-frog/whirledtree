@@ -176,6 +176,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
   // Filter card data
   const cards:MagicCard[] = useMemo(() => {
     if ((cardData.length <= 0)) return [];
+    console.log('Card Data Changed', cardData);
 
     //First, get rid of anything undefined
     let cards = cardData.filter((_card) => _card)
@@ -283,6 +284,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
         
         if (!cancelled) {
           setImagesLoaded(true);
+          console.log('---Ended loading card images---');
         }
       } catch (error) {
         if (!cancelled) {
@@ -292,6 +294,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
       }
     };
 
+    console.log('---Starting to load card images---');
     loadImages();
 
     return () => {

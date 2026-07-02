@@ -9,18 +9,21 @@ import { FilterFormat } from "./FilterFormat";
 import { FilterName } from "./FilterName";
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
+import { FilterType } from "./FilterType";
 
 type Props = {
   state:FilterState,
   setState:Dispatch<SetStateAction<FilterState>>,
   numCardsRow:number,
   onChangeNumCardsRow:ChangeEventHandler,
-  selectedSet:string,
+  selectedSet?:string,
   onChangeSet:ChangeEventHandler,
-  selectedFormat:string,
+  selectedFormat?:string,
   onChangeFormat:ChangeEventHandler,
-  selectedName:string,
+  selectedName?:string,
   onChangeName:ChangeEventHandler,
+  selectedType?:string,
+  onChangeType:ChangeEventHandler,
   sets:MagicSet[],
   cards:MagicCard[],
   formats:MagicFormat[],
@@ -36,6 +39,8 @@ const Filter:React.FC<Props> = ({
   onChangeFormat,
   selectedName,
   onChangeName,
+  selectedType,
+  onChangeType,
   cards,
   sets,
   formats}:Props) => {
@@ -54,18 +59,21 @@ const Filter:React.FC<Props> = ({
     <CardsPerRow
       numCards={cards.length}
       numCardsRow={numCardsRow}
-      onChangeNumCardsRow={onChangeNumCardsRow} />
-      <FilterSet
-        sets={sets}
-        selectedSet={selectedSet}
-        onChangeSet={onChangeSet}/>
-      <FilterFormat
-        formats={formats}
-        selectedFormat={selectedFormat}
-        onChangeFormat={onChangeFormat}/>
-      <FilterName
-        selectedName={selectedName}
-        onChangeName={onChangeName}/>
+      onChangeNumCardsRow={onChangeNumCardsRow}/>
+    <FilterSet
+      sets={sets}
+      selectedSet={selectedSet}
+      onChangeSet={onChangeSet}/>
+    <FilterName
+      selectedName={selectedName}
+      onChangeName={onChangeName}/>
+    <FilterType
+      selectedType={selectedType}
+      onChangeType={onChangeType}/>
+    <FilterFormat
+      formats={formats}
+      selectedFormat={selectedFormat}
+      onChangeFormat={onChangeFormat}/>
   </>);
 
   const handleArrowPointerUp:PointerEventHandler = useCallback((e) => {
@@ -79,8 +87,9 @@ const Filter:React.FC<Props> = ({
   }, []);
 
   const handleArrowPointerEnter:PointerEventHandler = useCallback((e) => {
-    if (reduced) setGlow(10);
-  }, []);
+    if (reduced)
+      setGlow(10);
+  }, [reduced]);
 
   const handleArrowPointerLeave:PointerEventHandler = useCallback((e) => {
     setGlow(0);
@@ -112,6 +121,8 @@ const Filter:React.FC<Props> = ({
   );
 
   const handleHiddenBoxPointerUp:PointerEventHandler = useCallback((e) => {
+    if (e.button !== 0) return;
+
     if(hidden) {
       setState(FilterState.REDUCED);
       setGlow(-3);

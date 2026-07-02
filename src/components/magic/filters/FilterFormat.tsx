@@ -6,13 +6,13 @@ import FilterOption from "./FilterOption";
 
 type Props = {
   formats:MagicFormat[],
-  selectedFormat:string,
+  selectedFormat?:string,
   onChangeFormat:ChangeEventHandler,
 }
 
 export const FilterFormat:React.FC<Props> = ({
     formats,
-    selectedFormat,
+    selectedFormat="",
     onChangeFormat,
   }:Props) => (
   <FilterOption text="Format">

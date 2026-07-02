@@ -12,6 +12,7 @@ import { capitalize } from "@/helpers/string";
 import { _noError, _notFound, WError } from "@/components/magic/CardDisplay";
 import { copyMap } from "@/helpers/wmap";
 import useMagicSymbols, { MagicSymbol } from "./useMagicSymbols";
+import useMagicTypes from "./useMagicTypes";
 
 /*
 * Everything listed here has both a loaded/unloaded state,
@@ -53,6 +54,7 @@ type UseMagicData = (
   url:string,
 ) => Return;
 const useMagicDatabase:UseMagicData = (url) => {
+  const [typesError, typesLoaded, types] = useMagicTypes();
   const [symbolsError, symbolsLoaded, symbols] = useMagicSymbols();
   const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
