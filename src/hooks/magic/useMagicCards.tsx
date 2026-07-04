@@ -163,14 +163,15 @@ export type UseMagicCards = [
   cards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
+  totalCards?:number,
 ]
 const useMagicCards:(url:string)=>UseMagicCards = (url) => {
   const [imageMap, setImageMap] = useState<ImageMap>(new Map());
   const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
-  let [error, dataLoaded, cardData] = useExternalData<MagicCard>(
+  let [error, dataLoaded, cardData, {totalCards}] = useExternalData<MagicCard>(
     url,
     transformMagicCard,
-    {dataLimit:500});
+    {dataLimit:500, totalCards:true});
   const reserveCards = useRef<MagicCard[]>([]);
 
   // Filter card data
@@ -306,7 +307,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     hydrateImageMap(setImageMap, [cards[index]], "large");
   }, [cards, imageMap]);
 
-  return [error, dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage];
+  return [error, dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage, totalCards];
 };
 
 export default useMagicCards;

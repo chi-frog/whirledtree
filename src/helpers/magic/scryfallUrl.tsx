@@ -14,8 +14,6 @@ export const constructSearchUrl = (selected:Selected={}) => {
   const keys = (Object.keys(selected) as SKey[]);
   const relevantKeys = keys.filter(
     (key) => Object.hasOwn(selected, key) && selected[key] !== ANY);
-  console.log('keys', keys);
-  console.log('relevantKeys', relevantKeys);
 
   if (relevantKeys.length === 0) {
     return 'https://api.scryfall.com/cards/search?q=game:paper';

@@ -5,12 +5,18 @@ import { useEffect, useState } from "react";
 
 export type Transform<T> = (input:any)=>T;
 export type ExternalDataOptions = {
-  //Represents the amount of data to fetch before
+  // Represents the amount of data to fetch before
   // waiting for a command to fetch more.
   dataLimit?:number,
+  // Return the total number of cards
+  totalCards?:boolean,
 };
 
-type Return<T> = [WError, boolean, T[], (()=>void)|undefined]
+type ReturnOptions = {
+  fetchNext?:(()=>void),
+  totalCards?:number,
+}
+type Return<T> = [WError, boolean, T[], ReturnOptions]
 function useExternalData<T> (
     url:string,
     transform:Transform<T>,
@@ -19,6 +25,7 @@ function useExternalData<T> (
   const [data, setData] = useState<T[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<WError>(_noError);
+  const [totalCards, setTotalCards] = useState<number>(0);
   const [fetchNext, setFetchNext] = useState<(()=>void)|undefined>();
 
   useEffect(() => {
@@ -31,8 +38,10 @@ function useExternalData<T> (
                        (options.dataLimit <= data.length);
         let chunkUrl:string|undefined = url;
         while ((!overflow) && (chunkUrl)) {
-          let [chunkData, nextUrl] = await chunk(chunkUrl);
+          let [chunkData, totalCards, nextUrl] = await chunk(chunkUrl);
 
+          if (options.totalCards)
+            setTotalCards(totalCards);
           data.push(...chunkData.map(transform));
           chunkUrl = nextUrl;
           overflow = (options.dataLimit) &&
@@ -41,7 +50,6 @@ function useExternalData<T> (
 
         if (overflow) {
           console.info('overflowed: ' + data.length + '/' + options.dataLimit);
-        
         }
         setError(_noError);
         setLoaded(true);
@@ -68,7 +76,7 @@ function useExternalData<T> (
         }
       }
 
-      async function chunk(url:string):Promise<[any[], string|undefined]> {
+      async function chunk(url:string):Promise<[any[], number, string|undefined]> {
         const res = await fetch(url, { signal: controller.signal });
         const json = await res.json();
         const body = json.data;
@@ -76,7 +84,7 @@ function useExternalData<T> (
         if (!body)
           throw Error(WErrorCode.NOT_FOUND);
 
-        return [body, json.next_page];
+        return [body, json.total_cards, json.next_page];
       };
     };
 
@@ -87,7 +95,7 @@ function useExternalData<T> (
     };
   }, [url, transform]);
 
-  return [error, loaded, data, fetchNext];
+  return [error, loaded, data, {fetchNext, totalCards}];
 };
 
 export default useExternalData;

@@ -24,6 +24,7 @@ const Landing:React.FC<Props> = () => {
       databaseCards={database.cards}
       imageMap={database.imageMap}
       hydrateLargeImage={database.hydrateLargeImage}
+      totalCards={database.totalCards}
       selected={selected}
       updateSelected={updateSelected}
       handlers={handlers}

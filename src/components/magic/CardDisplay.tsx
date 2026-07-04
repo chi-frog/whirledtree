@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler, PointerEventHandler, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEventHandler,   useCallback, useEffect, useMemo, useState } from "react";
 import { isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
@@ -54,13 +54,14 @@ type Props = {
   databaseCards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
+  totalCards?:number,
   selected:Selected,
   updateSelected:FilterUpdateFunction,
   handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>
 };
 const CardDisplay:React.FC<Props> = ({
   errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, databaseCards, imageMap, hydrateLargeImage,
-  selected, updateSelected, handlers
+  totalCards, selected, updateSelected, handlers
 }) => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
@@ -73,6 +74,10 @@ const CardDisplay:React.FC<Props> = ({
 
   const changeCard = useCallback((index:number, card:MagicCard) =>
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
+
+  useEffect(() => {
+    console.log('TOTAL CARDS CHANGED', totalCards);
+  }, [totalCards]);
 
   useEffect(() => {
     setCards(databaseCards);

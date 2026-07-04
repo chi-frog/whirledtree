@@ -35,8 +35,7 @@ export const isCardDoublesided = (card:MagicCard) =>
 
 export const isCardMultiple = (card:MagicCard) =>
   (card.layout === MagicCardLayout.ADVENTURE) ||
-  (card.layout === MagicCardLayout.PREPARE) ||
-  (card.layout === MagicCardLayout.PROTOTYPE);
+  (card.layout === MagicCardLayout.PREPARE);
 
 export type MagicCard = {
   reversed:boolean,
