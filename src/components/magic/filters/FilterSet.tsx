@@ -18,7 +18,7 @@ export const FilterSet:React.FC<Props> = ({
   }:Props) => {
 
   sets = useMemo(() => [_magicSetAny].concat(sets), [sets]);
-  
+
   return (
   <FilterOption text="Set">
     <select id="set" autoComplete="on"
@@ -27,7 +27,7 @@ export const FilterSet:React.FC<Props> = ({
       style={{
         cursor:'pointer',
         borderRadius:'5px',
-        padding:'2px 5px 2px 5px',
+        padding:'5px',
         textAlign:'center',
         transition:'background-color 0.1s ease-in-out',
         boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'

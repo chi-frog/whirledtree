@@ -21,7 +21,7 @@ export const FilterName:React.FC<Props> = ({
       style={{
         transition:'background-color 0.1s ease-in-out',
         borderRadius:'5px',
-        padding:'2px 5px 2px 5px',
+        padding:'5px',
         boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
       }}/>
   </FilterOption>);

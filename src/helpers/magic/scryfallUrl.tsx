@@ -10,10 +10,6 @@ const bitSearch = 'search?include_extras=true&q=';
 
 export const constructSearchUrl = (selected:Selected={}) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
-  let name = selected.name;
-  let set = selected.set;
-  let format = selected.format;
-  let type = selected.type;
 
   const keys = (Object.keys(selected) as SKey[]);
   const relevantKeys = keys.filter(
