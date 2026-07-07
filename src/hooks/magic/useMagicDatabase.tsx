@@ -57,14 +57,15 @@ export type MagicDatabase = {
 type Return = MagicDatabase;
 type UseMagicData = (
   url:string,
+  displayLimit:number,
 ) => Return;
-const useMagicDatabase:UseMagicData = (url) => {
+const useMagicDatabase:UseMagicData = (url, displayLimit) => {
   const [typesError, typesLoaded, types] = useMagicTypes();
   const [symbolsError, symbolsLoaded, symbols] = useMagicSymbols();
   const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
   const [setsError, setsLoaded, sets] = useMagicSets();
-  const [cardsError, cardsLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage, totalCards] = useMagicCards(url);
+  const [cardsError, cardsLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage, totalCards] = useMagicCards(url, displayLimit);
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
 

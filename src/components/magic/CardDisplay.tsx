@@ -8,7 +8,7 @@ import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
-import { ErrorMap, LoadMap } from "@/hooks/magic/useMagicDatabase";
+import { ErrorMap, LoadMap, MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 
 export enum FilterState {
@@ -44,24 +44,13 @@ export type ImagePacket = {
 export type ImageMap = Map<string, ImagePacket>;
 
 type Props = {
-  errorMap:ErrorMap,
-  loadMap:LoadMap,
-  formats:MagicFormat[],
-  sets:MagicSet[],
-  types:string[],
-  symbols:MagicSymbol[],
-  symbolImageMap:Map<string, string>,
-  databaseCards:MagicCard[],
-  imageMap:ImageMap,
-  hydrateLargeImage:(index:number)=>void,
-  totalCards?:number,
+  db:MagicDatabase,
   selected:Selected,
   updateSelected:FilterUpdateFunction,
   handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>
 };
 const CardDisplay:React.FC<Props> = ({
-  errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, databaseCards, imageMap, hydrateLargeImage,
-  totalCards, selected, updateSelected, handlers
+  db, selected, updateSelected, handlers
 }) => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
@@ -70,18 +59,18 @@ const CardDisplay:React.FC<Props> = ({
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
 
-  const [cards, setCards] = useState<MagicCard[]>(databaseCards);
+  const [cards, setCards] = useState<MagicCard[]>(db.cards);
 
   const changeCard = useCallback((index:number, card:MagicCard) =>
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
 
   useEffect(() => {
-    console.log('TOTAL CARDS CHANGED', totalCards);
-  }, [totalCards]);
+    console.log('TOTAL CARDS CHANGED', db.totalCards);
+  }, [db.totalCards]);
 
   useEffect(() => {
-    setCards(databaseCards);
-  } , [databaseCards]);
+    setCards(db.cards);
+  } , [db.cards]);
 
   const dragging = useMemo(() => dragState.stage === DragStage.ACTIVE, [dragState.stage]);
 
@@ -127,32 +116,32 @@ const CardDisplay:React.FC<Props> = ({
         (e.clientY === y)) {
       setModalShown(true);
       setModalIndex(index);
-      hydrateLargeImage(index);
+      db.hydrateLargeImage(index);
     }
-  }, [cards, imageMap]);
+  }, [cards, db.imageMap]);
 
   const hasCardsError:boolean = useMemo(() => {
-    const cardsError = errorMap.get('cards');
+    const cardsError = db.errorMap.get('cards');
     return cardsError ? cardsError.length > 0 : true;
-  }, [errorMap]);
+  }, [db.errorMap]);
 
   const cardsLoaded:boolean = useMemo(() => {
-    const cardsLoaded = loadMap.get('cards');
+    const cardsLoaded = db.loadMap.get('cards');
     return cardsLoaded === true;
-  }, [loadMap]);
+  }, [db.loadMap]);
 
   const modal = () => {
     if (!modalShown) return <></>;
     const card = cards[modalIndex];
-    const frontImage = imageMap.get(card.name);
+    const frontImage = db.imageMap.get(card.name);
     const backImage = (card.back && isCardDoublesided(card)) ?
-      imageMap.get(card.back.name) : imageMap.get("");
+      db.imageMap.get(card.back.name) : db.imageMap.get("");
 
     return (
       <Modal
       close={()=>setModalShown(false)}
-      symbols={symbols}
-      symbolImageMap={symbolImageMap}
+      symbols={db.symbols}
+      symbolImageMap={db.symbolImageMap}
       cards={cards}
       changeCard={changeCard}
       updateSelected={updateSelected}
@@ -175,15 +164,15 @@ const CardDisplay:React.FC<Props> = ({
       selectedFormat={selected.format} onChangeFormat={handlers.format}
       selectedName={selected.name} onChangeName={handlers.name}
       selectedType={selected.type} onChangeType={handlers.type}
-      sets={sets} cards={cards} formats={formats} types={types}/>
+      sets={db.sets} cards={cards} formats={db.formats} types={db.types}/>
     {(cards.length > 0) && !hasCardsError && 
-      <View loaded={loadMap.get('images')}
+      <View loaded={db.loadMap.get('images')}
         dragState={dragState}
         filterState={filterState}
         numCardsRow={numCardsRow}
         cards={cards}
         changeCard={changeCard}
-        imageMap={imageMap}
+        imageMap={db.imageMap}
         handleCardPointerUp={handleCardPointerUp}/>
     }
     {(cards.length === 0) && (!hasCardsError) && (cardsLoaded) &&
@@ -223,6 +212,26 @@ const CardDisplay:React.FC<Props> = ({
         fontWeight:'bold',
       }}>
         <h1> Loading Cards... </h1>
+      </div>
+    }
+    {(cardsLoaded) &&
+      <div id="countTracker" style={{
+        position:"fixed",
+        height:'30px',
+        width:'fit-content',
+        padding:'5px',
+        backgroundColor:'rgba(0,0,0,0.5)',
+        border:'1px solid rgba(255,255,255,0.5)',
+        borderRadius:'5px',
+        top:'calc(100vh - 30px)',
+        left:'5px',
+        zIndex:30,
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        pointerEvents:'none',
+      }}>
+        <h3>{db.totalCards} cards found, {db.cards.length} shown</h3>
       </div>
     }
     {modal()}

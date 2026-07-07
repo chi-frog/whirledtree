@@ -285,7 +285,7 @@ const Modal:React.FC<Props> = ({
           }}>{(!card?.reversed) ? card?.name :
                                   card?.back?.name}</h3>
           {...manaCostImages?.map((symbol, index) => (
-            <img key={index} src={symbol.imageUri} alt={symbol.symbol} className="icon" 
+            <img key={index} draggable="false" src={symbol.imageUri} alt={symbol.symbol} className="icon" 
              title="Search By Mana Cost" style={{
               width:'24px',
               height:'24px',

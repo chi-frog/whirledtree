@@ -4,27 +4,18 @@ import useMagicDatabase from "@/hooks/magic/useMagicDatabase";
 import CardDisplay from "./CardDisplay";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 import useFilters from "@/hooks/magic/useFilters";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 type Props = {};
 const Landing:React.FC<Props> = () => {
   const {selected, updateSelected, handlers} = useFilters();
   const url = useMemo(() => constructSearchUrl(selected), [selected]);
-  const database = useMagicDatabase(url);
+  const [displayLimit, setDisplayLimit] = useState<number>(500);
+  const database = useMagicDatabase(url, displayLimit);
 
   return (
     <CardDisplay
-      errorMap={database.errorMap}
-      loadMap={database.loadMap}
-      formats={database.formats}
-      sets={database.sets}
-      types={database.types}
-      symbols={database.symbols}
-      symbolImageMap={database.symbolImageMap}
-      databaseCards={database.cards}
-      imageMap={database.imageMap}
-      hydrateLargeImage={database.hydrateLargeImage}
-      totalCards={database.totalCards}
+      db={database}
       selected={selected}
       updateSelected={updateSelected}
       handlers={handlers}

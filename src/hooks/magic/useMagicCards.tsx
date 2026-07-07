@@ -165,13 +165,13 @@ export type UseMagicCards = [
   hydrateLargeImage:(index:number)=>void,
   totalCards?:number,
 ]
-const useMagicCards:(url:string)=>UseMagicCards = (url) => {
+const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, displayLimit) => {
   const [imageMap, setImageMap] = useState<ImageMap>(new Map());
   const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
   let [error, dataLoaded, cardData, {totalCards}] = useExternalData<MagicCard>(
     url,
     transformMagicCard,
-    {dataLimit:500, totalCards:true});
+    {dataLimit:displayLimit, totalCards:true});
   const reserveCards = useRef<MagicCard[]>([]);
 
   // Filter card data
@@ -194,6 +194,7 @@ const useMagicCards:(url:string)=>UseMagicCards = (url) => {
     //If an Alchemy card does not have a normal card, keep it in reserve.
     alchemyCards.forEach((_card, _index) => {
       let shortenedName = _card.name.substring(2);
+      console.log('Found Alchemy card!', _card);
       let originalCard = normalCards.find((__card) => __card.name === shortenedName);
 
       _card.alchemy = true;
