@@ -115,19 +115,23 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
   }, [setsError, setsLoaded]);
 
   useMemo(() => {
-    if (cardsLoaded)
+    if (cardsLoaded) {
       setLoadMap(copyMap(loadMap.set('cards', true)));
+      console.log('SETTING LOAD MAP FOR CARDS');
+    }
     else {
       const cardsErrors = errorMap.get('cards');
       if (!cardsErrors) return;
-      setErrorMap(copyMap(
-        errorMap).set('cards', cardsErrors.concat(cardsError)));
+      setErrorMap(copyMap(errorMap).
+        set('cards', cardsErrors.concat(cardsError)));
     }
   }, [cardsError, cardsLoaded]);
 
   useMemo(() => {
-    if (cardsLoaded && imagesLoaded)
+    if (cardsLoaded && imagesLoaded) {
       setLoadMap(copyMap(loadMap.set('images', true)));
+      console.log('SETTING LOAD MAP FOR IMAGES');
+    }
     else {
       const imagesErrors = errorMap.get('images');
       if (!imagesErrors) return;

@@ -1,10 +1,12 @@
 'use client'
 
+import { GAME_TYPE } from "@/components/magic/types/magic";
 import { ChangeEventHandler, useCallback, useMemo, useState } from "react";
 
 export const ANY = '';
 
 export type Selected = {
+  game:string,
   name?:string,
   format?:string,
   set?:string, //acronym
@@ -13,6 +15,7 @@ export type Selected = {
 export type SKey = keyof Selected;
 
 const defaultSelected = {
+  game:GAME_TYPE.PAPER,
   name:ANY,
   format:ANY,
   set:ANY,

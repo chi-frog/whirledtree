@@ -40,8 +40,10 @@ function useExternalData<T> (
         while ((!overflow) && (chunkUrl)) {
           let [chunkData, totalCards, nextUrl] = await chunk(chunkUrl);
 
-          if (options.totalCards)
+          if (options.totalCards) {
             setTotalCards(totalCards);
+            setLoaded(true);
+          }
           data.push(...chunkData.map(transform));
           chunkUrl = nextUrl;
           overflow = (options.dataLimit) &&

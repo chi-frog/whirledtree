@@ -2,13 +2,15 @@
 * Functions to construct valid scryfall requests
 */
 
+import { GAME_TYPE } from "@/components/magic/types/magic";
 import { ANY, Selected, SKey } from "@/hooks/magic/useFilters";
 
 const scryfallUrl = 'https://api.scryfall.com';
 const bitCards = 'cards';
-const bitSearch = 'search?include_extras=true&q=';
+const bitSearch = 'search?q=';
+const bitIncludeExtras = 'include_extras=true';
 
-export const constructSearchUrl = (selected:Selected={}) => {
+export const constructSearchUrl = (selected:Selected={game:GAME_TYPE.PAPER}) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
 
   const keys = (Object.keys(selected) as SKey[]);
@@ -21,10 +23,13 @@ export const constructSearchUrl = (selected:Selected={}) => {
 
   url = relevantKeys.reduce<string>((url, key) => {
     switch(key) {
-    case 'name': return url + key + ':' + selected[key] + '+';
-    case 'type': return url + key + ':' + selected[key] + '+';
-    case 'set': return url + key + ':' + selected[key] + '+';
-    case 'format': return url + key + ':' + selected[key] + '+';
+    case 'name': 
+    case 'type': 
+    case 'set': 
+    case 'format': 
+    case 'game':
+    default:
+      return url + key + ':' + selected[key] + '+';
     }
   }, url);
 

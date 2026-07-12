@@ -66,6 +66,7 @@ const CardDisplay:React.FC<Props> = ({
 
   useEffect(() => {
     console.log('TOTAL CARDS CHANGED', db.totalCards);
+    console.table(db.loadMap);
   }, [db.totalCards]);
 
   useEffect(() => {
@@ -160,10 +161,7 @@ const CardDisplay:React.FC<Props> = ({
       setState={setFilterState}
       state={filterState}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
-      selectedSet={selected.set} onChangeSet={handlers.set}
-      selectedFormat={selected.format} onChangeFormat={handlers.format}
-      selectedName={selected.name} onChangeName={handlers.name}
-      selectedType={selected.type} onChangeType={handlers.type}
+      selected={selected} handlers={handlers}
       sets={db.sets} cards={cards} formats={db.formats} types={db.types}/>
     {(cards.length > 0) && !hasCardsError && 
       <View loaded={db.loadMap.get('images')}
@@ -175,8 +173,8 @@ const CardDisplay:React.FC<Props> = ({
         imageMap={db.imageMap}
         handleCardPointerUp={handleCardPointerUp}/>
     }
-    {(cards.length === 0) && (!hasCardsError) && (cardsLoaded) &&
-      <div id="error_screen" style={{
+    {(!hasCardsError) && (cardsLoaded) && (db.totalCards === 0) &&
+      <div id="no_cards_screen" style={{
         width:'100vw',
         height: '100vh',
         display:'flex',
@@ -202,7 +200,7 @@ const CardDisplay:React.FC<Props> = ({
       </div>
     }
     {(!cardsLoaded) &&
-      <div id="error_screen" style={{
+      <div id="loading_screen" style={{
         width:'100vw',
         height: '100vh',
         display:'flex',

@@ -10,20 +10,15 @@ import { FilterName } from "./FilterName";
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 import { FilterType } from "./FilterType";
+import { Selected } from "@/hooks/magic/useFilters";
 
 type Props = {
   state:FilterState,
   setState:Dispatch<SetStateAction<FilterState>>,
   numCardsRow:number,
   onChangeNumCardsRow:ChangeEventHandler,
-  selectedSet?:string,
-  onChangeSet:ChangeEventHandler,
-  selectedFormat?:string,
-  onChangeFormat:ChangeEventHandler,
-  selectedName?:string,
-  onChangeName:ChangeEventHandler,
-  selectedType?:string,
-  onChangeType:ChangeEventHandler,
+  selected:Selected,
+  handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>,
   sets:MagicSet[],
   cards:MagicCard[],
   formats:MagicFormat[],
@@ -34,14 +29,8 @@ const Filter:React.FC<Props> = ({
   setState,
   numCardsRow,
   onChangeNumCardsRow,
-  selectedSet,
-  onChangeSet,
-  selectedFormat,
-  onChangeFormat,
-  selectedName,
-  onChangeName,
-  selectedType,
-  onChangeType,
+  selected,
+  handlers,
   cards,
   sets,
   formats,
@@ -64,19 +53,19 @@ const Filter:React.FC<Props> = ({
       onChangeNumCardsRow={onChangeNumCardsRow}/>
     <FilterSet
       sets={sets}
-      selectedSet={selectedSet}
-      onChangeSet={onChangeSet}/>
+      selectedSet={selected.set}
+      onChangeSet={handlers.set}/>
     <FilterName
-      selectedName={selectedName}
-      onChangeName={onChangeName}/>
+      selectedName={selected.name}
+      onChangeName={handlers.name}/>
     <FilterType
       types={types}
-      selectedType={selectedType}
-      onChangeType={onChangeType}/>
+      selectedType={selected.type}
+      onChangeType={handlers.type}/>
     <FilterFormat
       formats={formats}
-      selectedFormat={selectedFormat}
-      onChangeFormat={onChangeFormat}/>
+      selectedFormat={selected.format}
+      onChangeFormat={handlers.format}/>
   </>);
 
   const handleArrowPointerUp:PointerEventHandler = useCallback((e) => {
