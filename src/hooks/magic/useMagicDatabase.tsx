@@ -9,7 +9,7 @@ import useMagicCards, { copyImageMap, fetchImage, ImageMap } from "./useMagicCar
 import useMagicSets from "./useMagicSets";
 import { MagicCard, MagicFormat, MagicSet } from "@/components/magic/types/default";
 import { capitalize } from "@/helpers/string";
-import { _noError, _notFound, WError } from "@/components/magic/CardDisplay";
+import { _noError, _notFound, WError, WErrorCode } from "@/components/magic/CardDisplay";
 import { copyMap } from "@/helpers/wmap";
 import useMagicSymbols, { MagicSymbol } from "./useMagicSymbols";
 import useMagicTypes from "./useMagicTypes";
@@ -22,7 +22,6 @@ type DataKeys = {
   'formats':string,
   'sets':string,
   'cards':string,
-  'images':string,
   'types':string,
 };
 export type ErrorMap = Map<keyof DataKeys, WError[]>;
@@ -30,7 +29,6 @@ const _errorMap:ErrorMap = new Map([
   ['formats', []],
   ['sets', []],
   ['cards', []],
-  ['images', []],
   ['types', []],
 ])
 export type LoadMap = Map<keyof DataKeys, boolean>;
@@ -38,7 +36,6 @@ const _loadMap:LoadMap = new Map([
   ['formats', false],
   ['sets', false],
   ['cards', false],
-  ['images', false],
   ['types', false],
 ])
 export type MagicDatabase = {
@@ -65,7 +62,7 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
   const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
   const [setsError, setsLoaded, sets] = useMagicSets();
-  const [cardsError, cardsLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage, totalCards] = useMagicCards(url, displayLimit);
+  const [cardsError, cardsLoaded, cards, imageMap, hydrateLargeImage, totalCards] = useMagicCards(url, displayLimit);
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
 
@@ -115,30 +112,15 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
   }, [setsError, setsLoaded]);
 
   useMemo(() => {
-    if (cardsLoaded) {
+    if (cardsLoaded)
       setLoadMap(copyMap(loadMap.set('cards', true)));
-      console.log('SETTING LOAD MAP FOR CARDS');
-    }
-    else {
-      const cardsErrors = errorMap.get('cards');
-      if (!cardsErrors) return;
+    else if (cardsError.code !== WErrorCode.NO_ERROR) {
+      const bucket = errorMap.get('cards');
+      if (!bucket) return;
       setErrorMap(copyMap(errorMap).
-        set('cards', cardsErrors.concat(cardsError)));
+        set('cards', bucket.concat(cardsError)));
     }
   }, [cardsError, cardsLoaded]);
-
-  useMemo(() => {
-    if (cardsLoaded && imagesLoaded) {
-      setLoadMap(copyMap(loadMap.set('images', true)));
-      console.log('SETTING LOAD MAP FOR IMAGES');
-    }
-    else {
-      const imagesErrors = errorMap.get('images');
-      if (!imagesErrors) return;
-      setErrorMap(copyMap(
-        errorMap).set('images', imagesErrors.concat(cardsError)));
-    }
-  }, [cards, imagesLoaded]);
 
   return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, cards, imageMap, hydrateLargeImage, totalCards};
 };

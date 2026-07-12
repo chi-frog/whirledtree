@@ -159,7 +159,6 @@ const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, c
 export type UseMagicCards = [
   error:WError,
   dataLoaded:boolean,
-  imagesLoaded:boolean,
   cards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
@@ -167,7 +166,6 @@ export type UseMagicCards = [
 ]
 const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, displayLimit) => {
   const [imageMap, setImageMap] = useState<ImageMap>(new Map());
-  const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
   let [error, dataLoaded, cardData, {totalCards}] = useExternalData<MagicCard>(
     url,
     transformMagicCard,
@@ -268,13 +266,10 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
 
   // Hydrate image map when cards change
   useEffect(() => {
-    if ((cards.length === 0) && (dataLoaded)) {
-      setImagesLoaded(true);
+    if ((cards.length === 0) && (dataLoaded))
       return;
-    }
 
     let cancelled = false;
-    setImagesLoaded(false);
 
     const loadImages = async () => {
       try {
@@ -284,15 +279,11 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
           "small"
         );
         
-        if (!cancelled) {
-          setImagesLoaded(true);
+        if (!cancelled)
           console.log('---Ended loading card images---');
-        }
       } catch (error) {
-        if (!cancelled) {
+        if (!cancelled)
           console.error('Failed to load images:', error);
-          setImagesLoaded(false);
-        }
       }
     };
 
@@ -308,7 +299,7 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     hydrateImageMap(setImageMap, [cards[index]], "large");
   }, [cards, imageMap]);
 
-  return [error, dataLoaded, imagesLoaded, cards, imageMap, hydrateLargeImage, totalCards];
+  return [error, dataLoaded, cards, imageMap, hydrateLargeImage, totalCards];
 };
 
 export default useMagicCards;

@@ -18,7 +18,6 @@ type Props = {
 }
 
 const View:React.FC<Props> = ({
-    loaded,
     dragState,
     filterState,
     numCardsRow,
@@ -65,13 +64,7 @@ const View:React.FC<Props> = ({
       display:'grid',
       gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
       }}>
-      {!loaded &&
-      <h4 style={{
-        textAlign:'center',
-        textAnchor:'middle',
-        }}>Loading...</h4>}
-      {loaded &&
-      cards.map((_card, _index)=>
+      {...cards.map((_card, _index)=>
         card(_card.name, _index)
       )}
     </div>

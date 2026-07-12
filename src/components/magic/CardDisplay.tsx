@@ -31,7 +31,6 @@ export const _noError = {
 };
 export const _notFound = (info:any) =>
   ({code:WErrorCode.NOT_FOUND, info});
-
 export const _err = (err:any) =>
   ({code:WErrorCode.GENERAL, err});
 
@@ -123,6 +122,7 @@ const CardDisplay:React.FC<Props> = ({
 
   const hasCardsError:boolean = useMemo(() => {
     const cardsError = db.errorMap.get('cards');
+    console.log('cardsError', cardsError);
     return cardsError ? cardsError.length > 0 : true;
   }, [db.errorMap]);
 
@@ -164,7 +164,7 @@ const CardDisplay:React.FC<Props> = ({
       selected={selected} handlers={handlers}
       sets={db.sets} cards={cards} formats={db.formats} types={db.types}/>
     {(cards.length > 0) && !hasCardsError && 
-      <View loaded={db.loadMap.get('images')}
+      <View
         dragState={dragState}
         filterState={filterState}
         numCardsRow={numCardsRow}
