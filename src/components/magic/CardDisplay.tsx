@@ -1,7 +1,7 @@
 'use client'
 
 import { ChangeEventHandler,   useCallback, useEffect, useMemo, useState } from "react";
-import { isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
+import { _magicCard, isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
 import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
@@ -57,18 +57,18 @@ const CardDisplay:React.FC<Props> = ({
   const [modalIndex, setModalIndex] = useState<number>(-1);
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
-
   const [cards, setCards] = useState<MagicCard[]>(db.cards);
 
   const changeCard = useCallback((index:number, card:MagicCard) =>
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
 
   useEffect(() => {
-    console.log('TOTAL CARDS CHANGED', db.totalCards);
-    console.table(db.loadMap);
-  }, [db.totalCards]);
+    console.log('-----db.cards-----');
 
-  useEffect(() => {
+    console.log('TOTAL CARDS CHANGED', db.totalCards);
+    console.log('message', db);
+    console.log('-----db.cards-----');
+
     setCards(db.cards);
   } , [db.cards]);
 

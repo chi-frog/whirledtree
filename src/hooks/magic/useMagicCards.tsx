@@ -6,6 +6,9 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useS
 import { WError } from "@/components/magic/CardDisplay";
 import { partition } from "@/helpers/arrays";
 
+export const cardHeightRatio = 938/672;
+export const cardAspectRatio = 672/938;
+
 type ImagePacket = {
   name:string,
   smallBlob?:string,
@@ -257,8 +260,8 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
 
         return imageMap;
       });
-      
-      return backUrl;
+
+      console.log('Finished with back image!', backUrl);
     };
 
     getBackImage();

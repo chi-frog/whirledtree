@@ -55,6 +55,22 @@ export type MagicCard = {
   back?:MagicCard,
   };
 
+export const _magicCard = {
+  reversed:false,
+  name:"",
+  legalities:{},
+  set:"",
+  typeLine:"",
+  oracleText:"",
+  power:"",
+  toughness:"",
+  manaCost:"",
+  alchemy:false,
+  siblings:[],
+  imageUris:{small:"", large:""},
+  layout:MagicCardLayout.NORMAL,
+}
+
 export type MagicSet = {
   name:string,
   acronym:string,

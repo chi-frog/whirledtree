@@ -7,6 +7,7 @@ import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState 
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
+import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
 
 export type CardLocation =
   'view' | 'modal';
@@ -274,6 +275,7 @@ export const Card:React.FC<Props> = ({
         ...(imageHeightString && { height: imageHeightString }),
         cursor:'pointer',
         marginTop:'auto',
+        aspectRatio: cardAspectRatio,
         visibility: (showFront) ? 'visible' : 'hidden'
         }}/>
       <img src={backImageSrc} draggable="false" style={{
