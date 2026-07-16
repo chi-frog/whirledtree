@@ -40,7 +40,7 @@ const View:React.FC<Props> = ({
       <Card
         key={name}
         location='view'
-        widthString={`calc('100%/${numCardsRow}')`}
+        widthString={`calc('100% / ${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
         changeCard={(card:MagicCard) => changeCard(index, card)}
@@ -51,10 +51,9 @@ const View:React.FC<Props> = ({
 
   return (
     <div className="hover:bg-blue" style={{
-      paddingTop:(filterState === FilterState.REDUCED) ? '80px' : `${Math.min(10, 80)}px`,
+      paddingTop:(filterState === FilterState.REDUCED) ? '80px' : '10px',
       overflow:'scroll',
       minWidth:'100vw',
-      width:'fit-content',
       paddingLeft:'50px',
       paddingRight:'50px',
       backgroundColor:'black',

@@ -9,6 +9,13 @@ import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
 import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
 
+// As the cards load, first 
+enum LoadSequence {
+  PRE_BACKGROUND = 'preBackground',
+  PRE_IMAGE = 'preImage',
+  IMAGE = 'image',
+}
+
 export type CardLocation =
   'view' | 'modal';
 type Props = {
@@ -40,6 +47,7 @@ export const Card:React.FC<Props> = ({
     useCardRotate(ref.current, subDrag, startDragging, dragStateRef);
   const lastMousePress = useRef<WPoint>(_wpoint);
   const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
+  const [loadSequence, setLoadSequence] = useState<LoadSequence>(LoadSequence.PRE_BACKGROUND);
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
@@ -242,6 +250,63 @@ export const Card:React.FC<Props> = ({
     }
   };
 
+  const bgOnLoad = useCallback(() => {
+    setLoadSequence(LoadSequence.PRE_IMAGE);
+    if (card.name === 'Aang and Katara')
+    console.log('bg loaded', card.name);
+  }, []);
+
+  const imgOnLoad = useCallback(() => {
+    setLoadSequence(LoadSequence.IMAGE);
+    if (card.name === 'Aang and Katara')
+    console.log('image loaded', card.name);
+  }, []);
+
+  const frontFace = useMemo(() => {
+    return (
+      <img src={imageSrc} draggable="false" onLoad={imgOnLoad} style={{
+        maxWidth:'100%',
+        ...(imageHeightString && { height: imageHeightString }),
+        marginTop:'auto',
+        aspectRatio: cardAspectRatio,
+        visibility: (showFront && loadSequence === LoadSequence.IMAGE) ? 'visible' : 'hidden'
+        }}/>
+    )
+  }, [imageHeightString, showFront, loadSequence, imageSrc]);
+
+  const backFace = useMemo(() => {
+    return (
+      <img src={backImageSrc} draggable="false" style={{
+        maxWidth:'100%',
+        ...(imageHeightString && { height: imageHeightString }),
+        top:0,
+        left:0,
+        width:'100%',
+        height:'100%',
+        marginTop:'auto',
+        position: 'absolute',
+        visibility: (!showFront && loadSequence === LoadSequence.IMAGE) ? 'visible' : 'hidden',
+        }}/>
+    )
+  }, [backImageSrc, imageHeightString, showFront, loadSequence]);
+
+  const loadFace = useMemo(() => {
+    return (
+      <img src='magic/defaultCardBack.png' onLoad={bgOnLoad} style={{
+        width:'100%',
+        height:'100%',
+        ...(imageHeightString && { height: imageHeightString }),
+        marginTop:'auto',
+        aspectRatio: cardAspectRatio,
+        opacity: (loadSequence === LoadSequence.PRE_BACKGROUND) ? 0 : 1,
+        transition: 'opacity 1s ease-in-out',
+        position:'absolute',
+        pointerEvents:'none',
+        visibility: (loadSequence === LoadSequence.IMAGE) ? 'hidden' : 'visible',
+      }}/>
+    )
+  }, [imageHeightString, loadSequence]);
+
   return (
     <div
       ref={ref}
@@ -249,14 +314,11 @@ export const Card:React.FC<Props> = ({
       onPointerLeave={(e)=>handleCardPointerLeave(e)}
       onPointerDown={(e) => handleCardPointerDown(e)}
       onPointerUp={(e) => handleCardPointerUp(e)} style={{
-        display:'flex',
-        cursor:'hand',
-        flexDirection:'column',
+        cursor:'pointer',
         margin:(location === 'view') ? '5px' : '0px',
         overflow:'hidden',
         borderRadius:(location ==='view') ? '12px' : '20px',
-        border:'1px solid rgba(255, 255, 255, 0.7)',
-        minWidth:'fit-content',
+        border:(loadSequence !== LoadSequence.PRE_BACKGROUND) ? '1px solid rgba(255, 255, 255, 0.7)' : 'none',
         transform:
           (dragState && dragState.stage !== DragStage.INACTIVE) ?
             `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
@@ -267,29 +329,13 @@ export const Card:React.FC<Props> = ({
             '',
         width:widthString,
         height:heightString,
+        transition:'border 1s ease-in-out',
+        aspectRatio:cardAspectRatio,
         position: 'relative',
         zIndex: (dragState.stage !== DragStage.INACTIVE) ? 30 : 0,
         }}>
-      <img src={imageSrc} draggable="false" style={{
-        maxWidth:'100%',
-        ...(imageHeightString && { height: imageHeightString }),
-        cursor:'pointer',
-        marginTop:'auto',
-        aspectRatio: cardAspectRatio,
-        visibility: (showFront) ? 'visible' : 'hidden'
-        }}/>
-      <img src={backImageSrc} draggable="false" style={{
-        maxWidth:'100%',
-        ...(imageHeightString && { height: imageHeightString }),
-        cursor:'pointer',
-        top:0,
-        left:0,
-        width:'100%',
-        height:'100%',
-        marginTop:'auto',
-        position: 'absolute',
-        visibility: (!showFront) ? 'visible' : 'hidden',
-        }}/>
+      
+      {loadFace}
       { isCardDoublesided(card) &&
       <div 
         onPointerDown={(e) => handleDoublesidedPointerDown(e)}
