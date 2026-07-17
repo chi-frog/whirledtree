@@ -8,6 +8,7 @@ import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
 import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
+import { motion } from "framer-motion";
 
 // As the cards load, first 
 enum LoadSequence {
@@ -26,6 +27,7 @@ type Props = {
   card:MagicCard,
   changeCard:(card:MagicCard)=>void,
   imagePackets:ImagePacket[],
+  cardBackImagePacket?:ImagePacket,
   handlePointerUp?:(e:React.PointerEvent, x:number, y:number) => void,
 };
 export const Card:React.FC<Props> = ({
@@ -36,6 +38,7 @@ export const Card:React.FC<Props> = ({
     card,
     changeCard,
     imagePackets,
+    cardBackImagePacket,
     handlePointerUp,
   }:Props) => {
   const {subDrag, startDragging, dragStateRef} = useDragContext();
@@ -231,8 +234,6 @@ export const Card:React.FC<Props> = ({
     lastMousePress.current = {x:e.clientX, y:e.clientY};
   };
 
-
-
   const handleDoublesidedPointerUp:PointerEventHandler = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -292,7 +293,7 @@ export const Card:React.FC<Props> = ({
 
   const loadFace = useMemo(() => {
     return (
-      <img src='magic/defaultCardBack.png' onLoad={bgOnLoad} style={{
+      <img src={cardBackImagePacket?.largeBlob} onLoad={bgOnLoad} style={{
         width:'100%',
         height:'100%',
         ...(imageHeightString && { height: imageHeightString }),
@@ -305,38 +306,10 @@ export const Card:React.FC<Props> = ({
         visibility: (loadSequence === LoadSequence.IMAGE) ? 'hidden' : 'visible',
       }}/>
     )
-  }, [imageHeightString, loadSequence]);
+  }, [imageHeightString, loadSequence, cardBackImagePacket]);
 
-  return (
-    <div
-      ref={ref}
-      onPointerEnter={(e)=>handleCardPointerEnter(e)}
-      onPointerLeave={(e)=>handleCardPointerLeave(e)}
-      onPointerDown={(e) => handleCardPointerDown(e)}
-      onPointerUp={(e) => handleCardPointerUp(e)} style={{
-        cursor:'pointer',
-        margin:(location === 'view') ? '5px' : '0px',
-        overflow:'hidden',
-        borderRadius:(location ==='view') ? '12px' : '20px',
-        border:(loadSequence !== LoadSequence.PRE_BACKGROUND) ? '1px solid rgba(255, 255, 255, 0.7)' : 'none',
-        transform:
-          (dragState && dragState.stage !== DragStage.INACTIVE) ?
-            `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
-          (rotateState.stage !== DragStage.INACTIVE) ?
-          (!flipping) ?
-            `rotate3d(0, 1, 0, ${rotateState.angle}deg)` :
-            `rotate3d(0, 1, 0, ${90 - (rotateState.angle - 90)}deg)` :
-            '',
-        width:widthString,
-        height:heightString,
-        transition:'border 1s ease-in-out',
-        aspectRatio:cardAspectRatio,
-        position: 'relative',
-        zIndex: (dragState.stage !== DragStage.INACTIVE) ? 30 : 0,
-        }}>
-      
-      {loadFace}
-      { isCardDoublesided(card) &&
+  const doublesidedCircle = useMemo(() => {
+    return (
       <div 
         onPointerDown={(e) => handleDoublesidedPointerDown(e)}
         onPointerUp={handleDoublesidedPointerUp}
@@ -354,32 +327,70 @@ export const Card:React.FC<Props> = ({
           '0px 0px 5px 5px rgba(236, 236, 26), inset 0px 0px 2px 3px rgba(236, 236, 26, 1)' :
           'none',
         cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
-      }}/>  
-      }
+      }}/>
+    )
+  }, [showFront, handleDoublesidedPointerDown, handleDoublesidedPointerUp, dims.width, doubleSidedCircleOffset, mousedover])
+
+  const rotationBar = useCallback((left:string='0', dir:-1|1=1) => {
+    return (
       <div
         className="leftSideRotate"
-        onPointerDown={(e) => handleDoublesidedPointerDown(e, 1)}
+        onPointerDown={(e) => handleDoublesidedPointerDown(e, dir)}
         onPointerUp={handleDoublesidedPointerUp}
         style={{
           width:"10px",
           height:"100%",
           backgroundColor:'transparent',
           position:'absolute',
+          left:left,
           cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
         }}
         />
+    )
+  }, [handleDoublesidedPointerUp, handleDoublesidedPointerDown]);
+
+  return (
+    <motion.div
+      layout
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      style={{
+        cursor:'pointer',
+        margin:(location === 'view') ? '5px' : '0px',
+        width:widthString,
+        height:heightString,
+        aspectRatio:cardAspectRatio,
+        position: 'relative',
+        zIndex: (dragState.stage !== DragStage.INACTIVE) ? 30 : 0,
+        }}>
       <div
-        className="rightSideRotate"
-        onPointerDown={(e) => handleDoublesidedPointerDown(e, -1)}
-        onPointerUp={handleDoublesidedPointerUp}
+        ref={ref}
+        onPointerEnter={(e)=>handleCardPointerEnter(e)}
+        onPointerLeave={(e)=>handleCardPointerLeave(e)}
+        onPointerDown={(e) => handleCardPointerDown(e)}
+        onPointerUp={(e) => handleCardPointerUp(e)}
         style={{
-          width:"10px",
-          height:"100%",
-          left:"calc(100% - 10px)",
-          backgroundColor:'transparent',
-          position:'absolute',
-          cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
-        }}
-        />
-    </div>);
+        width:'100%',
+        height:'100%',
+        position:'relative',
+        overflow:'hidden',
+        transition:'border 1s ease-in-out',
+        borderRadius:(location ==='view') ? '12px' : '20px',
+        border:(loadSequence !== LoadSequence.PRE_BACKGROUND) ? '1px solid rgba(255, 255, 255, 0.7)' : 'none',
+        transform:
+          (dragState && dragState.stage !== DragStage.INACTIVE) ?
+            `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
+          (rotateState.stage !== DragStage.INACTIVE) ?
+          (!flipping) ?
+            `rotate3d(0, 1, 0, ${rotateState.angle}deg)` :
+            `rotate3d(0, 1, 0, ${90 - (rotateState.angle - 90)}deg)` :
+            '',
+      }}>
+      {loadFace}
+      { isCardDoublesided(card) &&
+        doublesidedCircle
+      }
+      {rotationBar("", 1)}
+      {rotationBar("calc(100% - 10px)", -1)}
+      </div>
+    </motion.div>);
 };

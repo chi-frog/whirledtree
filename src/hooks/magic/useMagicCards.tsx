@@ -242,7 +242,7 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     const getBackImage = async () => {
       let backUrl;
       if (await fileExists('magic/defaultCardBack.png'))
-        backUrl = 'magic/defaultCardBack.png';
+        backUrl = await fetchImage('magic/defaultCardBack.png');
       else
         backUrl = await fetchImage('https://cards.scryfall.io/back.png');
 

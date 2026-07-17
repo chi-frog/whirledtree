@@ -10,7 +10,7 @@ type Props = {};
 const Landing:React.FC<Props> = () => {
   const {selected, updateSelected, handlers} = useFilters();
   const url = useMemo(() => constructSearchUrl(selected), [selected]);
-  const [displayLimit, setDisplayLimit] = useState<number>(500);
+  const [displayLimit, setDisplayLimit] = useState<number>(175);
   const database = useMagicDatabase(url, displayLimit);
 
   return (

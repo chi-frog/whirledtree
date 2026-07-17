@@ -31,9 +31,10 @@ const View:React.FC<Props> = ({
     const frontImagePacket = imageMap.get(name);
     const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
     const card = cards[index];
+    const cardBackImagePacket = imageMap.get("");
     const backImagePacket = ((card.back) && isCardDoublesided(card)) ?
       imageMap.get(card.back.name) :
-      imageMap.get("");
+      cardBackImagePacket;
     if (backImagePacket) imagePackets.push(backImagePacket);
 
     return (
@@ -45,6 +46,7 @@ const View:React.FC<Props> = ({
         card={cards[index]}
         changeCard={(card:MagicCard) => changeCard(index, card)}
         imagePackets={imagePackets}
+        cardBackImagePacket={cardBackImagePacket}
         handlePointerUp={(e:React.PointerEvent, x:number, y:number) => handleCardPointerUp(e, index, x, y)}
         />)},
     [imageMap, cards, changeCard]);
