@@ -206,6 +206,7 @@ const Modal:React.FC<Props> = ({
 
     const orderedIndices = indices.toSorted((a, b) => a.manaCostIndex - b.manaCostIndex);
     const orderedSymbols = orderedIndices.map((index) => index.symbol);
+    console.log('orderedSymbols', orderedSymbols);
     return orderedSymbols;
 
   }, [symbols, card.manaCost, card.reversed, symbolImageMap]);

@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler,   useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEventHandler,   UIEventHandler,   useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { _magicCard, isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
 import Filter from "./filters/Filter";
 import Modal from "./Modal";
@@ -58,6 +58,7 @@ const CardDisplay:React.FC<Props> = ({
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [cards, setCards] = useState<MagicCard[]>(db.cards);
+  const scrollTrigger = useRef<HTMLDivElement|null>(null);
 
   const changeCard = useCallback((index:number, card:MagicCard) =>
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
@@ -154,6 +155,30 @@ const CardDisplay:React.FC<Props> = ({
     );
   };
 
+  const isFetchingRef = useRef(false);
+
+  useEffect(() => {
+    const el = scrollTrigger.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && db.fetchNextData && !isFetchingRef.current) {
+          isFetchingRef.current = true;
+          console.log('starting to load');
+          observer.unobserve(el);
+          Promise.resolve(db.fetchNextData()).finally(() => {
+            isFetchingRef.current = false;
+          });
+        }
+      });
+    }, { rootMargin: '3000px' });
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [cards]);
+
   return (
   <div
     onPointerDown={handlePointerDown}>
@@ -233,6 +258,11 @@ const CardDisplay:React.FC<Props> = ({
       </div>
     }
     {modal()}
+    <div id="scrollTrigger" ref={scrollTrigger} style={{
+      width:"100%",
+      height:"1px",
+      display:"hidden",
+    }}/>
   </div>)
 };
 

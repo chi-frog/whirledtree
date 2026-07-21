@@ -29,7 +29,8 @@ export const constructSearchUrl = (selected:Selected={game:GAME_TYPE.PAPER}) => 
     }
   }, url);
 
-  url.substring(0, url.length - 1);
+  url = url.substring(0, url.length - 1);
+  url += '&order=name';
 
   return url;
 };

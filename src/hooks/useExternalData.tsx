@@ -13,7 +13,7 @@ export type ExternalDataOptions = {
 };
 
 type ReturnOptions = {
-  fetchNext?:(()=>void),
+  fetchNextData?:()=>void,
   totalCards?:number,
 }
 type Return<T> = [WError, boolean, T[], ReturnOptions]
@@ -26,80 +26,84 @@ function useExternalData<T> (
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<WError>(_noError);
   const [totalCards, setTotalCards] = useState<number>(0);
-  const [fetchNext, setFetchNext] = useState<(()=>void)|undefined>();
+  const [nextUrl, setNextUrl] = useState<string>(url);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    let data:T[] = [];
+  const fetchData = async (url:string, controller:AbortController) => {
+    let dataCount = 0;
 
-    const fetchData = async (url:string) => {
-      try {
-        let overflow = (options.dataLimit) &&
-                       (options.dataLimit <= data.length);
-        let chunkUrl:string|undefined = url;
-        while ((!overflow) && (chunkUrl)) {
-          let [chunkData, totalCards, nextUrl] = await chunk(chunkUrl);
-          let transformedData = chunkData.map(transform);
+    try {
+      let overflow = (options.dataLimit) &&
+                     (options.dataLimit <= dataCount);
+      let chunkUrl = url;
+      while ((!overflow) && (chunkUrl)) {
+        let [chunkData, totalCards, nextUrl] = await chunk(chunkUrl);
+        let transformedData = chunkData.map(transform);
 
-          if (options.totalCards) {
-            setTotalCards(totalCards);
-            setLoaded(true);
-          }
-          setData((prev) => prev.concat(transformedData));
-          data = data.concat(transformedData);
-          chunkUrl = nextUrl;
-          overflow = (options.dataLimit) &&
-                     (options.dataLimit <= data.length);
+        if (options.totalCards) {
+          setTotalCards(totalCards);
+          setLoaded(true);
         }
-
-        if (overflow) {
-          console.info('overflowed: ' + data.length + '/' + options.dataLimit);
-        }
-        setError(_noError);
-        setLoaded(true);
-        setData(data);
-        console.info('-Loaded ', url);
-      } catch (err) {
-        if ((err instanceof Error)) {
-          // Don't log abort errors.
-          if (err.message === WErrorCode.NOT_FOUND) {
-            //Not an error - just means the search was empty
-            setError(_noError);
-            setLoaded(true);
-            setData([]);
-            return;
-
-          } else if (err.name !== 'AbortError') {
-            console.error('Error with url ' + url, err);
-            setError(_err(err));
-            setLoaded(false);
-            setData([]);
-            return;
-
-          }
-        }
+        setData((prev) => prev.concat(transformedData));
+        chunkUrl = nextUrl;
+        dataCount += transformedData.length;
+        overflow = (options.dataLimit) &&
+                     (options.dataLimit <= dataCount);
       }
 
-      async function chunk(url:string):Promise<[any[], number, string|undefined]> {
-        const res = await fetch(url, { signal: controller.signal });
-        const json = await res.json();
-        const body = json.data;
+      if (overflow) {
+        setNextUrl(chunkUrl);
+        console.info('overflowed: ' + dataCount + '/' + options.dataLimit + ', total cards loaded:' + data.length);
+      }
+      
+      setError(_noError);
+      setLoaded(true);
+      console.info('-Loaded ', url);
+    } catch (err) {
+      if ((err instanceof Error)) {
+        // Don't log abort errors.
+        if (err.message === WErrorCode.NOT_FOUND) {
+          //Not an error - just means the search was empty
+          setError(_noError);
+          setLoaded(true);
+          setData([]);
+          return;
 
-        if (!body)
-          throw Error(WErrorCode.NOT_FOUND);
+        } else if (err.name !== 'AbortError') {
+          console.error('Error with url ' + url, err);
+          setError(_err(err));
+          setLoaded(false);
+          setData([]);
+          return;
 
-        return [body, json.total_cards, json.next_page];
-      };
+        }
+      }
+    }
+
+    async function chunk(url:string):Promise<[any[], number, string]> {
+      const res = await fetch(url, { signal: controller.signal });
+      const json = await res.json();
+      const body = json.data;
+
+      if (!body)
+        throw Error(WErrorCode.NOT_FOUND);
+
+      return [body, json.total_cards, json.next_page];
     };
+  };
 
-    fetchData(url).catch((err) => console.error('error', err));
+  const fetchNextData = () => {
+    const controller = new AbortController();
+
+    fetchData(nextUrl, controller);
 
     return () => {
       controller.abort();
-    };
-  }, [url, transform]);
+    }
+  }
 
-  return [error, loaded, data, {fetchNext, totalCards}];
+  useEffect(() => fetchNextData(), [transform]);
+
+  return [error, loaded, data, {fetchNextData, totalCards}];
 };
 
 export default useExternalData;

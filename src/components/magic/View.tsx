@@ -7,7 +7,6 @@ import { _dragState, DragStage, DragState } from "../general/DragProvider";
 import { useCallback } from "react";
 
 type Props = {
-  loaded?:boolean,
   dragState:DragState,
   filterState:FilterState,
   numCardsRow:number,

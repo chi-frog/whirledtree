@@ -252,24 +252,24 @@ export const Card:React.FC<Props> = ({
   };
 
   const bgOnLoad = useCallback(() => {
-    setLoadSequence(LoadSequence.PRE_IMAGE);
-    if (card.name === 'Aang and Katara')
-    console.log('bg loaded', card.name);
-  }, []);
+    setLoadSequence((prev) => {
+      if (card.name === "Aang and Katara")
+        console.log('prev bgOnLoad', prev);
+      return prev === (LoadSequence.PRE_BACKGROUND) ? LoadSequence.PRE_IMAGE : prev
+    });
+  }, [loadSequence]);
 
   const imgOnLoad = useCallback(() => {
     setLoadSequence(LoadSequence.IMAGE);
-    if (card.name === 'Aang and Katara')
-    console.log('image loaded', card.name);
-  }, []);
+  }, [loadSequence]);
 
   const frontFace = useMemo(() => {
     return (
       <img src={imageSrc} draggable="false" onLoad={imgOnLoad} style={{
-        maxWidth:'100%',
+        width:'100%',
         ...(imageHeightString && { height: imageHeightString }),
         marginTop:'auto',
-        aspectRatio: cardAspectRatio,
+        position:'absolute',
         visibility: (showFront && loadSequence === LoadSequence.IMAGE) ? 'visible' : 'hidden'
         }}/>
     )
@@ -343,6 +343,7 @@ export const Card:React.FC<Props> = ({
           backgroundColor:'transparent',
           position:'absolute',
           left:left,
+          zIndex:10,
           cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
         }}
         />
@@ -351,7 +352,9 @@ export const Card:React.FC<Props> = ({
 
   return (
     <motion.div
-      layout
+      layoutId={card.name}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       style={{
         cursor:'pointer',
@@ -386,6 +389,8 @@ export const Card:React.FC<Props> = ({
             '',
       }}>
       {loadFace}
+      {frontFace}
+      {backFace}
       { isCardDoublesided(card) &&
         doublesidedCircle
       }

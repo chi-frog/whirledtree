@@ -165,11 +165,12 @@ export type UseMagicCards = [
   cards:MagicCard[],
   imageMap:ImageMap,
   hydrateLargeImage:(index:number)=>void,
+  fetchNextData?:()=>void,
   totalCards?:number,
 ]
 const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, displayLimit) => {
   const [imageMap, setImageMap] = useState<ImageMap>(new Map());
-  let [error, dataLoaded, cardData, {totalCards}] = useExternalData<MagicCard>(
+  let [error, dataLoaded, cardData, {fetchNextData, totalCards}] = useExternalData<MagicCard>(
     url,
     transformMagicCard,
     {dataLimit:displayLimit, totalCards:true});
@@ -302,7 +303,7 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     hydrateImageMap(setImageMap, [cards[index]], "large");
   }, [cards, imageMap]);
 
-  return [error, dataLoaded, cards, imageMap, hydrateLargeImage, totalCards];
+  return [error, dataLoaded, cards, imageMap, hydrateLargeImage, fetchNextData, totalCards];
 };
 
 export default useMagicCards;
