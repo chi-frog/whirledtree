@@ -28,25 +28,25 @@ const View:React.FC<Props> = ({
 
   const card = useCallback((name:string, index:number) => {
     const frontImagePacket = imageMap.get(name);
-    const imagePackets = (frontImagePacket) ? [frontImagePacket] : [];
     const card = cards[index];
     const cardBackImagePacket = imageMap.get("");
     const backImagePacket = ((card.back) && isCardDoublesided(card)) ?
       imageMap.get(card.back.name) :
       cardBackImagePacket;
-    if (backImagePacket) imagePackets.push(backImagePacket);
 
     return (
       <Card
         key={name}
         location='view'
+        index={index}
         widthString={`calc('100% / ${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
-        changeCard={(card:MagicCard) => changeCard(index, card)}
-        imagePackets={imagePackets}
+        changeCard={changeCard}
+        frontImagePacket={frontImagePacket}
+        backImagePacket={backImagePacket}
         cardBackImagePacket={cardBackImagePacket}
-        handlePointerUp={(e:React.PointerEvent, x:number, y:number) => handleCardPointerUp(e, index, x, y)}
+        handlePointerUp={handleCardPointerUp}
         />)},
     [imageMap, cards, changeCard]);
 

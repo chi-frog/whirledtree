@@ -218,14 +218,14 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
         originalCard.siblings.push(_card);
     });
 
-    normalCards = normalCards.sort((a, b) => {
+    /*normalCards = normalCards.sort((a, b) => {
       const nameA = a.name.toUpperCase(); // ignore upper and lowercase
       const nameB = b.name.toUpperCase(); // ignore upper and lowercase
 
       return (nameA < nameB) ? -1 :
              (nameA > nameB) ? 1 :
                                0;
-      });
+      });*/
     
     return normalCards;
   }, [cardData]);

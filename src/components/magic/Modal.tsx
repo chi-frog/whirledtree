@@ -10,6 +10,7 @@ import { _wpoint, } from "@/helpers/wpoint";
 import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
 import OracleText from "./OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
+import { motion } from "framer-motion";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -242,7 +243,11 @@ const Modal:React.FC<Props> = ({
         whiteSpace:'nowrap',
         zIndex:50,
       }}>
-      <div id="inner" style={{
+      <motion.div id="inner" 
+        initial={{opacity:0, width:'0', height:'0'}}
+        animate={{opacity:1, width:'80vw', height:'80vh'}}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        style={{
         backgroundColor:'white',
         height: '80vh',
         width: '80vw',
@@ -256,12 +261,14 @@ const Modal:React.FC<Props> = ({
         {card &&
           <Card
             location='modal'
+            index={index}
             widthString={'fit-content'}
             heightString={'100%'}
             imageHeightString={'100%'}
             card={card}
-            changeCard={changeCard.bind(null, index)}
-            imagePackets={imagePackets}
+            changeCard={changeCard}
+            frontImagePacket={imagePackets[0]}
+            backImagePacket={imagePackets[1]}
             handlePointerUp={handleCardPointerUp}
           />
         }
@@ -314,7 +321,7 @@ const Modal:React.FC<Props> = ({
           }}>{power}/{toughness}</h3>
           }
         </div>
-      </div>
+      </motion.div>
       <div id="searchTooltip" ref={ref}
         className="hover:bg-sky-200"
         onPointerDown={handleTooltipPointerDown}

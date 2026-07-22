@@ -3,7 +3,7 @@
 import { _wpoint, areEqualWPoints, WPoint } from "@/helpers/wpoint";
 import { isCardDoublesided, MagicCard } from "./types/default";
 import { ImagePacket } from "./CardDisplay";
-import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
@@ -21,26 +21,30 @@ export type CardLocation =
   'view' | 'modal';
 type Props = {
   location:CardLocation,
+  index:number,
   widthString:string,
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
-  changeCard:(card:MagicCard)=>void,
-  imagePackets:ImagePacket[],
+  changeCard:(index:number, card:MagicCard)=>void,
+  frontImagePacket?:ImagePacket,
+  backImagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
-  handlePointerUp?:(e:React.PointerEvent, x:number, y:number) => void,
+  handlePointerUp?:(e:React.PointerEvent, index:number, x:number, y:number) => void,
 };
-export const Card:React.FC<Props> = ({
+export const Card:React.FC<Props> = memo(function Card({
     location,
+    index,
     widthString,
     heightString,
     imageHeightString,
     card,
     changeCard,
-    imagePackets,
+    frontImagePacket,
+    backImagePacket,
     cardBackImagePacket,
     handlePointerUp,
-  }:Props) => {
+  }:Props) {
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
   const [mousedover, setMousedover] = useState<boolean>(false);
@@ -81,17 +85,16 @@ export const Card:React.FC<Props> = ({
   }, []);
 
   const imageSrc = useMemo(() =>
-    (!card || imagePackets.length <= 0)    ? undefined :
-    (imagePackets[0].largeBlob)            ? imagePackets[0].largeBlob :
-                                             imagePackets[0].smallBlob
-  , [imagePackets]);
+    (!card || !frontImagePacket) ? undefined :
+    (frontImagePacket.largeBlob) ? frontImagePacket.largeBlob :
+                                   frontImagePacket.smallBlob
+  , [frontImagePacket]);
 
   const backImageSrc = useMemo(() =>
-    ((!card) ||
-     (imagePackets.length <= 1)) ? undefined :
-    (imagePackets[1].largeBlob)                   ? imagePackets[1].largeBlob :
-                                                    imagePackets[1].smallBlob
-    , [imagePackets, card.layout]);
+    ((!card) || (!backImagePacket)) ? undefined :
+    (backImagePacket.largeBlob)     ? backImagePacket.largeBlob :
+                                      backImagePacket.smallBlob
+    , [backImagePacket, card.layout]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -177,7 +180,7 @@ export const Card:React.FC<Props> = ({
 
   const handleCardPointerUp = (e:React.PointerEvent) => {
     if (handlePointerUp)
-      handlePointerUp(e, lastMousePress.current.x, lastMousePress.current.y);
+      handlePointerUp(e, index, lastMousePress.current.x, lastMousePress.current.y);
     glow(false);
   }
 
@@ -226,30 +229,29 @@ export const Card:React.FC<Props> = ({
     return def;
   }, [dims]);
 
-  const handleDoublesidedPointerDown = (e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
+  const handleDoublesidedPointerDown = useCallback((e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
     e.stopPropagation();
     if (!dir) dir = (card.reversed) ? -1 : 1
     startRotating(e, dir);
     lastMousePress.current = {x:e.clientX, y:e.clientY};
-  };
+  }, [card.reversed]);
 
-  const handleDoublesidedPointerUp:PointerEventHandler = (e) => {
+  const handleDoublesidedPointerUp:PointerEventHandler = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     const point = {x:e.clientX, y:e.clientY};
 
     if (areEqualWPoints(point, lastMousePress.current)) {
-      changeCard({...card, reversed:!card.reversed});
-      console.table(rotateState);
+      changeCard(index, {...card, reversed:!card.reversed});
       forceRotate(180);
     }
 
     if (flipping) {
-      changeCard({...card, reversed:!card.reversed});
+      changeCard(index, {...card, reversed:!card.reversed});
       forceRotate(90 - (rotateState.angle - 90));
     }
-  };
+  }, [flipping, card.reversed]);
 
   const bgOnLoad = useCallback(() => {
     setLoadSequence((prev) => {
@@ -265,7 +267,7 @@ export const Card:React.FC<Props> = ({
 
   const frontFace = useMemo(() => {
     return (
-      <img src={imageSrc} draggable="false" onLoad={imgOnLoad} style={{
+      <img src={imageSrc} loading="lazy" draggable="false" onLoad={imgOnLoad} style={{
         width:'100%',
         ...(imageHeightString && { height: imageHeightString }),
         marginTop:'auto',
@@ -277,7 +279,7 @@ export const Card:React.FC<Props> = ({
 
   const backFace = useMemo(() => {
     return (
-      <img src={backImageSrc} draggable="false" style={{
+      <img src={backImageSrc} loading="lazy" draggable="false" style={{
         maxWidth:'100%',
         ...(imageHeightString && { height: imageHeightString }),
         top:0,
@@ -293,7 +295,7 @@ export const Card:React.FC<Props> = ({
 
   const loadFace = useMemo(() => {
     return (
-      <img src={cardBackImagePacket?.largeBlob} onLoad={bgOnLoad} style={{
+      <img src={cardBackImagePacket?.largeBlob} loading="lazy" onLoad={bgOnLoad} style={{
         width:'100%',
         height:'100%',
         ...(imageHeightString && { height: imageHeightString }),
@@ -398,4 +400,4 @@ export const Card:React.FC<Props> = ({
       {rotationBar("calc(100% - 10px)", -1)}
       </div>
     </motion.div>);
-};
+});
