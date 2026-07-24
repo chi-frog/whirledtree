@@ -69,7 +69,6 @@ type Props = {
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
   cards:MagicCard[],
-  changeCard:(index:number, card:MagicCard)=>void,
   updateSelected:FilterUpdateFunction,
   index:number,
   imagePackets:ImagePacket[],
@@ -82,7 +81,6 @@ const Modal:React.FC<Props> = ({
     symbols,
     symbolImageMap,
     cards,
-    changeCard,
     updateSelected,
     index,
     imagePackets
@@ -266,7 +264,6 @@ const Modal:React.FC<Props> = ({
             heightString={'100%'}
             imageHeightString={'100%'}
             card={card}
-            changeCard={changeCard}
             frontImagePacket={imagePackets[0]}
             backImagePacket={imagePackets[1]}
             handlePointerUp={handleCardPointerUp}

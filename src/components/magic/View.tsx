@@ -11,7 +11,6 @@ type Props = {
   filterState:FilterState,
   numCardsRow:number,
   cards:MagicCard[],
-  changeCard:(index:number, card:MagicCard)=>void,
   imageMap:ImageMap,
   handleCardPointerUp:(e:React.PointerEvent, index:number, x:number, y:number) => void,
 }
@@ -21,7 +20,6 @@ const View:React.FC<Props> = ({
     filterState,
     numCardsRow,
     cards,
-    changeCard,
     imageMap,
     handleCardPointerUp,
   }:Props) => {
@@ -42,13 +40,12 @@ const View:React.FC<Props> = ({
         widthString={`calc('100% / ${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
-        changeCard={changeCard}
         frontImagePacket={frontImagePacket}
         backImagePacket={backImagePacket}
         cardBackImagePacket={cardBackImagePacket}
         handlePointerUp={handleCardPointerUp}
         />)},
-    [imageMap, cards, changeCard]);
+    [imageMap, cards]);
 
   return (
     <div className="hover:bg-blue" style={{

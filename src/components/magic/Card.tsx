@@ -26,7 +26,6 @@ type Props = {
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
-  changeCard:(index:number, card:MagicCard)=>void,
   frontImagePacket?:ImagePacket,
   backImagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
@@ -39,7 +38,6 @@ export const Card:React.FC<Props> = memo(function Card({
     heightString,
     imageHeightString,
     card,
-    changeCard,
     frontImagePacket,
     backImagePacket,
     cardBackImagePacket,
@@ -48,41 +46,43 @@ export const Card:React.FC<Props> = memo(function Card({
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
   const [mousedover, setMousedover] = useState<boolean>(false);
-  const ref = useRef<null|HTMLDivElement>(null);
+  const [node, setNode] = useState<HTMLDivElement|null>(null);
+  const ref = useCallback((el:HTMLDivElement|null) => setNode(el), []);
   const raf = useRef<number>(-1);
   const [rotateState, startRotating, forceRotate] =
-    useCardRotate(ref.current, subDrag, startDragging, dragStateRef);
+    useCardRotate(node, subDrag, startDragging, dragStateRef);
   const lastMousePress = useRef<WPoint>(_wpoint);
   const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
   const [loadSequence, setLoadSequence] = useState<LoadSequence>(LoadSequence.PRE_BACKGROUND);
+  const [reversed, setReversed] = useState<boolean>(false);
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
-    ((!card.reversed && rotateState.angle <= 90) ||
-     (card.reversed && rotateState.angle > 90)), [card.reversed, rotateState.angle]);
+    (loadSequence === LoadSequence.IMAGE) &&
+      ((!reversed && rotateState.angle <= 90) ||
+       (reversed && rotateState.angle > 90)), [reversed, rotateState.angle, loadSequence]);
+  const showBack = useMemo(() =>
+    (loadSequence === LoadSequence.IMAGE) &&
+      ((reversed && rotateState.angle <= 90) ||
+       (!reversed && rotateState.angle > 90)), [reversed, rotateState.angle, loadSequence]);  
 
-  useEffect(() => {
-    if (ref.current) {
-      const observer = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          const {x, y} = entry.target.getBoundingClientRect();
-          setDims({
-            x: x,
-            y: y,
-            width: entry.contentRect.width,
-            height: entry.contentRect.height,
-          });
-        }
+useEffect(() => {
+  if (!node) return;
+
+  const observer = new ResizeObserver((entries) => {
+    for (let entry of entries) {
+      const { x, y } = entry.target.getBoundingClientRect();
+      setDims({
+        x, y,
+        width: entry.contentRect.width,
+        height: entry.contentRect.height,
       });
-
-      observer.observe(ref.current);
-
-      // Cleanup function
-      return () => {
-        observer.disconnect();
-      };
     }
-  }, []);
+  });
+
+  observer.observe(node);
+  return () => observer.disconnect();
+}, [node]);
 
   const imageSrc = useMemo(() =>
     (!card || !frontImagePacket) ? undefined :
@@ -106,8 +106,7 @@ export const Card:React.FC<Props> = memo(function Card({
     (dragState) ? (dragState.stage === DragStage.ACTIVE) : 0, [dragState?.stage]);
 
   const glow = useCallback((version:boolean) => {
-    const element = ref.current;
-    if (!element) return;
+    if (!node) return;
 
     cancelAnimationFrame(raf.current);
 
@@ -115,13 +114,13 @@ export const Card:React.FC<Props> = memo(function Card({
     let opacityGoingUp = true;
     let opacityFirstPass = true;
     let opacityRate = 0.008;
-    element.style.border = "1px solid rgb(146, 148, 248)";
-    element.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
+    node.style.border = "1px solid rgb(146, 148, 248)";
+    node.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
     if (!dragging && (location === 'view'))
-      element.style.top = "-3px";
+      node.style.top = "-3px";
 
     const change = () => {
-      if (element.style.boxShadow === 'none') {
+      if (node.style.boxShadow === 'none') {
         cancelAnimationFrame(raf.current);
         return;
       }
@@ -141,7 +140,7 @@ export const Card:React.FC<Props> = memo(function Card({
       const selectedBoxShadow = `0px 0px 15px 10px rgba(146, 255, 248, ${opacity})`;
       const mouseoverBoxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
 
-      element.style.boxShadow = (version) ?
+      node.style.boxShadow = (version) ?
         selectedBoxShadow:
         mouseoverBoxShadow;
 
@@ -151,7 +150,7 @@ export const Card:React.FC<Props> = memo(function Card({
     raf.current = requestAnimationFrame(change);
 
     return () => cancelAnimationFrame(raf.current);
-  }, []);
+  }, [node]);
 
   const handleCardPointerEnter = (e:React.PointerEvent) => {
     glow(false);
@@ -159,13 +158,12 @@ export const Card:React.FC<Props> = memo(function Card({
   };
 
   const handleCardPointerLeave = (e:React.PointerEvent) => {
-    const element = ref.current;
-    if (!element) return;
+    if (!node) return;
 
-    element.style.border = '1px solid rgba(255, 255, 255, 0.7)',
-    element.style.boxShadow = "none";
-    element.style.position = "auto";
-    element.style.top = "";
+    node.style.border = '1px solid rgba(255, 255, 255, 0.7)',
+    node.style.boxShadow = "none";
+    node.style.position = "auto";
+    node.style.top = "";
 
     setMousedover(false);
   };
@@ -220,22 +218,22 @@ export const Card:React.FC<Props> = memo(function Card({
     const def = {x:0, y:0, w:0, h:0};
     
     if (isCardDoublesided(card)) {
-      if (!ref.current) return def;
+      if (!node) return def;
 
       return (card.set === 'tla') ? tlaRatios(dims) :
              (card.set === 'khm') ? khmRatios(dims) :
                                     tlaRatios(dims);
     }
     return def;
-  }, [dims]);
+  }, [dims, node]);
 
   const handleDoublesidedPointerDown = useCallback((e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!dir) dir = (card.reversed) ? -1 : 1
+    if (!dir) dir = (reversed) ? -1 : 1
     startRotating(e, dir);
     lastMousePress.current = {x:e.clientX, y:e.clientY};
-  }, [card.reversed]);
+  }, [reversed, node]);
 
   const handleDoublesidedPointerUp:PointerEventHandler = useCallback((e) => {
     e.preventDefault();
@@ -243,20 +241,18 @@ export const Card:React.FC<Props> = memo(function Card({
     const point = {x:e.clientX, y:e.clientY};
 
     if (areEqualWPoints(point, lastMousePress.current)) {
-      changeCard(index, {...card, reversed:!card.reversed});
+      setReversed((prev) => !prev);
       forceRotate(180);
     }
 
     if (flipping) {
-      changeCard(index, {...card, reversed:!card.reversed});
+      setReversed((prev) => !prev);
       forceRotate(90 - (rotateState.angle - 90));
     }
-  }, [flipping, card.reversed]);
+  }, [flipping, reversed, node]);
 
   const bgOnLoad = useCallback(() => {
     setLoadSequence((prev) => {
-      if (card.name === "Aang and Katara")
-        console.log('prev bgOnLoad', prev);
       return prev === (LoadSequence.PRE_BACKGROUND) ? LoadSequence.PRE_IMAGE : prev
     });
   }, [loadSequence]);
@@ -272,7 +268,7 @@ export const Card:React.FC<Props> = memo(function Card({
         ...(imageHeightString && { height: imageHeightString }),
         marginTop:'auto',
         position:'absolute',
-        visibility: (showFront && loadSequence === LoadSequence.IMAGE) ? 'visible' : 'hidden'
+        visibility: (showFront) ? 'visible' : 'hidden'
         }}/>
     )
   }, [imageHeightString, showFront, loadSequence, imageSrc]);
@@ -288,10 +284,10 @@ export const Card:React.FC<Props> = memo(function Card({
         height:'100%',
         marginTop:'auto',
         position: 'absolute',
-        visibility: (!showFront && loadSequence === LoadSequence.IMAGE) ? 'visible' : 'hidden',
+        visibility: (showBack) ? 'visible' : 'hidden',
         }}/>
     )
-  }, [backImageSrc, imageHeightString, showFront, loadSequence]);
+  }, [backImageSrc, imageHeightString, showBack, loadSequence]);
 
   const loadFace = useMemo(() => {
     return (
@@ -305,7 +301,7 @@ export const Card:React.FC<Props> = memo(function Card({
         transition: 'opacity 1s ease-in-out',
         position:'absolute',
         pointerEvents:'none',
-        visibility: (loadSequence === LoadSequence.IMAGE) ? 'hidden' : 'visible',
+        visibility: (!showFront && !showBack) ? 'hidden' : 'visible',
       }}/>
     )
   }, [imageHeightString, loadSequence, cardBackImagePacket]);

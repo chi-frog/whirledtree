@@ -48,7 +48,6 @@ const useCardRotate:UseCardRotate = (
   const [state, setState] = useState<CardRotateState>(ref.current);
 
   const rotating = useMemo(() => state.stage === DragStage.ACTIVE, [state.stage]);
-  const returning = useMemo(() => state.stage === DragStage.RETURNING, [state.stage]);
 
   useEffect(() => {
     subDrag({tag})

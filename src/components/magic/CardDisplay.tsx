@@ -10,6 +10,7 @@ import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { ErrorMap, LoadMap, MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
+import { ModalProvider, useModalContext } from "../general/ModalProvider";
 
 export enum FilterState {
   HIDDEN = 'hidden',
@@ -53,12 +54,11 @@ const CardDisplay:React.FC<Props> = ({
 }) => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
-  const [modalShown, setModalShown] = useState<boolean>(false);
-  const [modalIndex, setModalIndex] = useState<number>(-1);
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [cards, setCards] = useState<MagicCard[]>(db.cards);
   const scrollTrigger = useRef<HTMLDivElement|null>(null);
+  const {showModal, hideModal} = useModalContext();
 
   const changeCard = useCallback((index:number, card:MagicCard) =>
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
@@ -115,8 +115,7 @@ const CardDisplay:React.FC<Props> = ({
     if ((e.button !== 2) &&
         (e.clientX === x) &&
         (e.clientY === y)) {
-      setModalShown(true);
-      setModalIndex(index);
+      showModal(index);
       db.hydrateLargeImage(index);
     }
   }, [cards, db.imageMap]);
@@ -131,29 +130,6 @@ const CardDisplay:React.FC<Props> = ({
     const cardsLoaded = db.loadMap.get('cards');
     return cardsLoaded === true;
   }, [db.loadMap]);
-
-  const modal = () => {
-    if (!modalShown) return <></>;
-    const card = cards[modalIndex];
-    const frontImage = db.imageMap.get(card.name);
-    const backImage = (card.back && isCardDoublesided(card)) ?
-      db.imageMap.get(card.back.name) : db.imageMap.get("");
-
-    return (
-      <Modal
-      close={()=>setModalShown(false)}
-      symbols={db.symbols}
-      symbolImageMap={db.symbolImageMap}
-      cards={cards}
-      changeCard={changeCard}
-      updateSelected={updateSelected}
-      index={modalIndex}
-      imagePackets={(!frontImage) ? [] :
-                    (backImage)   ? [frontImage, backImage] :
-                                    [frontImage]}
-      />
-    );
-  };
 
   const isFetchingRef = useRef(false);
 
@@ -194,7 +170,6 @@ const CardDisplay:React.FC<Props> = ({
         filterState={filterState}
         numCardsRow={numCardsRow}
         cards={cards}
-        changeCard={changeCard}
         imageMap={db.imageMap}
         handleCardPointerUp={handleCardPointerUp}/>
     }
@@ -257,7 +232,6 @@ const CardDisplay:React.FC<Props> = ({
         <h3>{db.totalCards} cards found, {db.cards.length} shown</h3>
       </div>
     }
-    {modal()}
     <div id="scrollTrigger" ref={scrollTrigger} style={{
       width:"100%",
       height:"1px",
