@@ -168,19 +168,19 @@ useEffect(() => {
     setMousedover(false);
   };
 
-  const handleCardPointerDown = (e:React.PointerEvent) => {
+  const handleCardPointerDown = useCallback((e:React.PointerEvent) => {
     e.stopPropagation();
     startDraggingCard(e);
     glow(true);
     lastMousePress.current = {x:e.clientX, y:e.clientY}; 
     console.info('card', card);
-  }
+  }, [glow]);
 
-  const handleCardPointerUp = (e:React.PointerEvent) => {
+  const handleCardPointerUp = useCallback((e:React.PointerEvent) => {
     if (handlePointerUp)
       handlePointerUp(e, index, lastMousePress.current.x, lastMousePress.current.y);
     glow(false);
-  }
+  }, [handlePointerUp, glow]);
 
   const tlaRatios = (dims:{width:number, height:number}) => {
     const circleSize = 55;
@@ -301,10 +301,10 @@ useEffect(() => {
         transition: 'opacity 1s ease-in-out',
         position:'absolute',
         pointerEvents:'none',
-        visibility: (!showFront && !showBack) ? 'hidden' : 'visible',
+        visibility: (!showFront && !showBack) ? 'visible' : 'hidden',
       }}/>
     )
-  }, [imageHeightString, loadSequence, cardBackImagePacket]);
+  }, [showFront, showBack, imageHeightString, loadSequence, cardBackImagePacket]);
 
   const doublesidedCircle = useMemo(() => {
     return (
@@ -365,10 +365,10 @@ useEffect(() => {
         }}>
       <div
         ref={ref}
-        onPointerEnter={(e)=>handleCardPointerEnter(e)}
-        onPointerLeave={(e)=>handleCardPointerLeave(e)}
-        onPointerDown={(e) => handleCardPointerDown(e)}
-        onPointerUp={(e) => handleCardPointerUp(e)}
+        onPointerEnter={handleCardPointerEnter}
+        onPointerLeave={handleCardPointerLeave}
+        onPointerDown={handleCardPointerDown}
+        onPointerUp={handleCardPointerUp}
         style={{
         width:'100%',
         height:'100%',

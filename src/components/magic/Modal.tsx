@@ -308,8 +308,7 @@ const Modal:React.FC<Props> = ({
                                   card?.back?.typeLine}</h3>
           <OracleText
             oracleText={oracleText}
-            symbols={symbols}
-            symbolImageMap={symbolImageMap}/>
+            symbols={symbols}/>
           {power && toughness &&
           <h3 className="selectable powerAndToughness" title="Search By Power/Toughness"
             style={{
