@@ -195,10 +195,7 @@ const Modal:React.FC<Props> = ({
     let face = (card.reversed) ? card.back : card;
 
     const manaCost = (face) ? face.manaCost : "";
-    console.log('manaCost', manaCost);
-    console.log('symbols', symbols);
     const manaSymbols = symbols.filter((symbol) => card.manaCost.includes(symbol.symbol));
-    console.log('manaSymbols', manaSymbols);
     const indices = manaSymbols.reduce<{manaCostIndex:number, symbol:MagicSymbol}[]>((indices, symbol) => {
       let newIndices = [...indices];
       let index = -1;
@@ -207,11 +204,9 @@ const Modal:React.FC<Props> = ({
 
       return newIndices;
     }, []);
-    console.log('indices', indices);
 
     const orderedIndices = indices.toSorted((a, b) => a.manaCostIndex - b.manaCostIndex);
     const orderedSymbols = orderedIndices.map((index) => index.symbol);
-    console.log('orderedSymbols', orderedSymbols);
     return orderedSymbols;
 
   }, [symbols, card.manaCost, card.reversed, symbolImageMap]);

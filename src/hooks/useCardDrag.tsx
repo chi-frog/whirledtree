@@ -39,11 +39,13 @@ type UseCardDrag = (
   subDrag:SubDrag,
   startDragging:StartDragging,
   dragStateRef:RefObject<DragState>,
+  onAnimationEnd?:()=>void,
 ) => UseCardDragReturn;
 const useCardDrag:UseCardDrag = (
     subDrag,
     startDragging,
-    dragStateRef
+    dragStateRef,
+    onAnimationEnd
   ) => {
   const [dragging, setDragging] = useState<boolean>(false);
   const cardDragStateRef = useRef<CardDragState>(_cardDragState);
@@ -79,6 +81,8 @@ const useCardDrag:UseCardDrag = (
         state = _cardDragState;
         cardDragStateRef.current = state;
         setDragState(state);
+        console.log('End of drag!');
+        if (onAnimationEnd) onAnimationEnd();
         return;
       }
 

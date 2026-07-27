@@ -52,7 +52,9 @@ export const Card:React.FC<Props> = memo(function Card({
   const [rotateState, startRotating, forceRotate] =
     useCardRotate(node, subDrag, startDragging, dragStateRef);
   const lastMousePress = useRef<WPoint>(_wpoint);
-  const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef);
+  const [isRaised, setIsRaised] = useState(false);
+  const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
+  const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef, onDragEnd);
   const [loadSequence, setLoadSequence] = useState<LoadSequence>(LoadSequence.PRE_BACKGROUND);
   const [reversed, setReversed] = useState<boolean>(false);
 
@@ -171,6 +173,7 @@ useEffect(() => {
   const handleCardPointerDown = useCallback((e:React.PointerEvent) => {
     e.stopPropagation();
     startDraggingCard(e);
+    setIsRaised(true);
     glow(true);
     lastMousePress.current = {x:e.clientX, y:e.clientY}; 
     console.info('card', card);
@@ -354,6 +357,16 @@ useEffect(() => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      onLayoutAnimationComplete={() => {
+        if (dragState.stage === DragStage.INACTIVE) {
+          setIsRaised(false);
+          console.log('End of animation!');
+        }
+      }}
+      onLayoutAnimationStart={() => {
+        setIsRaised(true);
+        console.log('start of animation!');
+      }}
       style={{
         cursor:'pointer',
         margin:(location === 'view') ? '5px' : '0px',
@@ -361,7 +374,7 @@ useEffect(() => {
         height:heightString,
         aspectRatio:cardAspectRatio,
         position: 'relative',
-        zIndex: (dragState.stage !== DragStage.INACTIVE) ? 30 : 0,
+        zIndex: (isRaised) ? 30 : 0,
         }}>
       <div
         ref={ref}
