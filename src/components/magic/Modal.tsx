@@ -95,7 +95,9 @@ const Modal:React.FC<Props> = ({
   const divRef = useRef(null);
   const nameRef = useRef(null);
 
-  const card = cards[index];
+  const card = useMemo(() => {
+    return cards[index];
+  }, [cards, index]);
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -185,7 +187,7 @@ const Modal:React.FC<Props> = ({
     (!card?.reversed) ? card?.oracleText :
     (card?.back)      ? card?.back?.oracleText :
                         ""
-  , [card.reversed]);
+  , [card.reversed, card.oracleText, card.back]);
 
   const manaCostImages = useMemo(() => {
     if (!card) return [];
@@ -193,7 +195,10 @@ const Modal:React.FC<Props> = ({
     let face = (card.reversed) ? card.back : card;
 
     const manaCost = (face) ? face.manaCost : "";
+    console.log('manaCost', manaCost);
+    console.log('symbols', symbols);
     const manaSymbols = symbols.filter((symbol) => card.manaCost.includes(symbol.symbol));
+    console.log('manaSymbols', manaSymbols);
     const indices = manaSymbols.reduce<{manaCostIndex:number, symbol:MagicSymbol}[]>((indices, symbol) => {
       let newIndices = [...indices];
       let index = -1;
@@ -202,6 +207,7 @@ const Modal:React.FC<Props> = ({
 
       return newIndices;
     }, []);
+    console.log('indices', indices);
 
     const orderedIndices = indices.toSorted((a, b) => a.manaCostIndex - b.manaCostIndex);
     const orderedSymbols = orderedIndices.map((index) => index.symbol);

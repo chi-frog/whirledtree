@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { isCardDoublesided, MagicCard } from "../magic/types/default";
 import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import Modal from "../magic/Modal";
@@ -21,22 +21,8 @@ export const useModalContext = () => {
   return ctx;
 }
 
-export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabase, updateSelected:FilterUpdateFunction, children: ReactNode}) => {
-  const [shown, setShown] = useState<boolean>(false);
-  const [index, setIndex] = useState<number>(-1);
-
-  const showModal = (index:number) => {
-    setShown(true);
-    setIndex(index);
-  }
-
-  const hideModal = () => {
-    setShown(false);
-    setIndex(-1);
-  }
-
-  const modal = () => {
-      if (!shown) return <></>;
+const modal = (shown:boolean, db:MagicDatabase, index:number, hideModal:()=>void, updateSelected:FilterUpdateFunction) => {
+  if (!shown) return <></>;
       const card = db.cards[index];
       const frontImage = db.imageMap.get(card.name);
       const backImage = (card.back && isCardDoublesided(card)) ?
@@ -57,13 +43,27 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
       );
     };
 
+export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabase, updateSelected:FilterUpdateFunction, children: ReactNode}) => {
+  const [shown, setShown] = useState<boolean>(false);
+  const [index, setIndex] = useState<number>(-1);
+
+  const showModal = useCallback((index:number) => {
+    setShown(true);
+    setIndex(index);
+  }, []);
+
+  const hideModal = useCallback(() => {
+    setShown(false);
+    setIndex(-1);
+  }, []);
+
   return (
     <ModalContext.Provider value={{
       showModal,
       hideModal,
     }}>
       {children}
-      {modal()}
+      {modal(shown, db, index, hideModal, updateSelected)}
     </ModalContext.Provider>
   );
 };

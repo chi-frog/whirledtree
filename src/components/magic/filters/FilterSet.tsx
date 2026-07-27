@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler, useMemo } from "react";
+import { ChangeEventHandler, memo, useMemo } from "react";
 import { _magicSetAny, MagicSet } from "../types/default";
 import FilterOption from "./FilterOption";
 import { ANY } from "@/hooks/magic/useFilters";
@@ -11,7 +11,7 @@ type Props = {
   onChangeSet:ChangeEventHandler,
 }
 
-export const FilterSet:React.FC<Props> = ({
+const FilterSet:React.FC<Props> = ({
     sets,
     selectedSet=ANY,
     onChangeSet,
@@ -41,4 +41,6 @@ export const FilterSet:React.FC<Props> = ({
       )})}
     </select>
   </FilterOption>)
-  };
+};
+
+export default memo(FilterSet);

@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler, useMemo } from "react";
+import { ChangeEventHandler, memo, useMemo } from "react";
 import { _magicFormatAny, MagicFormat } from "../types/default";
 import FilterOption from "./FilterOption";
 import { ANY } from "@/hooks/magic/useFilters";
@@ -11,7 +11,7 @@ type Props = {
   onChangeFormat:ChangeEventHandler,
 }
 
-export const FilterFormat:React.FC<Props> = ({
+const FilterFormat:React.FC<Props> = ({
     formats,
     selectedFormat=ANY,
     onChangeFormat,
@@ -43,3 +43,5 @@ export const FilterFormat:React.FC<Props> = ({
       )})}
     </select>
   </FilterOption>)};
+
+export default memo(FilterFormat);

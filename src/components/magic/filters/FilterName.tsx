@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler } from "react";
+import { ChangeEventHandler, memo } from "react";
 import FilterOption from "./FilterOption";
 
 type Props = {
@@ -8,7 +8,7 @@ type Props = {
   onChangeName:ChangeEventHandler,
 }
 
-export const FilterName:React.FC<Props> = ({
+const FilterName:React.FC<Props> = ({
     selectedName="",
     onChangeName,
   }:Props) => (
@@ -25,3 +25,5 @@ export const FilterName:React.FC<Props> = ({
         boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)',
       }}/>
   </FilterOption>);
+
+  export default memo(FilterName);

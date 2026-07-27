@@ -301,7 +301,7 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
 
   const hydrateLargeImage = useCallback(async (index:number) => {
     hydrateImageMap(setImageMap, [cards[index]], "large");
-  }, [cards, imageMap]);
+  }, [cards]);
 
   return [error, dataLoaded, cards, imageMap, hydrateLargeImage, fetchNextData, totalCards];
 };

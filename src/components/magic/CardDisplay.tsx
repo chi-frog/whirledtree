@@ -118,7 +118,11 @@ const CardDisplay:React.FC<Props> = ({
       showModal(index);
       db.hydrateLargeImage(index);
     }
-  }, [cards, db.imageMap]);
+  }, [db.hydrateLargeImage]);
+
+  const hi = useMemo(() => {
+    console.log('-------------changed---------');
+  }, [db.hydrateLargeImage]);
 
   const hasCardsError:boolean = useMemo(() => {
     const cardsError = db.errorMap.get('cards');
@@ -163,7 +167,7 @@ const CardDisplay:React.FC<Props> = ({
       state={filterState}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
       selected={selected} handlers={handlers}
-      sets={db.sets} cards={cards} formats={db.formats} types={db.types}/>
+      sets={db.sets} maxCards={cards.length} formats={db.formats} types={db.types}/>
     {(cards.length > 0) && !hasCardsError && 
       <View
         dragState={dragState}

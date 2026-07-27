@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEventHandler } from "react"
+import { ChangeEventHandler, memo } from "react"
 import FilterOption from "./FilterOption"
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
   onChangeNumCardsRow:ChangeEventHandler,
 }
 
-export const CardsPerRow:React.FC<Props> = 
+const CardsPerRow:React.FC<Props> = 
     ({numCards,
      numCardsRow,
      onChangeNumCardsRow
@@ -30,3 +30,5 @@ export const CardsPerRow:React.FC<Props> =
         transition:"background-color 0.1s ease-in-out",
       }}/>
   </FilterOption>);
+
+export default memo(CardsPerRow);

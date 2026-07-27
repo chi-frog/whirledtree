@@ -1,16 +1,16 @@
 'use client'
 
-import { ChangeEventHandler, Dispatch, PointerEventHandler, SetStateAction, useCallback, useMemo, useState } from "react";
-import { MagicCard, MagicFormat, MagicSet } from "../types/default";
+import { ChangeEventHandler, Dispatch, memo, PointerEventHandler, SetStateAction, useCallback, useMemo, useState } from "react";
+import { MagicFormat, MagicSet } from "../types/default";
 import { FilterState } from "../CardDisplay";
-import { CardsPerRow } from "./ViewCardsPerRow";
-import { FilterSet } from "./FilterSet";
-import { FilterFormat } from "./FilterFormat";
-import { FilterName } from "./FilterName";
+import CardsPerRow from "./CardsPerRow";
+import FilterSet from "./FilterSet";
+import FilterFormat from "./FilterFormat";
+import FilterName from "./FilterName";
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
-import { FilterType } from "./FilterType";
 import { Selected } from "@/hooks/magic/useFilters";
+import FilterType from "./FilterType";
 
 type Props = {
   state:FilterState,
@@ -20,7 +20,7 @@ type Props = {
   selected:Selected,
   handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>,
   sets:MagicSet[],
-  cards:MagicCard[],
+  maxCards:number,
   formats:MagicFormat[],
   types:string[],
 };
@@ -31,7 +31,7 @@ const Filter:React.FC<Props> = ({
   onChangeNumCardsRow,
   selected,
   handlers,
-  cards,
+  maxCards,
   sets,
   formats,
   types}:Props) => {
@@ -45,28 +45,6 @@ const Filter:React.FC<Props> = ({
   const hidden = useMemo(() => (state === FilterState.HIDDEN), [state]);
   const reduced = useMemo(() => (state === FilterState.REDUCED), [state]);
   const whole = useMemo(() => (state === FilterState.WHOLE), [state]);
-
-  const filterOptions = (<>
-    <CardsPerRow
-      numCards={cards.length}
-      numCardsRow={numCardsRow}
-      onChangeNumCardsRow={onChangeNumCardsRow}/>
-    <FilterSet
-      sets={sets}
-      selectedSet={selected.set}
-      onChangeSet={handlers.set}/>
-    <FilterName
-      selectedName={selected.name}
-      onChangeName={handlers.name}/>
-    <FilterType
-      types={types}
-      selectedType={selected.type}
-      onChangeType={handlers.type}/>
-    <FilterFormat
-      formats={formats}
-      selectedFormat={selected.format}
-      onChangeFormat={handlers.format}/>
-  </>);
 
   const handleArrowPointerUp:PointerEventHandler = useCallback((e) => {
     e.stopPropagation();
@@ -191,7 +169,25 @@ const Filter:React.FC<Props> = ({
         gap:'8px',
         height:(whole)?'calc(100vh - 40px - 30px)' : '50px', 
         }}>
-        {filterOptions}
+        <CardsPerRow
+          numCards={maxCards}
+          numCardsRow={numCardsRow}
+          onChangeNumCardsRow={onChangeNumCardsRow}/>
+        <FilterSet
+          sets={sets}
+          selectedSet={selected.set}
+          onChangeSet={handlers.set}/>
+        <FilterName
+          selectedName={selected.name}
+          onChangeName={handlers.name}/>
+        <FilterType
+          types={types}
+          selectedType={selected.type}
+          onChangeType={handlers.type}/>
+        <FilterFormat
+          formats={formats}
+          selectedFormat={selected.format}
+          onChangeFormat={handlers.format}/>
       </div>
       <div style={{
         width:'calc(100vw - 40px)',
@@ -204,4 +200,4 @@ const Filter:React.FC<Props> = ({
   </>);
 };
 
-export default Filter;
+export default memo(Filter);

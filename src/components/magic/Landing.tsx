@@ -16,12 +16,11 @@ const Landing:React.FC<Props> = () => {
 
   return (
     <ModalProvider db={database} updateSelected={updateSelected}>
-    <CardDisplay
-      db={database}
-      selected={selected}
-      updateSelected={updateSelected}
-      handlers={handlers}
-    />
+      <CardDisplay
+        db={database}
+        selected={selected}
+        updateSelected={updateSelected}
+        handlers={handlers}/>
     </ModalProvider>
   )
 };
