@@ -26,15 +26,16 @@ function useExternalData<T> (
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<WError>(_noError);
   const [totalCards, setTotalCards] = useState<number>(0);
-  const [nextUrl, setNextUrl] = useState<string>(url);
+  const [nextUrl, setNextUrl] = useState<string|null>(url);
 
-  const fetchData = async (url:string, controller:AbortController) => {
+  const fetchData = async (url:string, controller:AbortController, sustain:boolean=true) => {
     let dataCount = 0;
 
     try {
       let overflow = (options.dataLimit) &&
                      (options.dataLimit <= dataCount);
       let chunkUrl = url;
+
       while ((!overflow) && (chunkUrl)) {
         let [chunkData, totalCards, nextUrl] = await chunk(chunkUrl);
         let transformedData = chunkData.map(transform);
@@ -43,7 +44,14 @@ function useExternalData<T> (
           setTotalCards(totalCards);
           setLoaded(true);
         }
-        setData((prev) => prev.concat(transformedData));
+
+        if (!sustain) {
+          setData(transformedData);
+          sustain = true;
+
+        } else
+          setData((prev) => prev.concat(transformedData));
+
         chunkUrl = nextUrl;
         dataCount += transformedData.length;
         overflow = (options.dataLimit) &&
@@ -58,6 +66,7 @@ function useExternalData<T> (
       setError(_noError);
       setLoaded(true);
       console.info('-Loaded ', url);
+
     } catch (err) {
       if ((err instanceof Error)) {
         // Don't log abort errors.
@@ -66,6 +75,7 @@ function useExternalData<T> (
           setError(_noError);
           setLoaded(true);
           setData([]);
+          setNextUrl(null);
           return;
 
         } else if (err.name !== 'AbortError') {
@@ -73,6 +83,7 @@ function useExternalData<T> (
           setError(_err(err));
           setLoaded(false);
           setData([]);
+          setNextUrl(null);
           return;
 
         }
@@ -91,17 +102,25 @@ function useExternalData<T> (
     };
   };
 
-  const fetchNextData = () => {
+  const fetchNextData = (url=nextUrl, sustain=true) => {
     const controller = new AbortController();
+    if (!url) {
+      console.log('Nothing to fetch');
+      return;
+    }
 
-    fetchData(nextUrl, controller);
+    console.log('Fetching...', url);
+    fetchData(url, controller, sustain);
 
     return () => {
       controller.abort();
+      console.log('Cut off!', url);
     }
   }
 
-  useEffect(() => fetchNextData(), [transform]);
+  useEffect(() => {
+    return fetchNextData(url, false);
+  }, [url, transform]);
 
   return [error, loaded, data, {fetchNextData, totalCards}];
 };

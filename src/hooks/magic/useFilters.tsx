@@ -32,6 +32,8 @@ const useFilters = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
 
   const updateSelected: FilterUpdateFunction = useCallback((...updates) => {
+    console.log('updates', updates);
+    
     setSelected((prev) => {
       const newSelected = { ...prev };
       updates.forEach(({ property, value }) => {

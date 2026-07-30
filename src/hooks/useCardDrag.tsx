@@ -81,7 +81,6 @@ const useCardDrag:UseCardDrag = (
         state = _cardDragState;
         cardDragStateRef.current = state;
         setDragState(state);
-        console.log('End of drag!');
         if (onAnimationEnd) onAnimationEnd();
         return;
       }

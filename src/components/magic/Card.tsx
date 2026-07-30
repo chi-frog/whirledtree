@@ -139,7 +139,7 @@ useEffect(() => {
           opacityGoingUp = true;
       }
 
-      const selectedBoxShadow = `0px 0px 15px 10px rgba(146, 255, 248, ${opacity})`;
+      const selectedBoxShadow = `0px 0px 15px 10px rgba(253, 220, 92, ${opacity})`;
       const mouseoverBoxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
 
       node.style.boxShadow = (version) ?
@@ -360,12 +360,10 @@ useEffect(() => {
       onLayoutAnimationComplete={() => {
         if (dragState.stage === DragStage.INACTIVE) {
           setIsRaised(false);
-          console.log('End of animation!');
         }
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
-        console.log('start of animation!');
       }}
       style={{
         cursor:'pointer',

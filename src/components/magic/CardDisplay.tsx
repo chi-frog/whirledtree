@@ -140,6 +140,8 @@ const CardDisplay:React.FC<Props> = ({
   useEffect(() => {
     const el = scrollTrigger.current;
     if (!el) return;
+    console.log('IN HEREERE');
+    
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {

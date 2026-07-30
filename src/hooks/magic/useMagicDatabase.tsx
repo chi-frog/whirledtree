@@ -4,7 +4,7 @@
 */
 'use client'
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useMagicCards, { copyImageMap, fetchImage, ImageMap } from "./useMagicCards";
 import useMagicSets from "./useMagicSets";
 import { MagicCard, MagicFormat, MagicSet } from "@/components/magic/types/default";
@@ -67,6 +67,14 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
 
+  useEffect(() => {
+    console.log('url changed:', url);
+  }, [url]);
+
+  useEffect(() => {
+    console.log('cards changed:', cards);
+  }, [cards]);
+
   useMemo(() => {
     if (!symbolsLoaded) return;
 
@@ -122,8 +130,6 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
         set('cards', bucket.concat(cardsError)));
     }
   }, [cardsError, cardsLoaded]);
-
-  const continueSearch = () => null;
 
   return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, cards, imageMap, hydrateLargeImage, fetchNextData, totalCards};
 };
