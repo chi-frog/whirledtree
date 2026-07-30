@@ -49,7 +49,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const [node, setNode] = useState<HTMLDivElement|null>(null);
   const ref = useCallback((el:HTMLDivElement|null) => setNode(el), []);
   const raf = useRef<number>(-1);
-  const [rotateState, startRotating, forceRotate] =
+  const [rotateState, rotateStateRef, startRotating, forceRotate] =
     useCardRotate(node, subDrag, startDragging, dragStateRef);
   const lastMousePress = useRef<WPoint>(_wpoint);
   const [isRaised, setIsRaised] = useState(false);
@@ -68,23 +68,27 @@ export const Card:React.FC<Props> = memo(function Card({
       ((reversed && rotateState.angle <= 90) ||
        (!reversed && rotateState.angle > 90)), [reversed, rotateState.angle, loadSequence]);  
 
-useEffect(() => {
-  if (!node) return;
+  useEffect(() => {
+    if (!node) return;
 
-  const observer = new ResizeObserver((entries) => {
-    for (let entry of entries) {
-      const { x, y } = entry.target.getBoundingClientRect();
-      setDims({
-        x, y,
-        width: entry.contentRect.width,
-        height: entry.contentRect.height,
-      });
-    }
-  });
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { x, y } = entry.target.getBoundingClientRect();
+        setDims({
+          x, y,
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
 
-  observer.observe(node);
-  return () => observer.disconnect();
-}, [node]);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [node]);
+
+  useEffect(() => {
+    console.log('rotateState changed!  Angle:' + rotateState.angle);
+  }, [rotateState]);
 
   const imageSrc = useMemo(() =>
     (!card || !frontImagePacket) ? undefined :
@@ -250,9 +254,9 @@ useEffect(() => {
 
     if (flipping) {
       setReversed((prev) => !prev);
-      forceRotate(90 - (rotateState.angle - 90));
+      forceRotate(180 - rotateStateRef.current.angle);
     }
-  }, [flipping, reversed, node]);
+  }, [flipping, node]);
 
   const bgOnLoad = useCallback(() => {
     setLoadSequence((prev) => {
@@ -394,7 +398,7 @@ useEffect(() => {
           (rotateState.stage !== DragStage.INACTIVE) ?
           (!flipping) ?
             `rotate3d(0, 1, 0, ${rotateState.angle}deg)` :
-            `rotate3d(0, 1, 0, ${90 - (rotateState.angle - 90)}deg)` :
+            `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
             '',
       }}>
       {loadFace}

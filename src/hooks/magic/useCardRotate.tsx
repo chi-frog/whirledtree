@@ -2,7 +2,7 @@
 
 import { DragStage, DragState, StartDragging, SubDrag, _dragState } from "@/components/general/DragProvider";
 import { WPoint, makeWPoint, _wpoint, addWPoints, fsubWPoints, caddWPoints, divWPoint, subWPoints, divWPoints, mulWPoint, mulWPoints } from "@/helpers/wpoint";
-import { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { Ref, RefObject, useEffect, useMemo, useRef, useState } from "react";
 
 const tag = 'cardRotate';
 
@@ -28,6 +28,7 @@ type StartRotatingCard = (e:PointerEvent|React.PointerEvent, dir:-1|1)=>void;
 type ForceRotate = (angle:number)=>void;
 type UseCardRotateReturn = [
   cardRotateState:CardRotateState,
+  cardRotateStateRef:RefObject<CardRotateState>,
   startRotatingCard:StartRotatingCard,
   forceRotate:ForceRotate
 ];
@@ -155,6 +156,7 @@ const useCardRotate:UseCardRotate = (
 
   return [
     state,
+    ref,
     startRotatingCard,
     forceRotate,
   ];
