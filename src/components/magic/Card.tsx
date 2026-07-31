@@ -86,10 +86,6 @@ export const Card:React.FC<Props> = memo(function Card({
     return () => observer.disconnect();
   }, [node]);
 
-  useEffect(() => {
-    console.log('rotateState changed!  Angle:' + rotateState.angle);
-  }, [rotateState]);
-
   const imageSrc = useMemo(() =>
     (!card || !frontImagePacket) ? undefined :
     (frontImagePacket.largeBlob) ? frontImagePacket.largeBlob :
@@ -250,13 +246,15 @@ export const Card:React.FC<Props> = memo(function Card({
     if (areEqualWPoints(point, lastMousePress.current)) {
       setReversed((prev) => !prev);
       forceRotate(180);
+      return;
     }
 
-    if (flipping) {
+    const angle = rotateStateRef.current.angle;
+    if (angle > 90) {
       setReversed((prev) => !prev);
-      forceRotate(180 - rotateStateRef.current.angle);
+      forceRotate(180 - angle);
     }
-  }, [flipping, node]);
+  }, [node]);
 
   const bgOnLoad = useCallback(() => {
     setLoadSequence((prev) => {

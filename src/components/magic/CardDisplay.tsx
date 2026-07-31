@@ -1,16 +1,14 @@
 'use client'
 
-import { ChangeEventHandler,   UIEventHandler,   useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { _magicCard, isCardDoublesided, MagicCard, MagicFormat, MagicSet, } from "./types/default";
+import { ChangeEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { _magicCard, MagicCard } from "./types/default";
 import Filter from "./filters/Filter";
-import Modal from "./Modal";
 import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
-import { ErrorMap, LoadMap, MagicDatabase } from "@/hooks/magic/useMagicDatabase";
-import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
-import { ModalProvider, useModalContext } from "../general/ModalProvider";
+import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
+import { useModalContext } from "../general/ModalProvider";
 
 export enum FilterState {
   HIDDEN = 'hidden',
@@ -140,8 +138,10 @@ const CardDisplay:React.FC<Props> = ({
   useEffect(() => {
     const el = scrollTrigger.current;
     if (!el) return;
-    console.log('IN HEREERE');
-    
+
+    if ((!db.totalCards) ||
+        (db.totalCards <= cards.length))
+      return;
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
