@@ -2,12 +2,11 @@
 
 import { _wpoint, areEqualWPoints, WPoint } from "@/helpers/wpoint";
 import { isCardDoublesided, MagicCard } from "./types/default";
-import { ImagePacket } from "./CardDisplay";
 import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
-import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
+import { cardAspectRatio, ImagePacket } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
 
 // As the cards load, first 
@@ -26,8 +25,7 @@ type Props = {
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
-  frontImagePacket?:ImagePacket,
-  backImagePacket?:ImagePacket,
+  imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
   handlePointerUp?:(e:React.PointerEvent, index:number, x:number, y:number) => void,
 };
@@ -38,8 +36,7 @@ export const Card:React.FC<Props> = memo(function Card({
     heightString,
     imageHeightString,
     card,
-    frontImagePacket,
-    backImagePacket,
+    imagePacket,
     cardBackImagePacket,
     handlePointerUp,
   }:Props) {
@@ -86,17 +83,22 @@ export const Card:React.FC<Props> = memo(function Card({
     return () => observer.disconnect();
   }, [node]);
 
-  const imageSrc = useMemo(() =>
-    (!card || !frontImagePacket) ? undefined :
-    (frontImagePacket.largeBlob) ? frontImagePacket.largeBlob :
-                                   frontImagePacket.smallBlob
-  , [frontImagePacket]);
+  const [frontImageSrc, backImageSrc] = useMemo(() => {
+    if (!card || !imagePacket) return [];
 
-  const backImageSrc = useMemo(() =>
-    ((!card) || (!backImagePacket)) ? undefined :
-    (backImagePacket.largeBlob)     ? backImagePacket.largeBlob :
-                                      backImagePacket.smallBlob
-    , [backImagePacket, card.layout]);
+    const front = imagePacket.front.largeBlob ?
+      imagePacket.front.largeBlob :
+      imagePacket.front.smallBlob;
+
+
+    let back = imagePacket.back.largeBlob ?
+      imagePacket.back.largeBlob :
+      imagePacket.back.smallBlob;
+
+    if (back === "") back = cardBackImagePacket?.front.largeBlob;
+
+    return [front, back];
+  }, [imagePacket]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -268,7 +270,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const frontFace = useMemo(() => {
     return (
-      <img src={imageSrc} loading="lazy" draggable="false" onLoad={imgOnLoad} style={{
+      <img src={frontImageSrc} loading="lazy" draggable="false" onLoad={imgOnLoad} style={{
         width:'100%',
         ...(imageHeightString && { height: imageHeightString }),
         marginTop:'auto',
@@ -276,7 +278,7 @@ export const Card:React.FC<Props> = memo(function Card({
         visibility: (showFront) ? 'visible' : 'hidden'
         }}/>
     )
-  }, [imageHeightString, showFront, loadSequence, imageSrc]);
+  }, [imageHeightString, showFront, loadSequence, frontImageSrc]);
 
   const backFace = useMemo(() => {
     return (
@@ -296,7 +298,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const loadFace = useMemo(() => {
     return (
-      <img src={cardBackImagePacket?.largeBlob} loading="lazy" onLoad={bgOnLoad} style={{
+      <img src={cardBackImagePacket?.front.largeBlob} loading="lazy" onLoad={bgOnLoad} style={{
         width:'100%',
         height:'100%',
         ...(imageHeightString && { height: imageHeightString }),

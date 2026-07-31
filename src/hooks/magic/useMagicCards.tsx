@@ -9,13 +9,6 @@ import { partition } from "@/helpers/arrays";
 export const cardHeightRatio = 938/672;
 export const cardAspectRatio = 672/938;
 
-type ImagePacket = {
-  name:string,
-  smallBlob?:string,
-  largeBlob?:string,
-  };
-export type ImageMap = Map<string, ImagePacket>;
-
 const convertToManaCost = (manaCost:string) => {
   return manaCost;
 };
@@ -23,7 +16,6 @@ const convertToManaCost = (manaCost:string) => {
 // card.prints_search_uri: {}.data: [{}.image_uris]
 
 const transformMagicCard: Transform<MagicCard> = (card) => {
-  console.log('card:', card);
   let transformedCard = ({
     id:card.id,
     oracleId:card.oracle_id,
@@ -44,6 +36,11 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
       large:card.image_uris?.large,
     }
   }) as MagicCard;
+
+  if (isCardDoublesided(transformedCard)) {
+    console.log('Doublesided!', transformedCard);
+    console.log('Doublesided!', card);
+  }
 
   if (isCardDoublesided(transformedCard)) {
     const front = card.card_faces[0];
@@ -88,18 +85,44 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
   return transformedCard;
 };
 
-export const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
-  const newImageMap = new Map<string, ImagePacket>();
+export type ImageSet = {
+  smallBlob?:string,
+  largeBlob?:string,
+};
+export type ImagePacket = {
+  front:ImageSet,
+  back:ImageSet,
+  };
+export type ImageMap = Map<string, Map<string, ImagePacket>>;
 
-  for (const [key, value] of imageMap)
-    newImageMap.set(key, value);
+export const createImageSet:()=>ImageSet = () => ({});
+export const createImagePacket:()=>ImagePacket = () =>
+  ({front:createImageSet(),
+    back:createImageSet()});
+export const createImageMap:()=>ImageMap = () =>
+  new Map<string, Map<string, ImagePacket>>();
+
+export const copyImageSet:(a:ImageSet)=>ImageSet = (a:ImageSet) => ({...a});
+export const copyImagePacket = (a:ImagePacket) =>
+  ({front:copyImageSet(a.front),
+    back:copyImageSet(a.back)});
+export const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
+  const newImageMap = new Map<string, Map<string, ImagePacket>>();
+
+  for (const [outerKey, innerMap] of imageMap) {
+    const newInnerMap = new Map<string, ImagePacket>();
+
+    for (const [innerKey, value] of innerMap)
+      newInnerMap.set(innerKey, {...value});
+
+    newImageMap.set(outerKey, newInnerMap);
+  }
 
   return newImageMap;
 };
 
 type ImageSize = 'small' | 'large';
-
-const blobKey: Record<ImageSize, keyof ImagePacket> = {
+const blobKey: Record<ImageSize, keyof ImageSet> = {
   small: 'smallBlob',
   large: 'largeBlob',
 };
@@ -122,44 +145,37 @@ export const fetchImage = async (
 };
 
 const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, cards:MagicCard[], size:'small'|'large') => {
-    const hydrateCard = async (uris:string[]) => {
-      let imageUrls = await Promise.all(uris.map(async (_uri, _index) => {
-        const imageUrl = await fetchImage(_uri);
+    const hydrateCard = async (uris:string[]) => 
+      await Promise.all(uris.map(async (_uri, _index) =>
+        (_uri === "") ? "" : await fetchImage(_uri)))
 
-        return imageUrl;
-      }));
-
-      return imageUrls;
-    };
   
     await Promise.all(cards.map(async (_card, _index) => {
-      let names = (!isCardDoublesided(_card)) ?
-        [_card.name] :
-        [_card.name, (_card.back) ? _card.back.name : ""];
+      let oracleId = _card.oracleId;
+      let printId = _card.id;
 
-      let uris = (!isCardDoublesided(_card)) ?
-        [_card.imageUris[size]] :
-        [_card.imageUris[size], (_card.back) ? _card.back.imageUris[size] : ""];
+      let uris = (!isCardDoublesided(_card) || !(_card.back)) ?
+        [_card.imageUris[size], ""] :
+        [_card.imageUris[size], _card.back.imageUris[size]];
 
       const imageUrls = await hydrateCard(uris);
       
       setImageMap((prev) => {
-        let imageMap = copyImageMap(prev);
-        const frontExisting = prev.get(names[0]) ?? {name:names[0]};
-        const backExisting = (names[1]) ? (prev.get(names[1])) ?? {name:names[1]} : null;
-      
-        if (frontExisting) {
-          imageMap.set(names[0], {
-            ...frontExisting,
-            [blobKey[size]]:imageUrls[0],
-          });
-        }
-        if (backExisting) {
-          imageMap.set(names[1], {
-            ...backExisting,
-            [blobKey[size]]:imageUrls[1],
-          });
-        }
+        const imageMap = copyImageMap(prev);
+        let printsMap = imageMap.get(oracleId);
+        if (!printsMap)
+          printsMap = new Map<string, ImagePacket>();
+
+        const existing = printsMap.get(printId);
+        const imagePacket = (existing) ?
+          existing :
+          createImagePacket();
+
+        imagePacket.front[blobKey[size]] = imageUrls[0];
+        imagePacket.back[blobKey[size]] = imageUrls[1];
+
+        printsMap.set(printId, imagePacket);
+        imageMap.set(oracleId, printsMap);
 
         return imageMap;
       });
@@ -255,16 +271,21 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
         backUrl = await fetchImage('https://cards.scryfall.io/back.png');
 
       setImageMap((prev) => {
-        let imageMap = copyImageMap(prev);
-        let name = "";
-        const existing = prev.get(name) ?? {name};
-      
-        if (existing) {
-          imageMap.set(name, {
-            ...existing,
-            [blobKey.large]:backUrl,
-          });
-        }
+        const imageMap = copyImageMap(prev);
+        let printsMap = imageMap.get("");
+        if (!printsMap)
+          printsMap = new Map<string, ImagePacket>();
+
+        const existing = printsMap.get("");
+        const imagePacket = (existing) ?
+          existing :
+          createImagePacket();
+
+        imagePacket.front[blobKey.large] = backUrl;
+        imagePacket.back[blobKey.large] = backUrl;
+
+        printsMap.set("", imagePacket);
+        imageMap.set("", printsMap);
 
         return imageMap;
       });

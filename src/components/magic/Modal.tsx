@@ -2,7 +2,6 @@
 
 import { PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, } from "./types/default";
-import { ImagePacket } from "./CardDisplay";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
 import { _dragState, } from "../general/DragProvider";
@@ -11,6 +10,7 @@ import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
 import OracleText from "./OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
+import { ImagePacket } from "@/hooks/magic/useMagicCards";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -71,7 +71,8 @@ type Props = {
   cards:MagicCard[],
   updateSelected:FilterUpdateFunction,
   index:number,
-  imagePackets:ImagePacket[],
+  imagePacket?:ImagePacket,
+  cardBackImagePacket?:ImagePacket,
 }
 
 const tooltipMargin = 5;
@@ -83,7 +84,8 @@ const Modal:React.FC<Props> = ({
     cards,
     updateSelected,
     index,
-    imagePackets
+    imagePacket,
+    cardBackImagePacket,
   }:Props) => {
   const [selection, setSelection] = useState<string>("");
   const [selectionPoint, setSelectionPoint] = useState<{x:number, y:number}>({x:0, y:0});
@@ -265,8 +267,8 @@ const Modal:React.FC<Props> = ({
             heightString={'100%'}
             imageHeightString={'100%'}
             card={card}
-            frontImagePacket={imagePackets[0]}
-            backImagePacket={imagePackets[1]}
+            imagePacket={imagePacket}
+            cardBackImagePacket={cardBackImagePacket}
             handlePointerUp={handleCardPointerUp}
           />
         }

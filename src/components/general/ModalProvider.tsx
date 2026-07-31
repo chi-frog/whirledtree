@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
-import { isCardDoublesided, MagicCard } from "../magic/types/default";
+import { isCardDoublesided } from "../magic/types/default";
 import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import Modal from "../magic/Modal";
 import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
@@ -23,25 +23,22 @@ export const useModalContext = () => {
 
 const modal = (shown:boolean, db:MagicDatabase, index:number, hideModal:()=>void, updateSelected:FilterUpdateFunction) => {
   if (!shown) return <></>;
-      const card = db.cards[index];
-      const frontImage = db.imageMap.get(card.name);
-      const backImage = (card.back && isCardDoublesided(card)) ?
-        db.imageMap.get(card.back.name) : db.imageMap.get("");
+
+  const card = db.cards[index];
+  const imagePacket = db.imageMap.get(card.oracleId)?.get(card.id);
   
-      return (
-        <Modal
-        close={hideModal}
-        symbols={db.symbols}
-        symbolImageMap={db.symbolImageMap}
-        cards={db.cards}
-        updateSelected={updateSelected}
-        index={index}
-        imagePackets={(!frontImage) ? [] :
-                      (backImage)   ? [frontImage, backImage] :
-                                      [frontImage]}
-        />
-      );
-    };
+  return (
+    <Modal
+      close={hideModal}
+      symbols={db.symbols}
+      symbolImageMap={db.symbolImageMap}
+      cards={db.cards}
+      updateSelected={updateSelected}
+      index={index}
+      imagePacket={imagePacket}
+      cardBackImagePacket={db.imageMap.get("")?.get("")}
+      />);
+};
 
 export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabase, updateSelected:FilterUpdateFunction, children: ReactNode}) => {
   const [shown, setShown] = useState<boolean>(false);

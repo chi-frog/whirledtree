@@ -1,10 +1,11 @@
 'use client'
 
 import { isCardDoublesided, MagicCard } from "./types/default";
-import { FilterState, ImageMap } from "./CardDisplay";
+import { FilterState } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
 import { useCallback } from "react";
+import { ImageMap } from "@/hooks/magic/useMagicCards";
 
 type Props = {
   dragState:DragState,
@@ -25,12 +26,9 @@ const View:React.FC<Props> = ({
   }:Props) => {
 
   const card = useCallback((name:string, index:number) => {
-    const frontImagePacket = imageMap.get(name);
     const card = cards[index];
-    const cardBackImagePacket = imageMap.get("");
-    const backImagePacket = ((card.back) && isCardDoublesided(card)) ?
-      imageMap.get(card.back.name) :
-      cardBackImagePacket;
+    const cardBackImagePacket = imageMap.get("")?.get("");
+    const imagePacket = imageMap.get(card.oracleId)?.get(card.id);
 
     return (
       <Card
@@ -40,8 +38,7 @@ const View:React.FC<Props> = ({
         widthString={`calc('100% / ${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
-        frontImagePacket={frontImagePacket}
-        backImagePacket={backImagePacket}
+        imagePacket={imagePacket}
         cardBackImagePacket={cardBackImagePacket}
         handlePointerUp={handleCardPointerUp}
         />)},
