@@ -20,8 +20,13 @@ const convertToManaCost = (manaCost:string) => {
   return manaCost;
 };
 
+// card.prints_search_uri: {}.data: [{}.image_uris]
+
 const transformMagicCard: Transform<MagicCard> = (card) => {
+  console.log('card:', card);
   let transformedCard = ({
+    id:card.id,
+    oracleId:card.oracle_id,
     reversed:false,
     name:card.name, //!
     layout:(card.layout) as MagicCardLayout,
@@ -105,9 +110,11 @@ export const fetchImage = async (
   try {
     const response = await fetch(uri);
     if (!response.ok) return "";
+
     const blob = await response.blob();
 
     return URL.createObjectURL(blob);
+
   } catch(err) {
     console.error('fetchImageFailed:', err);
     return "";

@@ -38,8 +38,10 @@ export const isCardMultiple = (card:MagicCard) =>
   (card.layout === MagicCardLayout.PREPARE);
 
 export type MagicCard = {
-  reversed:boolean,
+  id:string,
+  oracleId:string,
   name:string,
+  reversed:boolean,
   legalities:any,
   set:string,
   typeLine:string,
