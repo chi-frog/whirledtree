@@ -168,7 +168,7 @@ const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, c
 
         const existing = printsMap.get(printId);
         const imagePacket = (existing) ?
-          existing :
+          {...existing} :
           createImagePacket();
 
         imagePacket.front[blobKey[size]] = imageUrls[0];

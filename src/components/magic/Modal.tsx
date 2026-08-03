@@ -262,6 +262,7 @@ const Modal:React.FC<Props> = ({
       }}>
         {card && <div style={{ position:'relative', width:'fit-content', height:'100%' }}>
           <CardPrintSelector location="right"/>
+          <CardPrintSelector location="left"/>
           <Card
             location='modal'
             index={index}
