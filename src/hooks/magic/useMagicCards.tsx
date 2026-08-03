@@ -110,12 +110,12 @@ export const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
   const newImageMap = new Map<string, Map<string, ImagePacket>>();
 
   for (const [outerKey, innerMap] of imageMap) {
-    const newInnerMap = new Map<string, ImagePacket>();
+    /*const newInnerMap = new Map<string, ImagePacket>();
 
     for (const [innerKey, value] of innerMap)
-      newInnerMap.set(innerKey, {...value});
+      newInnerMap.set(innerKey, {...value});*/
 
-    newImageMap.set(outerKey, newInnerMap);
+    newImageMap.set(outerKey, innerMap);
   }
 
   return newImageMap;

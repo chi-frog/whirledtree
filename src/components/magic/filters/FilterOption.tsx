@@ -10,7 +10,7 @@ type Props = {
 const FilterOption:React.FC<Props> = ({text, children}:PropsWithChildren<Props>) => {
 
   return (
-    <label onMouseDown={(e)=>e.stopPropagation()} onMouseUp={(e)=>e.stopPropagation()} style={{
+    <label onPointerDown={(e)=>e.stopPropagation()} onPointerUp={(e)=>e.stopPropagation()} style={{
         display:'flex',
         boxShadow:'0px 0px 5px 5px white',
         background:'white',

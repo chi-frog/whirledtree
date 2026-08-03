@@ -11,6 +11,7 @@ import OracleText from "./OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
 import { ImagePacket } from "@/hooks/magic/useMagicCards";
+import CardPrintSelector from "./CardPrintSelector";
 
 enum TooltipState {
   HIDDEN='hidden',
@@ -259,7 +260,8 @@ const Modal:React.FC<Props> = ({
         textAlign:'center',
         border: '2px solid rgba(146, 148, 248, 0.8)',
       }}>
-        {card &&
+        {card && <div style={{ position:'relative', width:'fit-content', height:'100%' }}>
+          <CardPrintSelector location="right"/>
           <Card
             location='modal'
             index={index}
@@ -271,7 +273,7 @@ const Modal:React.FC<Props> = ({
             cardBackImagePacket={cardBackImagePacket}
             handlePointerUp={handleCardPointerUp}
           />
-        }
+        </div>}
         <div id="text" style={{
           flexGrow:1,
           display:'flex',

@@ -21,7 +21,7 @@ export type CardLocation =
 type Props = {
   location:CardLocation,
   index:number,
-  widthString:string,
+  widthString?:string,
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,

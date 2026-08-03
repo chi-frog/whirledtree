@@ -35,14 +35,13 @@ const View:React.FC<Props> = ({
         key={name}
         location='view'
         index={index}
-        widthString={`calc('100% / ${numCardsRow}')`}
         heightString={'fit-content'}
         card={cards[index]}
         imagePacket={imagePacket}
         cardBackImagePacket={cardBackImagePacket}
         handlePointerUp={handleCardPointerUp}
         />)},
-    [imageMap, cards]);
+    [imageMap, cards, numCardsRow]);
 
   return (
     <div className="hover:bg-blue" style={{
