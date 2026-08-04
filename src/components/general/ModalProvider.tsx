@@ -1,13 +1,13 @@
 'use client'
 
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
-import { isCardDoublesided } from "../magic/types/default";
 import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import Modal from "../magic/Modal";
 import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
+import { MagicCard } from "../magic/types/default";
 
 type Modal = {
-  showModal:(index:number)=>void,
+  showModal:(card:MagicCard)=>void,
   hideModal:()=>void,
 }
 const ModalContext = createContext<Modal|undefined>(undefined);
@@ -21,10 +21,11 @@ export const useModalContext = () => {
   return ctx;
 }
 
-const modal = (shown:boolean, db:MagicDatabase, index:number, hideModal:()=>void, updateSelected:FilterUpdateFunction) => {
-  if (!shown) return <></>;
+const modal = (shown:boolean, db:MagicDatabase, card:MagicCard|null, hideModal:()=>void, updateSelected:FilterUpdateFunction) => {
+  if (!shown || !card) return <></>;
 
-  const card = db.cards[index];
+  console.log('db', db);
+  console.log('card', card);
   const imagePacket = db.imageMap.get(card.oracleId)?.get(card.id);
   
   return (
@@ -32,9 +33,8 @@ const modal = (shown:boolean, db:MagicDatabase, index:number, hideModal:()=>void
       close={hideModal}
       symbols={db.symbols}
       symbolImageMap={db.symbolImageMap}
-      cards={db.cards}
       updateSelected={updateSelected}
-      index={index}
+      card={card}
       imagePacket={imagePacket}
       cardBackImagePacket={db.imageMap.get("")?.get("")}
       />);
@@ -42,16 +42,18 @@ const modal = (shown:boolean, db:MagicDatabase, index:number, hideModal:()=>void
 
 export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabase, updateSelected:FilterUpdateFunction, children: ReactNode}) => {
   const [shown, setShown] = useState<boolean>(false);
-  const [index, setIndex] = useState<number>(-1);
+  const [card, setCard] = useState<MagicCard|null>(null);
 
-  const showModal = useCallback((index:number) => {
+  const showModal = useCallback((card:MagicCard) => {
+    console.log('showModal');
+    console.log('card', card);
     setShown(true);
-    setIndex(index);
+    setCard(card);
   }, []);
 
   const hideModal = useCallback(() => {
     setShown(false);
-    setIndex(-1);
+    setCard(null);
   }, []);
 
   return (
@@ -60,7 +62,7 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
       hideModal,
     }}>
       {children}
-      {modal(shown, db, index, hideModal, updateSelected)}
+      {modal(shown, db, card, hideModal, updateSelected)}
     </ModalContext.Provider>
   );
 };

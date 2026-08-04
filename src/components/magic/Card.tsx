@@ -20,18 +20,16 @@ export type CardLocation =
   'view' | 'modal';
 type Props = {
   location:CardLocation,
-  index:number,
   widthString?:string,
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
   imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
-  handlePointerUp?:(e:React.PointerEvent, index:number, x:number, y:number) => void,
+  handlePointerUp?:(e:React.PointerEvent, card:MagicCard) => void,
 };
 export const Card:React.FC<Props> = memo(function Card({
     location,
-    index,
     widthString,
     heightString,
     imageHeightString,
@@ -182,9 +180,12 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [glow]);
 
   const handleCardPointerUp = useCallback((e:React.PointerEvent) => {
-    if (handlePointerUp)
-      handlePointerUp(e, index, lastMousePress.current.x, lastMousePress.current.y);
-    glow(false);
+    if (handlePointerUp &&
+        (e.clientX === lastMousePress.current.x) &&
+        (e.clientY === lastMousePress.current.y)) {
+      handlePointerUp(e, card);
+      glow(false);
+    }
   }, [handlePointerUp, glow]);
 
   const tlaRatios = (dims:{width:number, height:number}) => {

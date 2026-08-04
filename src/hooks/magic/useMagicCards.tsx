@@ -38,11 +38,6 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
   }) as MagicCard;
 
   if (isCardDoublesided(transformedCard)) {
-    console.log('Doublesided!', transformedCard);
-    console.log('Doublesided!', card);
-  }
-
-  if (isCardDoublesided(transformedCard)) {
     const front = card.card_faces[0];
     const back = card.card_faces[1];
 
@@ -187,7 +182,7 @@ export type UseMagicCards = [
   dataLoaded:boolean,
   cards:MagicCard[],
   imageMap:ImageMap,
-  hydrateLargeImage:(index:number)=>void,
+  hydrateLargeImage:(card:MagicCard)=>void,
   fetchNextData?:()=>void,
   totalCards?:number,
 ]
@@ -327,8 +322,8 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     };
   }, [cards]); // Re-run when cards change
 
-  const hydrateLargeImage = useCallback(async (index:number) => {
-    hydrateImageMap(setImageMap, [cards[index]], "large");
+  const hydrateLargeImage = useCallback(async (card:MagicCard) => {
+    hydrateImageMap(setImageMap, [card], "large");
   }, [cards]);
 
   return [error, dataLoaded, cards, imageMap, hydrateLargeImage, fetchNextData, totalCards];

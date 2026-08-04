@@ -1,6 +1,6 @@
 'use client'
 
-import { isCardDoublesided, MagicCard } from "./types/default";
+import { MagicCard } from "./types/default";
 import { FilterState } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
@@ -13,7 +13,7 @@ type Props = {
   numCardsRow:number,
   cards:MagicCard[],
   imageMap:ImageMap,
-  handleCardPointerUp:(e:React.PointerEvent, index:number, x:number, y:number) => void,
+  handleCardPointerUp:(e:React.PointerEvent, card:MagicCard) => void,
 }
 
 const View:React.FC<Props> = ({
@@ -34,9 +34,8 @@ const View:React.FC<Props> = ({
       <Card
         key={name}
         location='view'
-        index={index}
         heightString={'fit-content'}
-        card={cards[index]}
+        card={card}
         imagePacket={imagePacket}
         cardBackImagePacket={cardBackImagePacket}
         handlePointerUp={handleCardPointerUp}

@@ -107,19 +107,13 @@ const CardDisplay:React.FC<Props> = ({
     startDragging(e, viewTag);
   }, [viewTag]);
 
-  const handleCardPointerUp = useCallback(async (e:React.PointerEvent, index:number, x:number, y:number) => {
+  const handleCardPointerUp = useCallback(async (e:React.PointerEvent, card:MagicCard) => {
     e.stopPropagation();
 
-    if ((e.button !== 2) &&
-        (e.clientX === x) &&
-        (e.clientY === y)) {
-      showModal(index);
-      db.hydrateLargeImage(index);
+    if ((e.button !== 2)) {
+      showModal(card);
+      db.hydrateLargeImage(card);
     }
-  }, [db.hydrateLargeImage]);
-
-  const hi = useMemo(() => {
-    console.log('-------------changed---------');
   }, [db.hydrateLargeImage]);
 
   const hasCardsError:boolean = useMemo(() => {

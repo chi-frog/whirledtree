@@ -1,6 +1,6 @@
 'use client'
 
-import { PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { memo, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, } from "./types/default";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
@@ -69,9 +69,8 @@ type Props = {
   close:()=>void,
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
-  cards:MagicCard[],
   updateSelected:FilterUpdateFunction,
-  index:number,
+  card:MagicCard,
   imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
 }
@@ -82,9 +81,8 @@ const Modal:React.FC<Props> = ({
     close,
     symbols,
     symbolImageMap,
-    cards,
     updateSelected,
-    index,
+    card,
     imagePacket,
     cardBackImagePacket,
   }:Props) => {
@@ -97,10 +95,6 @@ const Modal:React.FC<Props> = ({
   const ref = useRef(null);
   const divRef = useRef(null);
   const nameRef = useRef(null);
-
-  const card = useMemo(() => {
-    return cards[index];
-  }, [cards, index]);
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -148,6 +142,7 @@ const Modal:React.FC<Props> = ({
 
   const handleTooltipPointerDown:PointerEventHandler = (e) => {
     updateSelected({property:'name', value:selection});
+    document.getSelection()?.empty();
   };
 
   const handleTooltipPointerEnter:PointerEventHandler = (e) => {
@@ -214,13 +209,11 @@ const Modal:React.FC<Props> = ({
 
   }, [symbols, card.manaCost, card.reversed, symbolImageMap]);
 
-  const power = useMemo(() => {
-    if (card.reversed) {
-      if (!card.back) return null;
-      else return card.back.power;
-    } else
-      return card.power;
-  }, [card.power, card.reversed]);
+  const power = useMemo(() =>
+    (card.reversed) ?
+      (!card.back) ? null :
+                     card.back.power :
+      card.power, [card.power, card.reversed])
 
   const toughness = useMemo(() => {
     if (card.reversed) {
@@ -265,7 +258,6 @@ const Modal:React.FC<Props> = ({
           <CardPrintSelector location="left"/>
           <Card
             location='modal'
-            index={index}
             widthString={'fit-content'}
             heightString={'100%'}
             imageHeightString={'100%'}
@@ -353,4 +345,4 @@ const Modal:React.FC<Props> = ({
   )
 };
 
-export default Modal;
+export default memo(Modal);
