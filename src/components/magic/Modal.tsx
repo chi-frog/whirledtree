@@ -141,8 +141,14 @@ const Modal:React.FC<Props> = ({
   }, [ref.current]);
 
   const handleTooltipPointerDown:PointerEventHandler = (e) => {
+    const docSelection = document.getSelection();
+    if (!docSelection) return;
+    console.log('e', e);
+    console.log('selection', docSelection);
+    console.log(docSelection.anchorNode?.parentElement);
+    console.log(docSelection.anchorNode?.parentElement?.dataset.field);
     updateSelected({property:'name', value:selection});
-    document.getSelection()?.empty();
+    //document.getSelection()?.empty();
   };
 
   const handleTooltipPointerEnter:PointerEventHandler = (e) => {
@@ -209,6 +215,12 @@ const Modal:React.FC<Props> = ({
 
   }, [symbols, card.manaCost, card.reversed, symbolImageMap]);
 
+  const types = useMemo(() => {
+    const typeLine = (!card?.reversed) ? card?.typeLine :
+                                         card?.back?.typeLine;
+    return (typeLine) ? typeLine?.split(' ') : [""];
+  }, [card.reversed]);
+
   const power = useMemo(() =>
     (card.reversed) ?
       (!card.back) ? null :
@@ -222,6 +234,11 @@ const Modal:React.FC<Props> = ({
     } else
       return card.toughness;
   }, [card.toughness, card.reversed]);
+
+  const enum searchField {
+    NAME='name',
+    TYPE='type',
+  }
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -280,30 +297,53 @@ const Modal:React.FC<Props> = ({
             justifyContent:'center',
             alignItems:'center',
           }}>
-          <h3 className="selectable name" title="Search By Name"
-            style={{
-            fontSize:nameFontSize,
-            fontWeight:'bold',
-            paddingRight:'10px',
-          }}>{(!card?.reversed) ? card?.name :
-                                  card?.back?.name}</h3>
-          {...manaCostImages?.map((symbol, index) => (
-            <img key={index} draggable="false" src={symbol.imageUri} alt={symbol.symbol} className="icon" 
-             title="Search By Mana Cost" style={{
-              width:'24px',
-              height:'24px',
-              borderRadius:'50%',
-              boxShadow:'-0.8px 1.5px black',
-              margin:'1px',
-            }}/>
-          ))}
+            <h3 className="selectable name" title="Search By Name"
+              data-field={searchField.NAME}
+              style={{
+                fontSize:nameFontSize,
+                fontWeight:'bold',
+                paddingRight:'10px',
+              }}>{(!card?.reversed) ? card?.name :
+                                      card?.back?.name}</h3>
+            {...manaCostImages?.map((symbol, index) => (
+              <img key={index} draggable="false" src={symbol.imageUri} alt={symbol.symbol} className="icon" 
+                title="Search By Mana Cost" style={{
+                  width:'24px',
+                  height:'24px',
+                  borderRadius:'50%',
+                  boxShadow:'-0.8px 1.5px black',
+                  margin:'1px',
+                }}/>
+            ))}
           </div>
           <h3 className="selectable typeLine" title="Search By Type"
+            data-field={searchField.TYPE}
             style={{
-            fontSize:'20px',
-            fontWeight:'bold',
-          }}>{(!card?.reversed) ? card?.typeLine :
-                                  card?.back?.typeLine}</h3>
+              fontSize:'20px',
+              fontWeight:'bold',
+              
+            }}>
+              {...types.reduce((_result, _type, _index) => {
+                let jsx;
+
+                if (_type === "—") jsx = (
+                  <span style={{
+                    userSelect:'none',
+                    marginRight:'5px',
+                  }}>-</span>
+                );
+                else jsx = (
+                  <span className="selectableBit" style={{
+                    userSelect:'all',
+                    marginRight:(_index !== types.length - 1) ? '5px' : '0px',
+                  }}>
+                    {_type}
+                  </span>
+                );
+
+                return _result.concat(jsx);
+              }, [] as React.JSX.Element[])}
+            </h3>
           <OracleText
             oracleText={oracleText}
             symbols={symbols}/>

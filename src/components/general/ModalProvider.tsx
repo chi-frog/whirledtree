@@ -24,8 +24,6 @@ export const useModalContext = () => {
 const modal = (shown:boolean, db:MagicDatabase, card:MagicCard|null, hideModal:()=>void, updateSelected:FilterUpdateFunction) => {
   if (!shown || !card) return <></>;
 
-  console.log('db', db);
-  console.log('card', card);
   const imagePacket = db.imageMap.get(card.oracleId)?.get(card.id);
   
   return (
@@ -45,8 +43,6 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
   const [card, setCard] = useState<MagicCard|null>(null);
 
   const showModal = useCallback((card:MagicCard) => {
-    console.log('showModal');
-    console.log('card', card);
     setShown(true);
     setCard(card);
   }, []);
