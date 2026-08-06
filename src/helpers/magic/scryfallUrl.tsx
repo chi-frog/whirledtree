@@ -12,6 +12,7 @@ const bitIncludeExtras = 'include_extras=true';
 
 export const constructSearchUrl = (selected:Selected={game:GAME_TYPE.PAPER}) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
+  let query = 'q=';
 
   const keys = (Object.keys(selected) as SKey[]);
   const relevantKeys = keys.filter(
@@ -29,8 +30,26 @@ export const constructSearchUrl = (selected:Selected={game:GAME_TYPE.PAPER}) => 
     }
   }, url);
 
+  query = relevantKeys.reduce<string>((url, key) => {
+    switch(key) {
+    case 'name': 
+    case 'type': 
+    case 'set': 
+    case 'format': 
+    case 'game':
+    default:
+      return query + key + ':' + selected[key] + '+';
+    }
+  }, url);
+  query = query.substring(0, query.length - 1);
+  query += '&order=name';
+  const encodedQuery = encodeURIComponent(query);
+  console.log('ENCODED QUERY:' + encodedQuery);
+
   url = url.substring(0, url.length - 1);
   url += '&order=name';
+
+  const encodedUrl = encodeURI
 
   return url;
 };

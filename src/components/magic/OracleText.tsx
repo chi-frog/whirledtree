@@ -2,6 +2,7 @@
 
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { memo, useCallback, useMemo } from "react";
+import { searchField } from "./Modal";
 
 enum MagicTextType {
   NORMAL = 'normal',
@@ -104,10 +105,10 @@ const OracleText:React.FC<Props> = ({oracleText, symbols}) => {
   const transformedOracleText = tokenizedParagraphs.map(transformParagraph);
   
   return (
-    <h3 className="selectable oracleText" title="Search By Oracle Text"
+    <h3 className="selectable oracle" title="Search By Oracle Text"
+      data-field={searchField.ORACLE}
       style={{
         fontSize:'18px',
-        flex:1,
         textAlign:'left',
         alignContent:'center',
         padding:'5%',
