@@ -11,6 +11,10 @@ export type Selected = {
   format?:string,
   set?:string, //acronym
   type?:string,
+  power?:string,
+  toughness?:string,
+  oracle?:string,
+  manaValue?:string,
 }
 export type SKey = keyof Selected;
 
@@ -20,6 +24,9 @@ const defaultSelected = {
   format:ANY,
   set:ANY,
   type:ANY,
+  power:ANY,
+  toughness:ANY,
+  oracle:ANY,
 }
 
 export type FilterUpdate = {

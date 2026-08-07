@@ -6,40 +6,49 @@ import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
 import { _dragState, } from "../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
-import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
+import { FilterUpdateFunction, SKey } from "@/hooks/magic/useFilters";
 import OracleText from "./OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
 import { ImagePacket } from "@/hooks/magic/useMagicCards";
 import CardPrintSelector from "./CardPrintSelector";
+import Tooltip, { tooltipMargin, TooltipState } from "./Tooltip";
+import { renderToStaticMarkup } from "react-dom/server";
 
-enum TooltipState {
-  HIDDEN='hidden',
-  PENDING='pending',
-  SHOWN='shown',
-}
+export const searchFields = {
+  game: "game",
+  name: "name",
+  format: "format",
+  set: "set",
+  type: "type",
+  power: "power",
+  toughness: "toughness",
+  oracle: "oracle",
+  manaValue: "manaValue",
+} as const satisfies Record<SKey, SKey>;
 
+const tooltipText = (selectionField:string, selection:string) => {
+  const span = (<span style={{fontWeight:'bold', color:'rgba(146, 148, 248, 1)'}}>{selection}</span>);
+  const text =
+    (selectionField === searchFields.oracle) ?
+      (<h1>Search for cards with {span} in their oracle text.</h1>) :
+      (<h1>Search for cards with {span} in their {selectionField}</h1>);
 
- export const enum searchField {
-  NAME='name',
-  TYPE='type',
-  MANA='mana cost',
-  POWER='power',
-  TOUGHNESS='toughness',
-  ORACLE='oracle text'
-}
+  console.log('KJJKJ tet', text);
+  return text;
+};
 
 type SearchTooltipProps = {
   selection:string,
   selectionPoint:{x:number, y:number},
+  selectionField:string,
   tooltipMargin:number,
-  property:string,
 }
 function createSearchTooltip({
   selection,
   selectionPoint,
+  selectionField,
   tooltipMargin,
-  property,
 }:SearchTooltipProps) {
   // Root
   const div = document.createElement("div");
@@ -47,33 +56,45 @@ function createSearchTooltip({
 
   Object.assign(div.style, {
     position: "absolute",
-    background: "white",
     userSelect: "none",
     top: `${selectionPoint.y - 35 - tooltipMargin}px`,
     left: `${selectionPoint.x}px`,
     width: "fit-content",
-    color: "black",
     display: "flex",
     flexDirection: "column",
     borderRadius: "5px",
     justifyContent: "center",
     border: "2px solid rgba(146, 148, 248, 0.8)",
     padding: "2px 5px 2px 5px",
-    visibility: "hidden"
+    visibility: "hidden",
+    zIndex:500,
   });
 
-  // Content
-  const h1 = document.createElement("h1");
-  h1.append("Search for cards with ");
-
-  const span = document.createElement("span");
-  span.style.fontWeight = "bold";
-  span.style.color = "rgba(146, 148, 248, 1)";
-  span.textContent = selection;
-  h1.append(span, " in their ", property);
-  div.appendChild(h1);
+  div.innerHTML = renderToStaticMarkup(tooltipText(selectionField, selection));
 
   return div;
+}
+
+function getField(node:Node|null):Element|null {
+  if (!node) return null;
+
+  // Text nodes and img elements don't have .closest — use parentElement
+  const el = (node instanceof Element) ? node : node.parentElement;
+  return el?.closest('[data-field]') ?? null;
+}
+
+export function findNearestField(node:Node|null) {
+  if (!node) return null;
+
+  let currentNode:HTMLElement|null = (node as HTMLElement);
+  let property = currentNode?.dataset?.field;
+
+  while ((currentNode) && !(property)) {
+    currentNode = currentNode.parentElement;
+    property = currentNode?.dataset?.field;
+  }
+
+  return property;
 }
 
 type Props = {
@@ -85,8 +106,6 @@ type Props = {
   imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
 }
-
-const tooltipMargin = 5;
 
 const Modal:React.FC<Props> = ({
     close,
@@ -102,38 +121,24 @@ const Modal:React.FC<Props> = ({
   const [selectionPoint, setSelectionPoint] = useState<{x:number, y:number}>({x:0, y:0});
   const [tooltipState, setTooltipState] = useState<TooltipState>(TooltipState.HIDDEN);
   const [tooltipOverhang, setTooltipOverhang] = useState<number>(0);
-  const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
   const {subSelection} = useSelectionContext();
-  const ref = useRef(null);
   const divRef = useRef(null);
   const nameRef = useRef(null);
-
-  function getField(node:Node|null):Element|null {
-    if (!node) return null;
-
-    // Text nodes and img elements don't have .closest — use parentElement
-    const el = (node instanceof Element) ? node : node.parentElement;
-    return el?.closest('[data-field]') ?? null;
-  }
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
 
-    if (newSelection === '') {
+    if ((newSelection === '') ||
+        (!divRef.current) ||
+        (e.rangeCount === 0)) {
+
       setSelection(newSelection);
       setTooltipState(TooltipState.HIDDEN);
       setSelectionField("");
       return;
-    }
-    if ((newSelection === selection) ||
-        (!ref.current) ||
-        (!divRef.current) ||
-        (e.rangeCount === 0)) {
-      setSelection("");
-      setTooltipState(TooltipState.HIDDEN);
-      setSelectionField("");
+
+    } else if ((newSelection === selection))
       return;
-    }
 
     const range = e.getRangeAt(0);
     const selectionBox = range?.getBoundingClientRect();
@@ -144,9 +149,6 @@ const Modal:React.FC<Props> = ({
     // No zone found, or selection spans two different zones -> reject it
     if (!startField || !endField || startField !== endField) {
       e.removeAllRanges();
-      console.log('removed all');
-      console.log('start', startField);
-      console.log('end', endField);
       return;
     }
 
@@ -154,41 +156,27 @@ const Modal:React.FC<Props> = ({
       let x = selectionBox.x;
       const y = selectionBox.y;
       const windowWidth = window.innerWidth;
-      console.log('e', e);
-
-      function findNearestField(node:Node|null) {
-        if (!node) return null;
-
-        let currentNode:HTMLElement|null = (node as HTMLElement);
-        let property = currentNode?.dataset?.field;
-
-        while ((currentNode) && !(property)) {
-          currentNode = currentNode.parentElement;
-          property = currentNode?.dataset?.field;
-        }
-
-        return property;
-      }
 
       let property = findNearestField(e.anchorNode);
       if (!property) {
-        console.log('No Property Found');
+        console.warn('No Property Found');
         return;
       }
 
       setSelectionField(property);
+
       const testTooltip = createSearchTooltip({
         selection: newSelection,
-        selectionPoint,
+        selectionPoint: {x, y},
+        selectionField: property,
         tooltipMargin,
-        property,
       });
 
-      const div = (divRef.current as HTMLElement);
+      (divRef.current as HTMLElement).appendChild(testTooltip);
 
-      div.appendChild(testTooltip);
       const tooltipWidth = testTooltip.offsetWidth;
       const overhang = (windowWidth - (x + tooltipWidth + 2));
+
       testTooltip.remove();
 
       setSelectionPoint({x:x, y:y});
@@ -201,31 +189,7 @@ const Modal:React.FC<Props> = ({
 
   useEffect(() => {
     subSelection({tag:'modal', onSelectionChange});
-  }, [ref.current]);
-
-  const handleTooltipPointerDown:PointerEventHandler = (e) => {
-    const docSelection = document.getSelection();
-    if (!docSelection) return;
-    console.log('e', e);
-    console.log("Our Selection:" + selection);
-    console.log('selection', docSelection);
-    console.log(docSelection.anchorNode?.parentElement);
-    const property = docSelection.anchorNode?.parentElement?.dataset.field;
-    if (!property) {
-      console.error("Invalid Property:", property);
-      return;
-    }
-    updateSelected({property:property as keyof Selected, value:selection});
-    document.getSelection()?.empty();
-  };
-
-  const handleTooltipPointerEnter:PointerEventHandler = (e) => {
-    setTooltipHovered(true);
-  };
-
-  const handleTooltipPointerLeave:PointerEventHandler = (e) => {
-    setTooltipHovered(false);
-  };
+  }, [divRef.current]);
 
   const handlePointerDown:PointerEventHandler = (e) => {
     e.stopPropagation();
@@ -237,11 +201,6 @@ const Modal:React.FC<Props> = ({
   const handlePointerUp:PointerEventHandler = (e) => {
     e.stopPropagation();
 
-  }
-
-  const handleCardPointerDown:PointerEventHandler = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
   }
 
   const handleCardPointerUp:PointerEventHandler = (e) => {
@@ -361,7 +320,7 @@ const Modal:React.FC<Props> = ({
             alignItems:'center',
           }}>
             <h3 className="selectable name" title="Search By Name"
-              data-field={searchField.NAME}
+              data-field={searchFields.name}
               style={{
                 fontSize:nameFontSize,
                 fontWeight:'bold',
@@ -371,7 +330,7 @@ const Modal:React.FC<Props> = ({
                                    card?.back?.name}
             </h3>
             <div className="selectable mana" title="Search By Mana Cost"
-              data-field={searchField.MANA} style={{
+              data-field={searchFields.manaValue} style={{
                 display:'flex',
               }}>
               {...manaCostImages?.map((symbol, index) => (
@@ -389,7 +348,7 @@ const Modal:React.FC<Props> = ({
           </div>
           <div className="selectable type" title="Search By Type">
             <h3 className="selectable type" title="Search By Type"
-              data-field={searchField.TYPE}
+              data-field={searchFields.type}
               style={{
                 fontSize:'20px',
                 fontWeight:'bold',
@@ -417,7 +376,7 @@ const Modal:React.FC<Props> = ({
             </h3>
           </div>
           <div className="selectable oracle" title="Search By Oracle Text"
-            data-field={searchField.ORACLE}>
+            data-field={searchFields.oracle}>
             <OracleText
               oracleText={oracleText}
               symbols={symbols}/>
@@ -428,7 +387,7 @@ const Modal:React.FC<Props> = ({
               justifyContent:'center',
             }}>
             <h3 className="selectable powerAndToughness" title="Search By Power/Toughness"
-              data-field={searchField.POWER}
+              data-field={searchFields.power}
               style={{
                 fontSize:'30px',
                 fontWeight:'bold',
@@ -436,7 +395,7 @@ const Modal:React.FC<Props> = ({
               {power}
             </h3>
             <h3 className="selectable powerAndToughness" title="Search By Power/Toughness"
-              data-field={searchField.POWER}
+              data-field={searchFields.power}
               style={{
                 fontSize:'30px',
                 fontWeight:'bold',
@@ -444,7 +403,7 @@ const Modal:React.FC<Props> = ({
               /
             </h3>
             <h3 className="selectable powerAndToughness" title="Search By Power/Toughness"
-              data-field={searchField.TOUGHNESS}
+              data-field={searchFields.toughness}
               style={{
                 fontSize:'30px',
                 fontWeight:'bold',
@@ -455,31 +414,14 @@ const Modal:React.FC<Props> = ({
           }
         </div>
       </motion.div>
-      <div id="searchTooltip" ref={ref}
-        className="hover:bg-sky-200"
-        onPointerDown={handleTooltipPointerDown}
-        onPointerEnter={handleTooltipPointerEnter}
-        onPointerLeave={handleTooltipPointerLeave}
-        style={{
-        cursor:'pointer',
-        position:'absolute',
-        background:(!tooltipHovered) ? 'white' : 'oklch(90.1% .058 230.902)',
-        transition:'background 0.1s ease-in-out, left 0.1s ease-in-out',
-        userSelect:'none',
-        top:(selectionPoint.y - 35 - tooltipMargin),
-        left:selectionPoint.x + tooltipOverhang,
-        width:'fit-content',
-        color:'black',
-        display: (selection === '') ? 'none' : 'flex',
-        flexDirection:'column',
-        borderRadius:5,
-        justifyContent:'center',
-        border:'2px solid rgba(146, 148, 248, 0.8)',
-        padding:'2px 5px 2px 5px',
-        visibility:(tooltipState === TooltipState.SHOWN) ? 'visible' : 'hidden',
-        }}>
-        <h1>Search for cards with <span style={{fontWeight:'bold', color:'rgba(146, 148, 248, 1)'}}>{selection}</span> in their {selectionField}</h1>
-      </div>
+      <Tooltip 
+        updateSelected={updateSelected}
+        selection={selection}
+        selectionPoint={selectionPoint}
+        selectionField={selectionField}
+        overhang={tooltipOverhang}
+        state={tooltipState}
+        />
     </div>
   )
 };

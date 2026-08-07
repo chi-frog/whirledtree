@@ -19,37 +19,23 @@ export const constructSearchUrl = (selected:Selected={game:GAME_TYPE.PAPER}) => 
     (key) => Object.hasOwn(selected, key) && selected[key] !== ANY);
 
   url = relevantKeys.reduce<string>((url, key) => {
-    switch(key) {
-    case 'name': 
-    case 'type': 
-    case 'set': 
-    case 'format': 
-    case 'game':
-    default:
-      return url + key + ':' + selected[key] + '+';
-    }
-  }, url);
+    const value = selected[key]?.trim();
 
-  query = relevantKeys.reduce<string>((url, key) => {
     switch(key) {
+    case 'oracle':
+      return url + key + ':\'' + value + '\'+';
     case 'name': 
     case 'type': 
     case 'set': 
     case 'format': 
     case 'game':
     default:
-      return query + key + ':' + selected[key] + '+';
+      return url + key + ':' + value + '+';
     }
   }, url);
-  query = query.substring(0, query.length - 1);
-  query += '&order=name';
-  const encodedQuery = encodeURIComponent(query);
-  console.log('ENCODED QUERY:' + encodedQuery);
 
   url = url.substring(0, url.length - 1);
   url += '&order=name';
-
-  const encodedUrl = encodeURI
 
   return url;
 };
