@@ -14,6 +14,7 @@ import { ImagePacket } from "@/hooks/magic/useMagicCards";
 import CardPrintSelector from "./CardPrintSelector";
 import Tooltip, { tooltipMargin, TooltipState } from "./Tooltip";
 import { renderToStaticMarkup } from "react-dom/server";
+import { stopPropagationHandler } from "@/helpers/pointerEvent";
 
 export const searchFields = {
   game: "game",
@@ -188,23 +189,14 @@ const Modal:React.FC<Props> = ({
   };
 
   useEffect(() => {
-    subSelection({tag:'modal', onSelectionChange});
-  }, [divRef.current]);
+    return subSelection({tag:'modal', onSelectionChange});
+  }, []);
 
   const handlePointerDown:PointerEventHandler = (e) => {
     e.stopPropagation();
 
     if ((e.target as HTMLElement).id === 'modal')
       close();
-  }
-
-  const handlePointerUp:PointerEventHandler = (e) => {
-    e.stopPropagation();
-
-  }
-
-  const handleCardPointerUp:PointerEventHandler = (e) => {
-    e.stopPropagation();
   }
 
   const nameFontSize = useMemo(() => {
@@ -265,7 +257,7 @@ const Modal:React.FC<Props> = ({
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
       onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      onPointerUp={stopPropagationHandler}
       onPointerMove={(e)=>e.stopPropagation()}
       style={{
         background: 'rgba(120, 120, 120, 0.5)',
@@ -303,7 +295,7 @@ const Modal:React.FC<Props> = ({
             card={card}
             imagePacket={imagePacket}
             cardBackImagePacket={cardBackImagePacket}
-            handlePointerUp={handleCardPointerUp}
+            handlePointerUp={stopPropagationHandler}
           />
         </div>}
         <div id="text" style={{

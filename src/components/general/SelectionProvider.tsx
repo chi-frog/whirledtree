@@ -50,6 +50,10 @@ export const SelectionProvider = ({ children }: {children:ReactNode}) => {
     } else {
       selectionSubscriptions.current = selectionSubscriptions.current.concat({tag, onSelectionChange});
     }
+
+    return () => {
+      selectionSubscriptions.current = selectionSubscriptions.current.filter((_ss) => _ss.tag !== tag);
+    };
   };
 
   return (

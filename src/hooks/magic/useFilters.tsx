@@ -3,23 +3,23 @@
 import { GAME_TYPE } from "@/components/magic/types/magic";
 import { ChangeEventHandler, useCallback, useMemo, useState } from "react";
 
-export const ANY = '';
+export const ANY = [];
 
 export type Selected = {
-  game:string,
-  name?:string,
-  format?:string,
-  set?:string, //acronym
-  type?:string,
-  power?:string,
-  toughness?:string,
-  oracle?:string,
-  manaValue?:string,
+  game:string[],
+  name?:string[],
+  format?:string[],
+  set?:string[], //acronym
+  type?:string[],
+  power?:string[],
+  toughness?:string[],
+  oracle?:string[],
+  manaValue?:string[],
 }
 export type SKey = keyof Selected;
 
-const defaultSelected = {
-  game:GAME_TYPE.PAPER,
+export const defaultSelected = {
+  game:[GAME_TYPE.PAPER, GAME_TYPE.MTGO, GAME_TYPE.ARENA],
   name:ANY,
   format:ANY,
   set:ANY,
@@ -31,7 +31,7 @@ const defaultSelected = {
 
 export type FilterUpdate = {
   property:keyof Selected,
-  value:string,
+  value:string[],
 }
 export type FilterUpdateFunction = (...updates:FilterUpdate[])=>void;
 
@@ -52,7 +52,7 @@ const useFilters = () => {
 
   const makeHandler = useCallback((property: SKey): ChangeEventHandler<HTMLInputElement | HTMLSelectElement> => {
     return (e) => {
-      updateSelected({ property, value: e.target.value });
+      updateSelected({ property, value: [e.target.value] });
     };
   }, [updateSelected]);
 

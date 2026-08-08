@@ -42,7 +42,7 @@ const Tooltip:React.FC<Props> = ({
       return;
     }
 
-    updateSelected({property:property as keyof Selected, value:selection});
+    updateSelected({property:property as keyof Selected, value:[selection]});
     document.getSelection()?.empty();
   };
 
