@@ -6,23 +6,23 @@ import { ANY } from "@/hooks/magic/useFilters";
 
 type Props = {
   types:string[],
-  selectedType?:string,
+  selectedTypes:string[],
   onChangeType:ChangeEventHandler,
 }
 
 const FilterType:React.FC<Props> = ({
     types,
-    selectedType="",
+    selectedTypes=[],
     onChangeType,
   }:Props) => { 
 
-  types = useMemo(() => [ANY].concat(types), [types]);
+  types = useMemo(() => [''].concat(types), [types]);
 
   return (
   <FilterOption text="Type">
-    <select id="set" autoComplete="on"
+    <select multiple id="set" autoComplete="on"
       className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
-      name="set" value={selectedType} onChange={onChangeType}
+      name="set" value={selectedTypes} onChange={onChangeType}
       style={{
         cursor:'pointer',
         borderRadius:'5px',
@@ -32,8 +32,8 @@ const FilterType:React.FC<Props> = ({
         boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
       }}>
       {types.map((_type, _index) => {
-        const className = (_type !== selectedType) ? "notselected" : "selected";
-        const displayText = (_type !== ANY) ? _type : 'Any';
+        const className = !(selectedTypes.includes(_type)) ? "notselected" : "selected";
+        const displayText = (_type !== '') ? _type : 'Any Type';
 
         return (
           <option className={className} key={_index} value={_type}>{displayText}</option> 

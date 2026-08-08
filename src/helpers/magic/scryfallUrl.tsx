@@ -10,6 +10,36 @@ const bitCards = 'cards';
 const bitSearch = 'search?q=';
 const bitIncludeExtras = 'include_extras=true';
 
+const createSegment = (key:string, segment:string[]) => {
+  console.log('createSegment ', segment);
+
+  for (const value in segment) {
+    console.log('' + value);
+  }
+
+  const value = segment[0].trim();
+
+  console.log('segment', segment);
+  console.log('value', value);
+
+  let result = "(" + key;
+
+  switch(key) {
+  case 'oracle':
+  case 'name':
+    result += ':\'' + value + '\'';
+    break;
+  case 'type': 
+  case 'set': 
+  case 'format': 
+  case 'game':
+  default:
+    result += ':' + value;
+  }
+
+  return result + ")";
+};
+
 export const constructSearchUrl = (selected:Selected=defaultSelected) => {
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
 
@@ -18,28 +48,15 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
     (key) => Object.hasOwn(selected, key) && selected[key] !== ANY);
 
   let query = "";
-  query = relevantKeys.reduce<string>((query, key) => {
+  query = relevantKeys.reduce<string>((query, key, index) => {
     const arr = selected[key];
     if (!arr) return '';
-    const value = arr[0].trim();
 
-    console.log('arr', arr);
-    console.log('value', value);
-
-    switch(key) {
-    case 'oracle':
-      return query + key + ':\'' + value + '\'+';
-    case 'name': 
-    case 'type': 
-    case 'set': 
-    case 'format': 
-    case 'game':
-    default:
-      return query + key + ':' + value + '+';
-    }
+    return (index !== relevantKeys.length - 1) ?
+      query + createSegment(key, arr) + '+' :
+      query + createSegment(key, arr);
   }, query);
 
-  query = query.substring(0, url.length - 1);
   console.log('Using the thingy: ' + encodeURIComponent(query));
 
   url += query + '&order=name';

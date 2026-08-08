@@ -1,6 +1,3 @@
-import { ANY } from "@/hooks/magic/useFilters"
-import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
-
 export enum MagicCardLayout {
   NORMAL='normal',
   SPLIT='split',
@@ -80,9 +77,9 @@ export type MagicSet = {
 }
 
 export const _magicSetAny = {
-  name:ANY,
-  acronym:ANY,
-  type:ANY,
+  name:'',
+  acronym:'',
+  type:'',
 }
 
 export type MagicFormat = {
@@ -90,5 +87,5 @@ export type MagicFormat = {
 }
 
 export const _magicFormatAny = {
-  name:ANY,
+  name:'',
 }

@@ -7,13 +7,13 @@ import { ANY } from "@/hooks/magic/useFilters";
 
 type Props = {
   sets:MagicSet[],
-  selectedSet?:string,
+  selectedSets:string[],
   onChangeSet:ChangeEventHandler,
 }
 
 const FilterSet:React.FC<Props> = ({
     sets,
-    selectedSet=ANY,
+    selectedSets=[],
     onChangeSet,
   }:Props) => {
 
@@ -21,9 +21,9 @@ const FilterSet:React.FC<Props> = ({
 
   return (
   <FilterOption text="Set">
-    <select id="set" autoComplete="on"
+    <select multiple id="set" autoComplete="on"
       className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
-      name="set" value={selectedSet} onChange={onChangeSet}
+      name="set" value={selectedSets} onChange={onChangeSet}
       style={{
         cursor:'pointer',
         borderRadius:'5px',
@@ -33,8 +33,8 @@ const FilterSet:React.FC<Props> = ({
         boxShadow:'inset 0px 0px 2px 2px rgba(146, 148, 248, 0.4)'
       }}>
       {sets.map((_set, _index) => {
-        const className = (_set.acronym !== selectedSet) ? "notselected" : "selected";
-        const displayText = (_set.name !== ANY) ? _set.name : "Any";
+        const className = !(selectedSets.includes(_set.acronym)) ? "notselected" : "selected";
+        const displayText = (_set.name !== '') ? _set.name : "Any Set";
 
         return (
           <option className={className} key={_index} value={_set.acronym}>{displayText}</option>

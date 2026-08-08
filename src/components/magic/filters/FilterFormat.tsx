@@ -7,13 +7,13 @@ import { ANY } from "@/hooks/magic/useFilters";
 
 type Props = {
   formats:MagicFormat[],
-  selectedFormat?:string,
+  selectedFormats:string[],
   onChangeFormat:ChangeEventHandler,
 }
 
 const FilterFormat:React.FC<Props> = ({
     formats,
-    selectedFormat=ANY,
+    selectedFormats=[],
     onChangeFormat,
   }:Props) => {
 
@@ -21,10 +21,10 @@ const FilterFormat:React.FC<Props> = ({
     
   return (
   <FilterOption text="Format">
-    <select id="format"
+    <select multiple id="format"
       className="bg-white hover:bg-sky-200 [&>.notselected]:bg-white [&>.selected]:bg-sky-200"
       name="format"
-      value={selectedFormat}
+      value={selectedFormats}
       onChange={onChangeFormat}
       style={{
         cursor:'pointer',
@@ -35,8 +35,8 @@ const FilterFormat:React.FC<Props> = ({
         transition:'background-color 0.1s ease-in-out',
       }}>
       {formats.map((_format, _index) => {
-        const className = (_format.name !== selectedFormat) ? "notselected" : "selected";
-        const displayText = (_format.name !== ANY) ? _format.name : "Any";
+        const className = !(selectedFormats.includes(_format.name)) ? "notselected" : "selected";
+        const displayText = (_format.name !== '') ? _format.name : "Any Format";
 
         return (
           <option className={className} key={_index} value={_format.name}>{displayText}</option>
