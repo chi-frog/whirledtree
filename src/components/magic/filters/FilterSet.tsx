@@ -3,7 +3,6 @@
 import { ChangeEventHandler, memo, useMemo } from "react";
 import { _magicSetAny, MagicSet } from "../types/default";
 import FilterOption from "./FilterOption";
-import { ANY } from "@/hooks/magic/useFilters";
 
 type Props = {
   sets:MagicSet[],

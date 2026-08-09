@@ -4,12 +4,12 @@ import { ChangeEventHandler, memo } from "react";
 import FilterOption from "./FilterOption";
 
 type Props = {
-  selectedName?:string,
+  selectedNames:string[],
   onChangeName:ChangeEventHandler,
 }
 
 const FilterName:React.FC<Props> = ({
-    selectedName="",
+    selectedNames=[],
     onChangeName,
   }:Props) => (
   <FilterOption text="Name">
@@ -17,7 +17,7 @@ const FilterName:React.FC<Props> = ({
     className="bg-white hover:bg-sky-200"
       name="name"
       onChange={onChangeName}
-      value={selectedName}
+      value={selectedNames[0]}
       style={{
         transition:'background-color 0.1s ease-in-out',
         borderRadius:'5px',

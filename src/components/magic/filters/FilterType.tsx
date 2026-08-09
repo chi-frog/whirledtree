@@ -2,7 +2,6 @@
 
 import { ChangeEventHandler, memo, useMemo } from "react";
 import FilterOption from "./FilterOption";
-import { ANY } from "@/hooks/magic/useFilters";
 
 type Props = {
   types:string[],

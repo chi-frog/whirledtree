@@ -3,30 +3,29 @@
 import { GAME_TYPE } from "@/components/magic/types/magic";
 import { ChangeEventHandler, useCallback, useMemo, useState } from "react";
 
-export const ANY = [];
-
 export type Selected = {
   game:string[],
-  name?:string[],
-  format?:string[],
-  set?:string[], //acronym
-  type?:string[],
-  power?:string[],
-  toughness?:string[],
-  oracle?:string[],
-  manaValue?:string[],
+  name:string[],
+  format:string[],
+  set:string[], //acronym
+  type:string[],
+  power:string[],
+  toughness:string[],
+  oracle:string[],
+  manaValue:string[],
 }
 export type SKey = keyof Selected;
 
 export const defaultSelected = {
   game:[GAME_TYPE.PAPER, GAME_TYPE.MTGO, GAME_TYPE.ARENA],
-  name:ANY,
-  format:ANY,
-  set:ANY,
-  type:ANY,
-  power:ANY,
-  toughness:ANY,
-  oracle:ANY,
+  name:[],
+  format:[],
+  set:[],
+  type:[],
+  power:[],
+  toughness:[],
+  oracle:[],
+  manaValue:[]
 }
 
 export type FilterUpdate = {

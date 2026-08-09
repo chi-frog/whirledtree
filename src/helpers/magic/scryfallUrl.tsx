@@ -2,8 +2,7 @@
 * Functions to construct valid scryfall requests
 */
 
-import { GAME_TYPE } from "@/components/magic/types/magic";
-import { ANY, defaultSelected, Selected, SKey } from "@/hooks/magic/useFilters";
+import { defaultSelected, Selected, SKey } from "@/hooks/magic/useFilters";
 
 const scryfallUrl = 'https://api.scryfall.com';
 const bitCards = 'cards';
@@ -45,7 +44,7 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
 
   const keys = (Object.keys(selected) as SKey[]);
   const relevantKeys = keys.filter(
-    (key) => Object.hasOwn(selected, key) && selected[key] !== ANY);
+    (key) => Object.hasOwn(selected, key) && selected[key].length > 0);
 
   let query = "";
   query = relevantKeys.reduce<string>((query, key, index) => {

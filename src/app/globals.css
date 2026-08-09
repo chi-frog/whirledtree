@@ -38,3 +38,7 @@ body {
 .selectableBit::moz-selection {
   text-shadow: 0px 0px 10px yellow
 }
+
+.fieldSizing {
+  field-sizing: content;
+}

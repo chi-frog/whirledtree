@@ -11,6 +11,7 @@ import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 import { Selected } from "@/hooks/magic/useFilters";
 import FilterType from "./FilterType";
+import FilterButton from "./FilterButton";
 
 type Props = {
   state:FilterState,
@@ -169,24 +170,25 @@ const Filter:React.FC<Props> = ({
         gap:'8px',
         height:(whole)?'calc(100vh - 40px - 30px)' : '50px', 
         }}>
+        <FilterButton />
         <CardsPerRow
           numCards={maxCards}
           numCardsRow={numCardsRow}
           onChangeNumCardsRow={onChangeNumCardsRow}/>
         <FilterSet
           sets={sets}
-          selectedSet={selected.set}
+          selectedSets={selected.set}
           onChangeSet={handlers.set}/>
         <FilterName
-          selectedName={selected.name}
+          selectedNames={selected.name}
           onChangeName={handlers.name}/>
         <FilterType
           types={types}
-          selectedType={selected.type}
+          selectedTypes={selected.type}
           onChangeType={handlers.type}/>
         <FilterFormat
           formats={formats}
-          selectedFormat={selected.format}
+          selectedFormats={selected.format}
           onChangeFormat={handlers.format}/>
       </div>
       <div style={{
