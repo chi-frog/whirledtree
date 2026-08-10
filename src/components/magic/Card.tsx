@@ -23,6 +23,7 @@ type Props = {
   widthString?:string,
   heightString?:string,
   imageHeightString?:string,
+  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   card:MagicCard,
   imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
@@ -33,6 +34,7 @@ export const Card:React.FC<Props> = memo(function Card({
     widthString,
     heightString,
     imageHeightString,
+    hydrateImage,
     card,
     imagePacket,
     cardBackImagePacket,
@@ -81,6 +83,12 @@ export const Card:React.FC<Props> = memo(function Card({
     return () => observer.disconnect();
   }, [node]);
 
+  useEffect(() => {
+    console.log('Card useEffect: ' + card.name);
+    console.log('Card Uris', card.imageUris);
+    hydrateImage(card, 'small');
+  }, [card.imageUris]);
+
   const [frontImageSrc, backImageSrc] = useMemo(() => {
     if (!card || !imagePacket) return [];
 
@@ -93,10 +101,11 @@ export const Card:React.FC<Props> = memo(function Card({
       imagePacket.back.largeBlob :
       imagePacket.back.smallBlob;
 
-    if (back === "") back = cardBackImagePacket?.front.largeBlob;
+    if (back === "")
+      back = cardBackImagePacket?.front.largeBlob;
 
     return [front, back];
-  }, [imagePacket]);
+  }, [cardBackImagePacket, imagePacket]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);

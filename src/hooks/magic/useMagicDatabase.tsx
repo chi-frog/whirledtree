@@ -48,7 +48,7 @@ export type MagicDatabase = {
   symbolImageMap:Map<string, string>,
   cards:MagicCard[],
   imageMap:ImageMap,
-  hydrateLargeImage:(card:MagicCard)=>void,
+  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   fetchNextData?:()=>void,
   totalCards?:number,
 }
@@ -63,7 +63,7 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
   const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
   const [setsError, setsLoaded, sets] = useMagicSets();
-  const [cardsError, cardsLoaded, cards, imageMap, hydrateLargeImage, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
+  const [cardsError, cardsLoaded, cards, imageMap, hydrateImage, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
 
@@ -123,7 +123,7 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
     }
   }, [cardsError, cardsLoaded]);
 
-  return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, cards, imageMap, hydrateLargeImage, fetchNextData, totalCards};
+  return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, cards, imageMap, hydrateImage, fetchNextData, totalCards};
 };
 
 export default useMagicDatabase;

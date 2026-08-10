@@ -139,50 +139,70 @@ export const fetchImage = async (
   }
 };
 
-const hydrateImageMap = async (setImageMap:Dispatch<SetStateAction<ImageMap>>, cards:MagicCard[], size:'small'|'large') => {
-    const hydrateCard = async (uris:string[]) => 
-      await Promise.all(uris.map(async (_uri, _index) =>
-        (_uri === "") ? "" : await fetchImage(_uri)))
+const hydrateImageMap = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateAction<ImageMap>>, cards:MagicCard[], size:'small'|'large') => {
+  const hydrateCard = async (uris:string[]) => 
+    await Promise.all(uris.map(async (_uri, _index) =>
+      (_uri === "") ? "" : await fetchImage(_uri)))
 
+  let frontCount = 0;
+  let backCount = 0;
   
-    await Promise.all(cards.map(async (_card, _index) => {
-      let oracleId = _card.oracleId;
-      let printId = _card.id;
+  await Promise.all(cards.map(async (_card, _index) => {
+    let oracleId = _card.oracleId;
+    let printId = _card.id;
 
-      let uris = (!isCardDoublesided(_card) || !(_card.back)) ?
-        [_card.imageUris[size], ""] :
-        [_card.imageUris[size], _card.back.imageUris[size]];
+    const cardImages = imageMap.get(oracleId)?.get(printId);
+    let frontUri = _card.imageUris[size];
+    let backUri = (_card.back) ? _card.back.imageUris[size] : "";
 
-      const imageUrls = await hydrateCard(uris);
+    let noFront = false;
+    if (cardImages) {
+      if (cardImages.front[blobKey[size]]) {
+        frontUri = "";
+        frontCount++;
+        noFront = true;
+      }
+      if (cardImages.back[blobKey[size]]) {
+        backCount++;
+        backUri = "";
+      }
+    }
+
+    const imageUrls = await hydrateCard([frontUri, backUri]);
+
+    if (noFront) console.log('uris', imageUrls);
       
-      setImageMap((prev) => {
-        const imageMap = copyImageMap(prev);
-        let printsMap = imageMap.get(oracleId);
-        if (!printsMap)
-          printsMap = new Map<string, ImagePacket>();
+    setImageMap((prev) => {
+      const imageMap = copyImageMap(prev);
+      let printsMap = imageMap.get(oracleId);
+      if (!printsMap)
+        printsMap = new Map<string, ImagePacket>();
 
-        const existing = printsMap.get(printId);
-        const imagePacket = (existing) ?
-          {...existing} :
-          createImagePacket();
+      const existing = printsMap.get(printId);
+      const imagePacket = (existing) ?
+        {...existing} :
+        createImagePacket();
 
-        imagePacket.front[blobKey[size]] = imageUrls[0];
-        imagePacket.back[blobKey[size]] = imageUrls[1];
+      imagePacket.front[blobKey[size]] = imageUrls[0];
+      imagePacket.back[blobKey[size]] = imageUrls[1];
 
-        printsMap.set(printId, imagePacket);
-        imageMap.set(oracleId, printsMap);
+      printsMap.set(printId, imagePacket);
+      imageMap.set(oracleId, printsMap);
 
-        return imageMap;
-      });
-    }));
-  };
+      return imageMap;
+    });
+  }));
+
+  console.log('Front Count:' + frontCount + "out of " + cards.length + " cards");
+  console.log('Back Count:' + backCount + "out of " + cards.length + " cards");
+};
 
 export type UseMagicCards = [
   error:WError,
   dataLoaded:boolean,
   cards:MagicCard[],
   imageMap:ImageMap,
-  hydrateLargeImage:(card:MagicCard)=>void,
+  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   fetchNextData?:()=>void,
   totalCards?:number,
 ]
@@ -301,6 +321,7 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     const loadImages = async () => {
       try {
         await hydrateImageMap(
+          imageMap,
           setImageMap,
           cards, 
           "small"
@@ -315,18 +336,18 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     };
 
     console.log('---Starting to load card images---');
-    loadImages();
+    //loadImages();
 
     return () => {
       cancelled = true;
     };
   }, [cards]); // Re-run when cards change
 
-  const hydrateLargeImage = useCallback(async (card:MagicCard) => {
-    hydrateImageMap(setImageMap, [card], "large");
+  const hydrateImage = useCallback(async (card:MagicCard, size:'small'|'large') => {
+    hydrateImageMap(imageMap, setImageMap, [card], size);
   }, [cards]);
 
-  return [error, dataLoaded, cards, imageMap, hydrateLargeImage, fetchNextData, totalCards];
+  return [error, dataLoaded, cards, imageMap, hydrateImage, fetchNextData, totalCards];
 };
 
 export default useMagicCards;

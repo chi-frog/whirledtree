@@ -74,6 +74,7 @@ function useExternalData<T> (
           //Not an error - just means the search was empty
           setError(_noError);
           setLoaded(true);
+          setTotalCards(0);
           setData([]);
           setNextUrl(null);
           return;
