@@ -11,7 +11,7 @@ export type Selected = {
   type:string[],
   power:string[],
   toughness:string[],
-  oracle:string[],
+  oracleText:string[],
   manaValue:string[],
 }
 export type SKey = keyof Selected;
@@ -24,7 +24,7 @@ export const defaultSelected = {
   type:[],
   power:[],
   toughness:[],
-  oracle:[],
+  oracleText:[],
   manaValue:[]
 }
 

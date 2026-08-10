@@ -21,10 +21,18 @@ const createSegment = (key:string, segment:string[]) => {
   console.log('segment', segment);
   console.log('value', value);
 
-  let result = "(" + key;
+  let result = "(";
 
   switch(key) {
-  case 'oracle':
+    case 'oracleText':
+      result += 'oracle';
+      break;
+    default:
+      result += key;
+  }
+
+  switch(key) {
+  case 'oracleText':
   case 'name':
     result += ':\'' + value + '\'';
     break;

@@ -120,6 +120,11 @@ const Filter:React.FC<Props> = ({
     e.stopPropagation();
   }, []);
 
+  const onSubmit = (e:any) => {
+    e.preventDefault();
+    console.log('submitting', e);
+  }
+
   return (<>
     <div
       onPointerDown={stopPropagationHandler}
@@ -160,7 +165,9 @@ const Filter:React.FC<Props> = ({
       backgroundColor: (whole) ? 'rgba(255, 255, 255, 0.85)' : 'white',
       transition: "box-shadow 0.2s ease-in-out, top 0.2s ease-in-out, left 0.2s ease-in-out, height 0.2s ease-in-out",
       }}>
-      <div style={{
+      <form
+        onSubmit={onSubmit}
+        style={{
         display:'flex',
         flexDirection:(!whole) ? 'row' : 'column',
         justifyContent:'space-evenly',
@@ -170,7 +177,8 @@ const Filter:React.FC<Props> = ({
         gap:'8px',
         height:(whole)?'calc(100vh - 40px - 30px)' : '50px', 
         }}>
-        <FilterButton />
+        <FilterButton id="oracleText"
+          onChange={handlers.oracleText}/>
         <CardsPerRow
           numCards={maxCards}
           numCardsRow={numCardsRow}
@@ -190,7 +198,7 @@ const Filter:React.FC<Props> = ({
           formats={formats}
           selectedFormats={selected.format}
           onChangeFormat={handlers.format}/>
-      </div>
+      </form>
       <div style={{
         width:'calc(100vw - 40px)',
         height:'30px',
