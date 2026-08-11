@@ -84,10 +84,8 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [node]);
 
   useEffect(() => {
-    console.log('Card useEffect: ' + card.name);
-    console.log('Card Uris', card.imageUris);
-    hydrateImage(card, 'small');
-  }, [card.imageUris]);
+    hydrateImage(card, (location === 'view') ? 'small' : 'large');
+  }, [card.imageUris, location]);
 
   const [frontImageSrc, backImageSrc] = useMemo(() => {
     if (!card || !imagePacket) return [];

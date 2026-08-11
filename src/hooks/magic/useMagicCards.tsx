@@ -143,9 +143,6 @@ const hydrateImageMap = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateA
   const hydrateCard = async (uris:string[]) => 
     await Promise.all(uris.map(async (_uri, _index) =>
       (_uri === "") ? "" : await fetchImage(_uri)))
-
-  let frontCount = 0;
-  let backCount = 0;
   
   await Promise.all(cards.map(async (_card, _index) => {
     let oracleId = _card.oracleId;
@@ -155,22 +152,24 @@ const hydrateImageMap = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateA
     let frontUri = _card.imageUris[size];
     let backUri = (_card.back) ? _card.back.imageUris[size] : "";
 
-    let noFront = false;
     if (cardImages) {
       if (cardImages.front[blobKey[size]]) {
         frontUri = "";
-        frontCount++;
-        noFront = true;
       }
       if (cardImages.back[blobKey[size]]) {
-        backCount++;
         backUri = "";
       }
     }
 
+    if (frontUri === "" && backUri === "") {
+      console.log('Skipped ' + _card.name);
+      return;
+    } else {
+      console.log('Fetched ' + _card.name);
+    }
+
     const imageUrls = await hydrateCard([frontUri, backUri]);
 
-    if (noFront) console.log('uris', imageUrls);
       
     setImageMap((prev) => {
       const imageMap = copyImageMap(prev);
@@ -192,9 +191,6 @@ const hydrateImageMap = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateA
       return imageMap;
     });
   }));
-
-  console.log('Front Count:' + frontCount + "out of " + cards.length + " cards");
-  console.log('Back Count:' + backCount + "out of " + cards.length + " cards");
 };
 
 export type UseMagicCards = [

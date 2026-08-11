@@ -32,6 +32,7 @@ const modal = (shown:boolean, db:MagicDatabase, card:MagicCard|null, hideModal:(
       symbols={db.symbols}
       symbolImageMap={db.symbolImageMap}
       updateSelected={updateSelected}
+      hydrateImage={db.hydrateImage}
       card={card}
       imagePacket={imagePacket}
       cardBackImagePacket={db.imageMap.get("")?.get("")}

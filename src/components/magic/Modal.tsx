@@ -24,14 +24,14 @@ export const searchFields = {
   type: "type",
   power: "power",
   toughness: "toughness",
-  oracle: "oracle",
+  oracleText: "oracleText",
   manaValue: "manaValue",
 } as const satisfies Record<SKey, SKey>;
 
 const tooltipText = (selectionField:string, selection:string) => {
   const span = (<span style={{fontWeight:'bold', color:'rgba(146, 148, 248, 1)'}}>{selection}</span>);
   const text =
-    (selectionField === searchFields.oracle) ?
+    (selectionField === searchFields.oracleText) ?
       (<h1>Search for cards with {span} in their oracle text.</h1>) :
       (<h1>Search for cards with {span} in their {selectionField}</h1>);
 
@@ -103,16 +103,17 @@ type Props = {
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
   updateSelected:FilterUpdateFunction,
+  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   card:MagicCard,
   imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
 }
-
 const Modal:React.FC<Props> = ({
     close,
     symbols,
     symbolImageMap,
     updateSelected,
+    hydrateImage,
     card,
     imagePacket,
     cardBackImagePacket,
@@ -203,6 +204,8 @@ const Modal:React.FC<Props> = ({
     console.log('Changing Name Font Size');
     console.log('Name Ref:', nameRef.current);
     console.log('Div Ref', divRef.current);
+    console.log('card.name', card.name);
+    console.log('card.r', card.reversed);
     return 30;
   }, [card.name, card.reversed]);
 
@@ -292,6 +295,7 @@ const Modal:React.FC<Props> = ({
             widthString={'fit-content'}
             heightString={'100%'}
             imageHeightString={'100%'}
+            hydrateImage={hydrateImage}
             card={card}
             imagePacket={imagePacket}
             cardBackImagePacket={cardBackImagePacket}
@@ -368,7 +372,7 @@ const Modal:React.FC<Props> = ({
             </h3>
           </div>
           <div className="selectable oracle" title="Search By Oracle Text"
-            data-field={searchFields.oracle}>
+            data-field={searchFields.oracleText}>
             <OracleText
               oracleText={oracleText}
               symbols={symbols}/>
