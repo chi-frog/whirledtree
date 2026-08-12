@@ -11,7 +11,6 @@ type Props = {
   dragState:DragState,
   filterState:FilterState,
   numCardsRow:number,
-  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   cards:MagicCard[],
   imageMap:ImageMap,
   handleCardPointerUp:(e:React.PointerEvent, card:MagicCard) => void,
@@ -20,7 +19,6 @@ const View:React.FC<Props> = ({
     dragState,
     filterState,
     numCardsRow,
-    hydrateImage,
     cards,
     imageMap,
     handleCardPointerUp,
@@ -29,7 +27,6 @@ const View:React.FC<Props> = ({
   const card = useCallback((name:string, index:number) => {
     const card = cards[index];
     const cardBackImagePacket = imageMap.get("")?.get("");
-    const imagePacket = imageMap.get(card.oracleId)?.get(card.id);
 
     return (
       <Card
@@ -37,8 +34,6 @@ const View:React.FC<Props> = ({
         location='view'
         heightString={'fit-content'}
         card={card}
-        hydrateImage={hydrateImage}
-        imagePacket={imagePacket}
         cardBackImagePacket={cardBackImagePacket}
         handlePointerUp={handleCardPointerUp}
         />)},

@@ -117,7 +117,7 @@ export const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
 };
 
 type ImageSize = 'small' | 'large';
-const blobKey: Record<ImageSize, keyof ImageSet> = {
+export const blobKey: Record<ImageSize, keyof ImageSet> = {
   small: 'smallBlob',
   large: 'largeBlob',
 };
@@ -153,23 +153,16 @@ const hydrateImageMap = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateA
     let backUri = (_card.back) ? _card.back.imageUris[size] : "";
 
     if (cardImages) {
-      if (cardImages.front[blobKey[size]]) {
+      if (cardImages.front[blobKey[size]])
         frontUri = "";
-      }
-      if (cardImages.back[blobKey[size]]) {
+      if (cardImages.back[blobKey[size]])
         backUri = "";
-      }
     }
 
-    if (frontUri === "" && backUri === "") {
-      console.log('Skipped ' + _card.name);
+    if (frontUri === "" && backUri === "")
       return;
-    } else {
-      console.log('Fetched ' + _card.name);
-    }
 
     const imageUrls = await hydrateCard([frontUri, backUri]);
-
       
     setImageMap((prev) => {
       const imageMap = copyImageMap(prev);
@@ -193,6 +186,10 @@ const hydrateImageMap = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateA
   }));
 };
 
+export const hydrateImage = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateAction<ImageMap>>, card:MagicCard, size:'small'|'large') => {
+  hydrateImageMap(imageMap, setImageMap, [card], size);
+};
+
 export type UseMagicCards = [
   error:WError,
   dataLoaded:boolean,
@@ -204,10 +201,10 @@ export type UseMagicCards = [
 ]
 const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, displayLimit) => {
   const [imageMap, setImageMap] = useState<ImageMap>(new Map());
-  let [error, dataLoaded, cardData, {fetchNextData, totalCards}] = useExternalData<MagicCard>(
-    url,
-    transformMagicCard,
-    {dataLimit:displayLimit, totalCards:true});
+  let [error, dataLoaded, cardData, {fetchNextData, totalCards}] =
+    useExternalData<MagicCard>(url,
+                               transformMagicCard,
+                               {dataLimit:displayLimit, totalCards:true});
   const reserveCards = useRef<MagicCard[]>([]);
 
   // Filter card data
@@ -224,7 +221,6 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     //Set aside Alchemy cards
     let [alchemyCards, normalCards] = partition(cards, (_card) =>
       (_card.name.substring(0, 2) === 'A-'));
-
  
     //If an Alchemy card has a normal card in existence as well, fold it inside.
     //If an Alchemy card does not have a normal card, keep it in reserve.
@@ -294,6 +290,8 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
 
         imagePacket.front[blobKey.large] = backUrl;
         imagePacket.back[blobKey.large] = backUrl;
+        imagePacket.front[blobKey.small] = backUrl;
+        imagePacket.back[blobKey.small] = backUrl;
 
         printsMap.set("", imagePacket);
         imageMap.set("", printsMap);
@@ -307,41 +305,9 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     getBackImage();
   }, []);
 
-  // Hydrate image map when cards change
-  useEffect(() => {
-    if ((cards.length === 0) && (dataLoaded))
-      return;
-
-    let cancelled = false;
-
-    const loadImages = async () => {
-      try {
-        await hydrateImageMap(
-          imageMap,
-          setImageMap,
-          cards, 
-          "small"
-        );
-        
-        if (!cancelled)
-          console.log('---Ended loading card images---');
-      } catch (error) {
-        if (!cancelled)
-          console.error('Failed to load images:', error);
-      }
-    };
-
-    console.log('---Starting to load card images---');
-    //loadImages();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [cards]); // Re-run when cards change
-
   const hydrateImage = useCallback(async (card:MagicCard, size:'small'|'large') => {
     hydrateImageMap(imageMap, setImageMap, [card], size);
-  }, [cards]);
+  }, [cards, imageMap]);
 
   return [error, dataLoaded, cards, imageMap, hydrateImage, fetchNextData, totalCards];
 };

@@ -6,7 +6,7 @@ import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, use
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
-import { cardAspectRatio, ImagePacket } from "@/hooks/magic/useMagicCards";
+import { blobKey, cardAspectRatio, copyImagePacket, createImagePacket, fetchImage, ImagePacket } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
 
 // As the cards load, first 
@@ -23,9 +23,7 @@ type Props = {
   widthString?:string,
   heightString?:string,
   imageHeightString?:string,
-  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   card:MagicCard,
-  imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
   handlePointerUp?:(e:React.PointerEvent, card:MagicCard) => void,
 };
@@ -34,9 +32,7 @@ export const Card:React.FC<Props> = memo(function Card({
     widthString,
     heightString,
     imageHeightString,
-    hydrateImage,
     card,
-    imagePacket,
     cardBackImagePacket,
     handlePointerUp,
   }:Props) {
@@ -54,6 +50,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef, onDragEnd);
   const [loadSequence, setLoadSequence] = useState<LoadSequence>(LoadSequence.PRE_BACKGROUND);
   const [reversed, setReversed] = useState<boolean>(false);
+  const [imagePacket, setImagePacket] = useState<ImagePacket|null>(null);
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
@@ -84,8 +81,27 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [node]);
 
   useEffect(() => {
-    hydrateImage(card, (location === 'view') ? 'small' : 'large');
-  }, [card.imageUris, location]);
+    async function getImage() {
+      const size = (location === 'view') ? 'small' : 'large';
+      const frontBlob = await fetchImage(card.imageUris[size]);
+      const backBlob = (card.back) ? await fetchImage(card.back.imageUris[size]) : "";
+
+      setImagePacket((prev) => {
+        let newImagePacket = (!prev) ?
+          createImagePacket() :
+          copyImagePacket(prev);
+
+        newImagePacket.front[blobKey[size]] = frontBlob;
+        newImagePacket.back[blobKey[size]] = (backBlob !== '') ?
+          backBlob :
+          cardBackImagePacket?.back[blobKey[size]];
+
+        return newImagePacket;
+      });
+    }
+
+    getImage();
+  }, [card.imageUris, location, cardBackImagePacket]);
 
   const [frontImageSrc, backImageSrc] = useMemo(() => {
     if (!card || !imagePacket) return [];

@@ -23,8 +23,6 @@ export const useModalContext = () => {
 
 const modal = (shown:boolean, db:MagicDatabase, card:MagicCard|null, hideModal:()=>void, updateSelected:FilterUpdateFunction) => {
   if (!shown || !card) return <></>;
-
-  const imagePacket = db.imageMap.get(card.oracleId)?.get(card.id);
   
   return (
     <Modal
@@ -32,9 +30,7 @@ const modal = (shown:boolean, db:MagicDatabase, card:MagicCard|null, hideModal:(
       symbols={db.symbols}
       symbolImageMap={db.symbolImageMap}
       updateSelected={updateSelected}
-      hydrateImage={db.hydrateImage}
       card={card}
-      imagePacket={imagePacket}
       cardBackImagePacket={db.imageMap.get("")?.get("")}
       />);
 };

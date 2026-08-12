@@ -112,9 +112,8 @@ const CardDisplay:React.FC<Props> = ({
 
     if ((e.button !== 2)) {
       showModal(card);
-      db.hydrateImage(card, 'large');
     }
-  }, [db.hydrateImage]);
+  }, [showModal]);
 
   const hasCardsError:boolean = useMemo(() => {
     const cardsError = db.errorMap.get('cards');
@@ -169,7 +168,6 @@ const CardDisplay:React.FC<Props> = ({
         dragState={dragState}
         filterState={filterState}
         numCardsRow={numCardsRow}
-        hydrateImage={db.hydrateImage}
         cards={cards}
         imageMap={db.imageMap}
         handleCardPointerUp={handleCardPointerUp}/>

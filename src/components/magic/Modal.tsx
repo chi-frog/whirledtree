@@ -35,7 +35,6 @@ const tooltipText = (selectionField:string, selection:string) => {
       (<h1>Search for cards with {span} in their oracle text.</h1>) :
       (<h1>Search for cards with {span} in their {selectionField}</h1>);
 
-  console.log('KJJKJ tet', text);
   return text;
 };
 
@@ -103,9 +102,7 @@ type Props = {
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
   updateSelected:FilterUpdateFunction,
-  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   card:MagicCard,
-  imagePacket?:ImagePacket,
   cardBackImagePacket?:ImagePacket,
 }
 const Modal:React.FC<Props> = ({
@@ -113,9 +110,7 @@ const Modal:React.FC<Props> = ({
     symbols,
     symbolImageMap,
     updateSelected,
-    hydrateImage,
     card,
-    imagePacket,
     cardBackImagePacket,
   }:Props) => {
   const [selection, setSelection] = useState<string>("");
@@ -273,8 +268,8 @@ const Modal:React.FC<Props> = ({
         zIndex:50,
       }}>
       <motion.div id="inner" 
-        initial={{opacity:0, width:'0', height:'0'}}
-        animate={{opacity:1, width:'80vw', height:'80vh'}}
+        initial={{opacity:0}}
+        animate={{opacity:1}}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
         backgroundColor:'white',
@@ -295,9 +290,7 @@ const Modal:React.FC<Props> = ({
             widthString={'fit-content'}
             heightString={'100%'}
             imageHeightString={'100%'}
-            hydrateImage={hydrateImage}
             card={card}
-            imagePacket={imagePacket}
             cardBackImagePacket={cardBackImagePacket}
             handlePointerUp={stopPropagationHandler}
           />
