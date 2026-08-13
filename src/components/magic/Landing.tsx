@@ -6,6 +6,7 @@ import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
 import useFilters from "@/hooks/magic/useFilters";
 import { useEffect, useMemo, useState } from "react";
 import { ModalProvider } from "../general/ModalProvider";
+import { ImageRepoProvider } from "../general/ImageRepoProvider";
 
 type Props = {};
 const Landing:React.FC<Props> = () => {
@@ -21,6 +22,7 @@ const Landing:React.FC<Props> = () => {
   }, [selected]);
 
   return (
+    <ImageRepoProvider>
     <ModalProvider db={database} updateSelected={updateSelected}>
       <CardDisplay
         db={database}
@@ -28,6 +30,7 @@ const Landing:React.FC<Props> = () => {
         updateSelected={updateSelected}
         handlers={handlers}/>
     </ModalProvider>
+    </ImageRepoProvider>
   )
 };
 

@@ -33,14 +33,6 @@ export const _notFound = (info:any) =>
 export const _err = (err:any) =>
   ({code:WErrorCode.GENERAL, err});
 
-export type ImagePacket = {
-  name:string,
-  smallBlob?:string,
-  largeBlob?:string,
-  };
-
-export type ImageMap = Map<string, ImagePacket>;
-
 type Props = {
   db:MagicDatabase,
   selected:Selected,

@@ -81,8 +81,8 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
 };
 
 export type ImageSet = {
-  smallBlob?:string,
-  largeBlob?:string,
+  small?:string,
+  large?:string,
 };
 export type ImagePacket = {
   front:ImageSet,
@@ -116,10 +116,10 @@ export const copyImageMap:(imageMap:ImageMap)=>ImageMap = (imageMap) => {
   return newImageMap;
 };
 
-type ImageSize = 'small' | 'large';
+export type ImageSize = 'small' | 'large';
 export const blobKey: Record<ImageSize, keyof ImageSet> = {
-  small: 'smallBlob',
-  large: 'largeBlob',
+  small: 'small',
+  large: 'large',
 };
 
 export const fetchImage = async (

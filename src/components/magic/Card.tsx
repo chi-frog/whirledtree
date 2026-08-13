@@ -6,8 +6,9 @@ import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, use
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
-import { blobKey, cardAspectRatio, copyImagePacket, createImagePacket, fetchImage, ImagePacket } from "@/hooks/magic/useMagicCards";
+import { blobKey, cardAspectRatio, copyImagePacket, createImagePacket, fetchImage, ImageMap, ImagePacket, ImageSet } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
+import { useImageRepositoryContext } from "../general/ImageRepoProvider";
 
 // As the cards load, first 
 enum LoadSequence {
@@ -50,7 +51,9 @@ export const Card:React.FC<Props> = memo(function Card({
   const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef, onDragEnd);
   const [loadSequence, setLoadSequence] = useState<LoadSequence>(LoadSequence.PRE_BACKGROUND);
   const [reversed, setReversed] = useState<boolean>(false);
-  const [imagePacket, setImagePacket] = useState<ImagePacket|null>(null);
+  const {addImage, getImagePacket} = useImageRepositoryContext();
+  const [frontImageSet, setFrontImageSet] = useState<ImageSet|undefined>(undefined);
+  const [backImageSet, setBackImageSet] = useState<ImageSet|undefined>(undefined);
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
@@ -81,45 +84,74 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [node]);
 
   useEffect(() => {
-    async function getImage() {
-      const size = (location === 'view') ? 'small' : 'large';
-      const frontBlob = await fetchImage(card.imageUris[size]);
-      const backBlob = (card.back) ? await fetchImage(card.back.imageUris[size]) : "";
+    const size = (location === 'view') ?
+      'small' :
+      'large';
+    const repoImagePacket = getImagePacket(card);
 
-      setImagePacket((prev) => {
-        let newImagePacket = (!prev) ?
-          createImagePacket() :
-          copyImagePacket(prev);
+    async function getImage(side:keyof ImagePacket) {
+      if ((repoImagePacket) &&
+          (repoImagePacket[side][size])) {
+        if (side === 'front')
+          setFrontImageSet(repoImagePacket.front);
+        else if (side === 'back')
+          setBackImageSet(repoImagePacket.back);
+        return;
+      }
 
-        newImagePacket.front[blobKey[size]] = frontBlob;
-        newImagePacket.back[blobKey[size]] = (backBlob !== '') ?
-          backBlob :
-          cardBackImagePacket?.back[blobKey[size]];
+      const newImagePacket = (repoImagePacket) ?
+        repoImagePacket :
+        createImagePacket();
 
-        return newImagePacket;
-      });
+      const blob = await fetchImage(card.imageUris[size]);
+      if (!blob) return;
+
+      newImagePacket[side][size] = blob;
+      addImage(card, blob, side, size);
+
+      if (side === 'front')
+        setFrontImageSet(newImagePacket.front);
+      else if (side === 'back')
+        setBackImageSet(newImagePacket.back);
     }
 
-    getImage();
-  }, [card.imageUris, location, cardBackImagePacket]);
+    getImage('front');
+    getImage('back');
+  }, [card.imageUris, location]);
 
   const [frontImageSrc, backImageSrc] = useMemo(() => {
-    if (!card || !imagePacket) return [];
+    if (!card) return [];
 
-    const front = imagePacket.front.largeBlob ?
-      imagePacket.front.largeBlob :
-      imagePacket.front.smallBlob;
+    const getHighestQualityImage = (set:ImageSet|undefined) =>
+      (!set) ?
+        undefined :
+      (set.large) ?
+        set.large :
+      (set.small) ?
+        set.small :
+        undefined;
 
+    let front = getHighestQualityImage(frontImageSet);
+    let back = getHighestQualityImage(backImageSet);
+    const repoImagePacket = getImagePacket(card);
 
-    let back = imagePacket.back.largeBlob ?
-      imagePacket.back.largeBlob :
-      imagePacket.back.smallBlob;
+    if ((!front) &&
+        (repoImagePacket)) {
+      front = getHighestQualityImage(repoImagePacket.front);
+      console.log('Found front in repo', front);
+    }
 
-    if (back === "")
-      back = cardBackImagePacket?.front.largeBlob;
+    if ((!back) &&
+        (repoImagePacket)) {
+      back = getHighestQualityImage(repoImagePacket.back);
+      console.log('Found back in repo', back);
+    }
+
+    if ((!back) || back === "")
+      back = cardBackImagePacket?.front.large;
 
     return [front, back];
-  }, [cardBackImagePacket, imagePacket]);
+  }, [cardBackImagePacket, frontImageSet, backImageSet]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -322,7 +354,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const loadFace = useMemo(() => {
     return (
-      <img src={cardBackImagePacket?.front.largeBlob} loading="lazy" onLoad={bgOnLoad} style={{
+      <img src={cardBackImagePacket?.front.large} loading="lazy" onLoad={bgOnLoad} style={{
         width:'100%',
         height:'100%',
         ...(imageHeightString && { height: imageHeightString }),
@@ -382,16 +414,16 @@ export const Card:React.FC<Props> = memo(function Card({
   return (
     <motion.div
       layoutId={card.name}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
         if (dragState.stage === DragStage.INACTIVE) {
           setIsRaised(false);
+          console.log('turn off raied');
         }
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
+        console.log('turn on raised');
       }}
       style={{
         cursor:'pointer',
