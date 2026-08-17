@@ -10,16 +10,7 @@ const bitSearch = 'search?q=';
 const bitIncludeExtras = 'include_extras=true';
 
 const createSegment = (key:string, segment:string[]) => {
-  console.log('createSegment ', segment);
-
-  for (const value in segment) {
-    console.log('' + value);
-  }
-
   const value = segment[0].trim();
-
-  console.log('segment', segment);
-  console.log('value', value);
 
   let result = "(";
 
@@ -63,8 +54,6 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
       query + createSegment(key, arr) + '+' :
       query + createSegment(key, arr);
   }, query);
-
-  console.log('Using the thingy: ' + encodeURIComponent(query));
 
   url += query + '&order=name';
 

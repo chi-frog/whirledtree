@@ -9,7 +9,7 @@ import { _wpoint, } from "@/helpers/wpoint";
 import { FilterUpdateFunction, SKey } from "@/hooks/magic/useFilters";
 import OracleText from "./OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
-import { motion } from "framer-motion";
+import { LayoutGroup, motion } from "framer-motion";
 import { ImagePacket } from "@/hooks/magic/useMagicCards";
 import CardPrintSelector from "./CardPrintSelector";
 import Tooltip, { tooltipMargin, TooltipState } from "./Tooltip";
@@ -98,14 +98,16 @@ export function findNearestField(node:Node|null) {
 }
 
 type Props = {
+  shown:boolean,
   close:()=>void,
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
   updateSelected:FilterUpdateFunction,
-  card:MagicCard,
+  card?:MagicCard,
   cardBackImagePacket?:ImagePacket,
 }
 const Modal:React.FC<Props> = ({
+    shown,
     close,
     symbols,
     symbolImageMap,
@@ -121,6 +123,7 @@ const Modal:React.FC<Props> = ({
   const {subSelection} = useSelectionContext();
   const divRef = useRef(null);
   const nameRef = useRef(null);
+  const [expanded, setExpanded] = useState<boolean>(false);
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -196,19 +199,15 @@ const Modal:React.FC<Props> = ({
   }
 
   const nameFontSize = useMemo(() => {
-    console.log('Changing Name Font Size');
-    console.log('Name Ref:', nameRef.current);
-    console.log('Div Ref', divRef.current);
-    console.log('card.name', card.name);
-    console.log('card.r', card.reversed);
     return 30;
-  }, [card.name, card.reversed]);
+  }, [card?.name, card?.reversed]);
 
   const oracleText = useMemo(() =>
-    (!card?.reversed) ? card?.oracleText :
-    (card?.back)      ? card?.back?.oracleText :
+    (!card) ? "" :
+    (!card.reversed) ? card.oracleText :
+    (card.back)      ? card.back?.oracleText :
                         ""
-  , [card.reversed, card.oracleText, card.back]);
+  , [card?.reversed, card?.oracleText, card?.back]);
 
   const manaCostImages = useMemo(() => {
     if (!card) return [];
@@ -230,27 +229,29 @@ const Modal:React.FC<Props> = ({
     const orderedSymbols = orderedIndices.map((index) => index.symbol);
     return orderedSymbols;
 
-  }, [symbols, card.manaCost, card.reversed, symbolImageMap]);
+  }, [symbols, card?.manaCost, card?.reversed, symbolImageMap]);
 
   const types = useMemo(() => {
     const typeLine = (!card?.reversed) ? card?.typeLine :
                                          card?.back?.typeLine;
     return (typeLine) ? typeLine?.split(' ') : [""];
-  }, [card.reversed]);
+  }, [card?.reversed]);
 
   const power = useMemo(() =>
-    (card.reversed) ?
-      (!card.back) ? null :
+    (card?.reversed) ?
+      (!card?.back) ? null :
                      card.back.power :
-      card.power, [card.power, card.reversed])
+      card?.power, [card?.power, card?.reversed])
 
   const toughness = useMemo(() => {
-    if (card.reversed) {
+    if (card?.reversed) {
       if (!card.back) return null;
       else return card.back.toughness;
     } else
-      return card.toughness;
-  }, [card.toughness, card.reversed]);
+      return card?.toughness;
+  }, [card?.toughness, card?.reversed]);
+
+  if (card) console.log('CARD IN MODAL');
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -266,15 +267,16 @@ const Modal:React.FC<Props> = ({
         alignItems:'center',
         whiteSpace:'nowrap',
         zIndex:50,
+        visibility:(shown) ? 'visible' : 'hidden',
+        pointerEvents:(shown) ? 'auto' : 'none',
       }}>
-      <motion.div id="inner" 
-        initial={{opacity:0}}
-        animate={{opacity:1}}
+      {card && <motion.div id="inner"
+        layoutId={`inner-${card?.name}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
         backgroundColor:'white',
-        height: '80vh',
-        width: '80vw',
+        width:'fit-content',
+        height:'fit-content',
         borderRadius:'20px',
         display:'flex',
         flexDirection:'row',
@@ -282,24 +284,27 @@ const Modal:React.FC<Props> = ({
         textAlign:'center',
         border: '2px solid rgba(146, 148, 248, 0.8)',
       }}>
-        {card && <div style={{ position:'relative', width:'fit-content', height:'100%' }}>
+        <div style={{ position: 'relative', width: 'fit-content', height: '100%' }}>
           <CardPrintSelector location="right"/>
           <CardPrintSelector location="left"/>
           <Card
             location='modal'
             widthString={'fit-content'}
-            heightString={'100%'}
+            heightString={'80vh'}
             imageHeightString={'100%'}
             card={card}
             cardBackImagePacket={cardBackImagePacket}
             handlePointerUp={stopPropagationHandler}
           />
-        </div>}
-        <div id="text" style={{
+        </div>
+        <div id="cardInformation"
+          style={{
           flexGrow:1,
-          display:'flex',
+          display:'none',
           flexDirection:'column',
+          overflow:'hidden',
           textWrap:'wrap',
+          width:(expanded) ? 'auto' : '0px',
         }}>
           <div className="nameDiv" ref={nameRef} style={{
             display:"flex",
@@ -402,7 +407,7 @@ const Modal:React.FC<Props> = ({
           </div>
           }
         </div>
-      </motion.div>
+      </motion.div>}
       <Tooltip 
         updateSelected={updateSelected}
         selection={selection}

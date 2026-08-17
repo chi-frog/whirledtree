@@ -21,23 +21,9 @@ export const useModalContext = () => {
   return ctx;
 }
 
-const modal = (shown:boolean, db:MagicDatabase, card:MagicCard|null, hideModal:()=>void, updateSelected:FilterUpdateFunction) => {
-  if (!shown || !card) return <></>;
-  
-  return (
-    <Modal
-      close={hideModal}
-      symbols={db.symbols}
-      symbolImageMap={db.symbolImageMap}
-      updateSelected={updateSelected}
-      card={card}
-      cardBackImagePacket={db.imageMap.get("")?.get("")}
-      />);
-};
-
 export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabase, updateSelected:FilterUpdateFunction, children: ReactNode}) => {
   const [shown, setShown] = useState<boolean>(false);
-  const [card, setCard] = useState<MagicCard|null>(null);
+  const [card, setCard] = useState<MagicCard|undefined>(undefined);
 
   const showModal = useCallback((card:MagicCard) => {
     setShown(true);
@@ -46,7 +32,7 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
 
   const hideModal = useCallback(() => {
     setShown(false);
-    setCard(null);
+    setCard(undefined);
   }, []);
 
   return (
@@ -55,7 +41,14 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
       hideModal,
     }}>
       {children}
-      {modal(shown, db, card, hideModal, updateSelected)}
+      <Modal
+        shown={shown}
+        close={hideModal}
+        symbols={db.symbols}
+        symbolImageMap={db.symbolImageMap}
+        updateSelected={updateSelected}
+        card={card}
+        cardBackImagePacket={db.imageMap.get("")?.get("")}/>
     </ModalContext.Provider>
   );
 };

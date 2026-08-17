@@ -34,6 +34,7 @@ type StartDraggingCard = (e:PointerEvent|React.PointerEvent)=>void;
 type UseCardDragReturn = [
   dragState:CardDragState,
   startDraggingCard:StartDraggingCard,
+  stopDraggingCard:()=>void,
 ];
 type UseCardDrag = (
   subDrag:SubDrag,
@@ -50,6 +51,7 @@ const useCardDrag:UseCardDrag = (
   const [dragging, setDragging] = useState<boolean>(false);
   const cardDragStateRef = useRef<CardDragState>(_cardDragState);
   const [dragState, setDragState] = useState<CardDragState>(cardDragStateRef.current);
+  const raf = useRef<number>(-1);
 
   useEffect(() => {
     document.body.classList.toggle("no-select", dragging);
@@ -61,8 +63,6 @@ const useCardDrag:UseCardDrag = (
   }, []);
 
   const drag = () => {
-    let raf:number;
-
     const returnTick = () => {
       let state = {...cardDragStateRef.current};
 
@@ -89,7 +89,7 @@ const useCardDrag:UseCardDrag = (
       setDragState(state);
 
       if (state.stage == DragStage.RETURNING)
-        raf = requestAnimationFrame(returnTick);
+        raf.current = requestAnimationFrame(returnTick);
     };
 
     const dragTick = () => {
@@ -110,7 +110,7 @@ const useCardDrag:UseCardDrag = (
         setDragState(state);
         setDragging(false);
 
-        return raf = requestAnimationFrame(returnTick);
+        return raf.current = requestAnimationFrame(returnTick);
       }
 
       contextState.delta = _wpoint;
@@ -130,10 +130,10 @@ const useCardDrag:UseCardDrag = (
       cardDragStateRef.current = state;
       setDragState(state);
 
-      raf = requestAnimationFrame(dragTick);
+      raf.current = requestAnimationFrame(dragTick);
     };
 
-    raf = requestAnimationFrame(dragTick);
+    raf.current = requestAnimationFrame(dragTick);
 
     return () => {
 
@@ -157,9 +157,15 @@ const useCardDrag:UseCardDrag = (
     setDragging(true);
   };
 
+  const stopDraggingCard = () => {
+    cancelAnimationFrame(raf.current);
+    console.log('Drag Cancelled!');
+  };
+
   return [
     dragState,
     startDraggingCard,
+    stopDraggingCard,
   ];
 };
 

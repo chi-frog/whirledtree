@@ -37,6 +37,9 @@ export const ImageRepoProvider = ({children}:Props) => {
       imagePacket = createImagePacket();
 
     imagePacket[side][size] = url;
+    if (card.name === '+2 Mace') {
+      console.log('Adding ' + url + ' to the ' + side + ' with size ' + size);
+    }
     oracleIdMap.set(card.id, imagePacket);
   };
 

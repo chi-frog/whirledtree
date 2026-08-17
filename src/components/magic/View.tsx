@@ -4,7 +4,7 @@ import { MagicCard } from "./types/default";
 import { FilterState } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { ImageMap } from "@/hooks/magic/useMagicCards";
 
 type Props = {
@@ -61,4 +61,4 @@ const View:React.FC<Props> = ({
   );
 };
 
-export default View;
+export default memo(View);

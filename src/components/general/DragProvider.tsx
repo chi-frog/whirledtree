@@ -84,7 +84,7 @@ export const DragProvider = ({ children }: { children: ReactNode }) => {
     const nativeEvent =
       "nativeEvent" in e ? e.nativeEvent : e;
       
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
     document.body.style.cursor = "grabbing";
     const point = makeWPoint(nativeEvent);
     dragState.current = {
