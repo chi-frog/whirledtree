@@ -259,7 +259,7 @@ const Modal:React.FC<Props> = ({
       onPointerUp={stopPropagationHandler}
       onPointerMove={(e)=>e.stopPropagation()}
       style={{
-        background: 'rgba(120, 120, 120, 0.5)',
+        background: (shown) ? 'rgba(120, 120, 120, 0.5)' : 'rgba(120, 120, 120, 0)',
         position:'fixed',
         top:'0px',
         display:'flex',
@@ -269,6 +269,7 @@ const Modal:React.FC<Props> = ({
         zIndex:50,
         visibility:(shown) ? 'visible' : 'hidden',
         pointerEvents:(shown) ? 'auto' : 'none',
+        transition:'background 0.3s ease-in-out'
       }}>
       {card && <motion.div id="inner"
         layoutId={`inner-${card?.name}`}
@@ -294,7 +295,6 @@ const Modal:React.FC<Props> = ({
             imageHeightString={'100%'}
             card={card}
             cardBackImagePacket={cardBackImagePacket}
-            handlePointerUp={stopPropagationHandler}
           />
         </div>
         <div id="cardInformation"

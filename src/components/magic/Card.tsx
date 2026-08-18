@@ -9,6 +9,7 @@ import useCardDrag from "@/hooks/useCardDrag";
 import { blobKey, cardAspectRatio, copyImagePacket, createImagePacket, fetchImage, ImageMap, ImagePacket, ImageSet } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
 import { useImageRepositoryContext } from "../general/ImageRepoProvider";
+import { useModalContext } from "../general/ModalProvider";
 
 // As the cards load, first 
 enum LoadSequence {
@@ -26,7 +27,6 @@ type Props = {
   imageHeightString?:string,
   card:MagicCard,
   cardBackImagePacket?:ImagePacket,
-  handlePointerUp?:(e:React.PointerEvent, card:MagicCard) => void,
 };
 export const Card:React.FC<Props> = memo(function Card({
     location,
@@ -35,27 +35,31 @@ export const Card:React.FC<Props> = memo(function Card({
     imageHeightString,
     card,
     cardBackImagePacket,
-    handlePointerUp,
   }:Props) {
-  const {subDrag, startDragging, dragStateRef} = useDragContext();
-  const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
-  const [mousedover, setMousedover] = useState<boolean>(false);
+  const [reversed, setReversed] = useState<boolean>(false);
+  const [isRaised, setIsRaised] = useState(false);
   const [node, setNode] = useState<HTMLDivElement|null>(null);
-  const ref = useCallback((el:HTMLDivElement|null) => setNode(el), []);
-  const raf = useRef<number>(-1);
+  const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
+
+  const {addImage, getImagePacket} = useImageRepositoryContext();
+  const {subDrag, startDragging, dragStateRef} = useDragContext();
+  const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef, onDragEnd);
   const [rotateState, rotateStateRef, startRotating, forceRotate] =
     useCardRotate(node, subDrag, startDragging, dragStateRef);
+
+  const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
+  const [mousedover, setMousedover] = useState<boolean>(false);
+  const ref = useCallback((el:HTMLDivElement|null) => setNode(el), []);
+  const raf = useRef<number>(-1);
   const lastMousePress = useRef<React.PointerEvent|undefined>(undefined);
-  const [isRaised, setIsRaised] = useState(false);
-  const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
-  const [dragState, startDraggingCard, stopDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef, onDragEnd);
-  const [loadSequence, setLoadSequence] = useState<LoadSequence>(LoadSequence.PRE_BACKGROUND);
-  const [reversed, setReversed] = useState<boolean>(false);
-  const {addImage, getImagePacket} = useImageRepositoryContext();
+
+  const repoImagePacket = getImagePacket(card);
+
+  const [loadSequence, setLoadSequence] = useState<LoadSequence>(
+    (!repoImagePacket) ? LoadSequence.PRE_BACKGROUND : LoadSequence.IMAGE);
   const [frontImageSet, setFrontImageSet] = useState<ImageSet|undefined>(undefined);
   const [backImageSet, setBackImageSet] = useState<ImageSet|undefined>(undefined);
-  const isAnimating = useRef<boolean>(false);
-  const animatingImageSrc = useRef<string|undefined>(undefined);
+  const {showModal} = useModalContext();
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
@@ -137,10 +141,6 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const [frontImageSrc, backImageSrc] = useMemo(() => {
     if (!card) return [];
-
-    if (isAnimating && animatingImageSrc.current) {
-      return [animatingImageSrc.current, animatingImageSrc.current];
-    }
 
     const getHighestQualityImage = (set:ImageSet|undefined) =>
       (!set) ?
@@ -257,31 +257,23 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const handleCardPointerDown = useCallback((e:React.PointerEvent) => {
     e.stopPropagation();
-    //startDraggingCard(e);
     setIsRaised(true);
     glow(true);
     lastMousePress.current = e;
     console.info('card', card);
-    console.log('E ON CAPTURE', e);
   }, [glow]);
 
   const handleCardPointerUp = useCallback((e:React.PointerEvent) => {
-    if ((handlePointerUp) &&
-        (lastMousePress.current) &&
+    if ((lastMousePress.current) &&
         (e.clientX === lastMousePress.current.clientX) &&
         (e.clientY === lastMousePress.current.clientY)) {
-      handlePointerUp(e, card);
+      showModal(card);
       setIsRaised(false);
       glow(false);
     }
 
     lastMousePress.current = undefined;
-  }, [handlePointerUp, glow]);
-/*
-  useEffect(() => {
-    console.log('dragState');
-    console.table(dragState);
-  }, [dragState]);*/
+  }, [glow]);
 
   const tlaRatios = (dims:{width:number, height:number}) => {
     const circleSize = 55;
@@ -370,8 +362,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const frontFace = useMemo(() => {
     return (
-      <motion.img layoutId={`card-image-${card.name}`}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      <img
         src={frontImageSrc} loading="lazy" draggable="false" onLoad={imgOnLoad}
         style={{
           width:'100%',
@@ -459,25 +450,15 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleDoublesidedPointerUp, handleDoublesidedPointerDown]);
 
-  if (location !== 'view') console.log('MODAL IN CARD');
-
   return (
     <motion.div
       layoutId={card.name}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
-        if (dragState.stage === DragStage.INACTIVE) {
-          setIsRaised(false);
-          isAnimating.current = false;
-          console.log('Stop Animating');
-        }
+        setIsRaised(false);
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
-        isAnimating.current = true;
-        animatingImageSrc.current = frontImageSrc;
-        console.log('start animating');
-        console.log('front: ' + frontImageSrc);
       }}
       style={{
         cursor:'pointer',

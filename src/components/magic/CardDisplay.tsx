@@ -48,7 +48,6 @@ const CardDisplay:React.FC<Props> = ({
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [cards, setCards] = useState<MagicCard[]>(db.cards);
   const scrollTrigger = useRef<HTMLDivElement|null>(null);
-  const {showModal, hideModal} = useModalContext();
 
   const changeCard = useCallback((index:number, card:MagicCard) =>
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
@@ -98,14 +97,6 @@ const CardDisplay:React.FC<Props> = ({
   const handlePointerDown = useCallback((e:React.PointerEvent) => {
     startDragging(e, viewTag);
   }, [viewTag]);
-
-  const handleCardPointerUp = useCallback(async (e:React.PointerEvent, card:MagicCard) => {
-    e.stopPropagation();
-
-    if ((e.button !== 2)) {
-      showModal(card);
-    }
-  }, [showModal]);
 
   const hasCardsError:boolean = useMemo(() => {
     const cardsError = db.errorMap.get('cards');
@@ -161,8 +152,7 @@ const CardDisplay:React.FC<Props> = ({
         filterState={filterState}
         numCardsRow={numCardsRow}
         cards={cards}
-        imageMap={db.imageMap}
-        handleCardPointerUp={handleCardPointerUp}/>
+        imageMap={db.imageMap}/>
     }
     {(!hasCardsError) && (cardsLoaded) && (db.totalCards === 0) &&
       <div id="no_cards_screen" style={{

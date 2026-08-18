@@ -13,7 +13,6 @@ type Props = {
   numCardsRow:number,
   cards:MagicCard[],
   imageMap:ImageMap,
-  handleCardPointerUp:(e:React.PointerEvent, card:MagicCard) => void,
 };
 const View:React.FC<Props> = ({
     dragState,
@@ -21,7 +20,6 @@ const View:React.FC<Props> = ({
     numCardsRow,
     cards,
     imageMap,
-    handleCardPointerUp,
   }:Props) => {
 
   const card = useCallback((name:string, index:number) => {
@@ -35,7 +33,6 @@ const View:React.FC<Props> = ({
         heightString={'fit-content'}
         card={card}
         cardBackImagePacket={cardBackImagePacket}
-        handlePointerUp={handleCardPointerUp}
         />)},
     [imageMap, cards, numCardsRow]);
 
