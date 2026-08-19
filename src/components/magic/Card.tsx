@@ -1,12 +1,12 @@
 'use client'
 
-import { _wpoint, areEqualWPoints, makeWPoint, WPoint } from "@/helpers/wpoint";
+import { _wpoint } from "@/helpers/wpoint";
 import { isCardDoublesided, MagicCard } from "./types/default";
 import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
-import { blobKey, cardAspectRatio, copyImagePacket, createImagePacket, fetchImage, ImageMap, ImagePacket, ImageSet } from "@/hooks/magic/useMagicCards";
+import { cardAspectRatio, createImagePacket, fetchImage, ImagePacket, ImageSet } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
 import { useImageRepositoryContext } from "../general/ImageRepoProvider";
 import { useModalContext } from "../general/ModalProvider";
@@ -43,7 +43,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const {addImage, getImagePacket} = useImageRepositoryContext();
   const {subDrag, startDragging, dragStateRef} = useDragContext();
-  const [dragState, startDraggingCard] = useCardDrag(subDrag, startDragging, dragStateRef, onDragEnd);
+  const [dragState, startDraggingCard] = useCardDrag(startDragging, dragStateRef, onDragEnd);
   const [rotateState, rotateStateRef, startRotating, forceRotate] =
     useCardRotate(node, subDrag, startDragging, dragStateRef);
 
@@ -250,7 +250,6 @@ export const Card:React.FC<Props> = memo(function Card({
         (dragStateRef.current.stage === DragStage.INACTIVE) &&
         !(e.clientX === lastMousePress.current.clientX) &&
         !(e.clientY === lastMousePress.current.clientY)) {
-      console.log('E ON DRAG', lastMousePress.current);
       startDraggingCard(lastMousePress.current);
     }
   }, []);
@@ -363,7 +362,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const frontFace = useMemo(() => {
     return (
       <img
-        src={frontImageSrc} loading="lazy" draggable="false" onLoad={imgOnLoad}
+        src={frontImageSrc} loading="lazy" draggable={false} onLoad={imgOnLoad}
         style={{
           width:'100%',
           ...(imageHeightString && { height: imageHeightString }),
@@ -377,7 +376,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const backFace = useMemo(() => {
     return (
       <img
-        src={backImageSrc} loading="lazy" draggable="false"
+        src={backImageSrc} loading="lazy" draggable={false}
         style={{
           maxWidth:'100%',
           ...(imageHeightString && { height: imageHeightString }),
@@ -393,7 +392,9 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const loadFace = useMemo(() => {
     return (
-      <img src={cardBackImagePacket?.front.large} loading="lazy" onLoad={bgOnLoad} style={{
+      <img src={cardBackImagePacket?.front.large} loading="lazy" onLoad={bgOnLoad}
+        draggable={false}
+        style={{
         width:'100%',
         height:'100%',
         ...(imageHeightString && { height: imageHeightString }),

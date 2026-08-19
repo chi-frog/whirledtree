@@ -1,9 +1,8 @@
 'use client';
 
-import { DragStage, DragState, StartDragging, SubDrag, _dragState } from "@/components/general/DragProvider";
-import { copyMap } from "@/helpers/wmap";
+import { DragStage, DragState, StartDragging, _dragState } from "@/components/general/DragProvider";
 import { WPoint, makeWPoint, _wpoint, addWPoints, fsubWPoints, caddWPoints, divWPoint, mulWPoint, subWPoints } from "@/helpers/wpoint";
-import { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 const tag = 'card';
 
@@ -37,13 +36,11 @@ type UseCardDragReturn = [
   stopDraggingCard:()=>void,
 ];
 type UseCardDrag = (
-  subDrag:SubDrag,
   startDragging:StartDragging,
   dragStateRef:RefObject<DragState>,
   onAnimationEnd?:()=>void,
 ) => UseCardDragReturn;
 const useCardDrag:UseCardDrag = (
-    subDrag,
     startDragging,
     dragStateRef,
     onAnimationEnd
@@ -56,11 +53,6 @@ const useCardDrag:UseCardDrag = (
   useEffect(() => {
     document.body.classList.toggle("no-select", dragging);
   }, [dragging]);
-  
-
-  useEffect(() => {
-    subDrag({tag})
-  }, []);
 
   const drag = () => {
     const returnTick = () => {

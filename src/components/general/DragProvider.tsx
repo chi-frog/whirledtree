@@ -1,12 +1,13 @@
 'use client';
 
 import { WPoint, _wpoint, makeWPoint, subWPoints } from "@/helpers/wpoint";
-import { ReactNode, useContext, useEffect, useRef } from "react";
+import { ReactNode, useCallback, useContext, useEffect, useRef } from "react";
 import { createContext } from "react";
 
 export type DragFunc = (e:PointerEvent)=>void;
 export type DragSubscription = {
   tag:any,
+  id?:number,
   onDragStart?:DragFunc,
   onDrag?:DragFunc,
   onDragEnd?:DragFunc,
@@ -52,18 +53,21 @@ export const useDragContext = () => {
 export const DragProvider = ({ children }: { children: ReactNode }) => {
   const dragState = useRef<DragState>(_dragState);
   const dragSubscriptions = useRef<DragSubscription[]>([]);
+  const nextId = useRef<number>(1);
 
-  const subDrag:SubDrag = ({tag, onDragStart, onDrag, onDragEnd}) => {
+  const subDrag:SubDrag = useCallback(({tag, onDragStart, onDrag, onDragEnd}) => {
     if ((!tag))
       return;
 
-    const dragSubscription = dragSubscriptions.current.find((_ss) => _ss.tag === tag);
+    const id = nextId.current++;
 
-    if (dragSubscription)
-      dragSubscriptions.current = dragSubscriptions.current.filter((_ss) => _ss.tag !== tag).concat({tag, onDragStart, onDrag, onDragEnd});
-    else
-      dragSubscriptions.current = dragSubscriptions.current.concat({tag, onDragStart, onDrag, onDragEnd});
-  };
+    dragSubscriptions.current = dragSubscriptions.current.concat({tag, id, onDragStart, onDrag, onDragEnd});
+
+    return () => {
+      dragSubscriptions.current = dragSubscriptions.current.filter((subscription) =>
+        subscription.id !== id);
+    }
+  }, []);
 
   const runStartFuncs = (e:PointerEvent, tag:string) =>
     dragSubscriptions.current.filter((_ss) => _ss.tag === tag)

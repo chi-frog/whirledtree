@@ -9,7 +9,7 @@ import { _wpoint, } from "@/helpers/wpoint";
 import { FilterUpdateFunction, SKey } from "@/hooks/magic/useFilters";
 import OracleText from "./OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
-import { LayoutGroup, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ImagePacket } from "@/hooks/magic/useMagicCards";
 import CardPrintSelector from "./CardPrintSelector";
 import Tooltip, { tooltipMargin, TooltipState } from "./Tooltip";
@@ -285,7 +285,11 @@ const Modal:React.FC<Props> = ({
         textAlign:'center',
         border: '2px solid rgba(146, 148, 248, 0.8)',
       }}>
-        <div style={{ position: 'relative', width: 'fit-content', height: '100%' }}>
+        <div style={{
+          position: 'relative',
+          width: 'fit-content',
+          height: '100%',
+          filter: 'drop-shadow(black 0px 10px 15px)'}}>
           <CardPrintSelector location="right"/>
           <CardPrintSelector location="left"/>
           <Card
