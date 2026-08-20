@@ -251,7 +251,11 @@ const Modal:React.FC<Props> = ({
       return card?.toughness;
   }, [card?.toughness, card?.reversed]);
 
-  if (card) console.log('CARD IN MODAL');
+  useEffect(() => {
+    if (!card) return;
+
+    console.log('card uri: ' + card.printsUri);
+  }, [card]);
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -274,10 +278,14 @@ const Modal:React.FC<Props> = ({
       {card && <motion.div id="inner"
         layoutId={`inner-${card?.name}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        onLayoutAnimationComplete={() => {
+          setExpanded(true);
+          console.log('Modal Animation Complete');
+        }}
         style={{
         backgroundColor:'white',
-        width:'fit-content',
-        height:'fit-content',
+        width:'80vw',
+        height:'80vh',
         borderRadius:'20px',
         display:'flex',
         flexDirection:'row',
@@ -295,7 +303,7 @@ const Modal:React.FC<Props> = ({
           <Card
             location='modal'
             widthString={'fit-content'}
-            heightString={'80vh'}
+            heightString={'100%'}
             imageHeightString={'100%'}
             card={card}
             cardBackImagePacket={cardBackImagePacket}
@@ -304,7 +312,6 @@ const Modal:React.FC<Props> = ({
         <div id="cardInformation"
           style={{
           flexGrow:1,
-          display:'none',
           flexDirection:'column',
           overflow:'hidden',
           textWrap:'wrap',

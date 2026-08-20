@@ -26,6 +26,7 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
     set:card.set,
     typeLine:card.type_line, //!
     oracleText:card.oracle_text,
+    flavorText:card.flavor_text,
     power:card.power,
     toughness:card.toughness,
     manaCost:convertToManaCost(card.mana_cost),
@@ -34,7 +35,8 @@ const transformMagicCard: Transform<MagicCard> = (card) => {
     imageUris:{
       small:card.image_uris?.small,
       large:card.image_uris?.large,
-    }
+    },
+    printsUri:card.prints_search_uri,
   }) as MagicCard;
 
   if (isCardDoublesided(transformedCard)) {

@@ -191,17 +191,12 @@ export const Card:React.FC<Props> = memo(function Card({
     let opacityGoingUp = true;
     let opacityFirstPass = true;
     let opacityRate = 0.008;
-    node.style.border = "1px solid rgb(146, 148, 248)";
+    node.style.outline = "1px solid rgb(146, 148, 248)";
     node.style.boxShadow = `0px 0px 10px 4px rgba(146, 148, 248, ${opacity})`;
     if (!dragging && (location === 'view'))
       node.style.top = "-3px";
 
     const change = () => {
-      if (node.style.boxShadow === 'none') {
-        cancelAnimationFrame(raf.current);
-        return;
-      }
-
       if(opacityGoingUp) {
         opacity += (opacityFirstPass) ? opacityRate*15 : opacityRate;
         if (opacity >= 1) {
@@ -230,19 +225,25 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [node]);
 
   const handleCardPointerEnter = (e:React.PointerEvent) => {
+    if (loadSequence !== LoadSequence.IMAGE)
+      return;
+
     glow(false);
     setMousedover(true);
   };
 
   const handleCardPointerLeave = (e:React.PointerEvent) => {
-    if (!node) return;
+    if ((!node) ||
+        (loadSequence !== LoadSequence.IMAGE)) return;
 
-    node.style.border = '1px solid rgba(255, 255, 255, 0.7)',
+    if (location !== "modal")
+      node.style.outline = '1px solid rgba(255, 255, 255, 0.7)',
     node.style.boxShadow = "none";
     node.style.position = "auto";
     node.style.top = "";
 
     setMousedover(false);
+    cancelAnimationFrame(raf.current);
   };
 
   const handleCardPointerMove = useCallback((e:React.PointerEvent) => {
@@ -269,6 +270,8 @@ export const Card:React.FC<Props> = memo(function Card({
       showModal(card);
       setIsRaised(false);
       glow(false);
+      if (node)
+        node.style.boxShadow = "none";
     }
 
     lastMousePress.current = undefined;
@@ -457,9 +460,11 @@ export const Card:React.FC<Props> = memo(function Card({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
         setIsRaised(false);
+        console.log('Lowering (' + location + ")");
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
+        console.log('Raising (' + location + ")");
       }}
       style={{
         cursor:'pointer',
@@ -482,9 +487,13 @@ export const Card:React.FC<Props> = memo(function Card({
         height:'100%',
         position:'relative',
         overflow:'hidden',
-        transition:'border 1s ease-in-out',
+        transition:'outline 1s ease-in-out',
         borderRadius:(location ==='view') ? '12px' : '20px',
-        border:(loadSequence !== LoadSequence.PRE_BACKGROUND) ? '1px solid rgba(255, 255, 255, 0.7)' : 'none',
+        outline:
+          ((loadSequence !== LoadSequence.PRE_BACKGROUND) &&
+           (location !== "modal")) ?
+            '1px solid rgba(255, 255, 255, 0.7)' :
+            'none',
         transform:
           (dragState && dragState.stage !== DragStage.INACTIVE) ?
             `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
