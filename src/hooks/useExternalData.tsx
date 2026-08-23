@@ -18,7 +18,7 @@ type ReturnOptions = {
 }
 type Return<T> = [WError, boolean, T[], ReturnOptions]
 function useExternalData<T> (
-    url:string,
+    url:string|undefined,
     transform:Transform<T>,
     options:ExternalDataOptions={},
   ):Return<T> {
@@ -26,7 +26,7 @@ function useExternalData<T> (
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<WError>(_noError);
   const [totalCards, setTotalCards] = useState<number>(0);
-  const [nextUrl, setNextUrl] = useState<string|null>(url);
+  const [nextUrl, setNextUrl] = useState<string|undefined>(url);
 
   const fetchData = async (url:string, controller:AbortController, sustain:boolean=true) => {
     let dataCount = 0;
@@ -76,7 +76,7 @@ function useExternalData<T> (
           setLoaded(true);
           setTotalCards(0);
           setData([]);
-          setNextUrl(null);
+          setNextUrl(undefined);
           return;
 
         } else if (err.name !== 'AbortError') {
@@ -84,7 +84,7 @@ function useExternalData<T> (
           setError(_err(err));
           setLoaded(false);
           setData([]);
-          setNextUrl(null);
+          setNextUrl(undefined);
           return;
 
         }
@@ -120,6 +120,8 @@ function useExternalData<T> (
   }
 
   useEffect(() => {
+    if (!url) return;
+
     return fetchNextData(url, false);
   }, [url, transform]);
 

@@ -10,11 +10,12 @@ import { FilterUpdateFunction, SKey } from "@/hooks/magic/useFilters";
 import OracleText from "./OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
-import { ImagePacket } from "@/hooks/magic/useMagicCards";
+import { ImagePacket, transformMagicCard } from "@/hooks/magic/useMagicCards";
 import CardPrintSelector from "./CardPrintSelector";
 import Tooltip, { tooltipMargin, TooltipState } from "./Tooltip";
 import { renderToStaticMarkup } from "react-dom/server";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
+import useExternalData from "@/hooks/useExternalData";
 
 export const searchFields = {
   game: "game",
@@ -124,6 +125,8 @@ const Modal:React.FC<Props> = ({
   const divRef = useRef(null);
   const nameRef = useRef(null);
   const [expanded, setExpanded] = useState<boolean>(false);
+  const [error, loaded, printsData] =
+    useExternalData<MagicCard>(card?.printsUri, transformMagicCard);
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -255,7 +258,12 @@ const Modal:React.FC<Props> = ({
     if (!card) return;
 
     console.log('card uri: ' + card.printsUri);
+    console.log('data:', printsData);
   }, [card]);
+
+  useEffect(() => {
+    console.log('PrintsData', printsData);
+  }, [printsData]);
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}

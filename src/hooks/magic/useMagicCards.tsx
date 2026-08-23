@@ -15,7 +15,7 @@ const convertToManaCost = (manaCost:string) => {
 
 // card.prints_search_uri: {}.data: [{}.image_uris]
 
-const transformMagicCard: Transform<MagicCard> = (card) => {
+export const transformMagicCard: Transform<MagicCard> = (card) => {
   let transformedCard = ({
     id:card.id,
     oracleId:card.oracle_id,

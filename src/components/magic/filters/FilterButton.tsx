@@ -1,5 +1,6 @@
 'use client'
 
+import useTabVisibility from "@/hooks/useTabVisibility";
 import { ChangeEventHandler, FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const defaultCoords = {x:-1, y:-1};
@@ -18,6 +19,10 @@ const FilterButton:React.FC<Props> = ({id, onChange}) => {
   const savedText = useRef<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
+
+  useTabVisibility({
+    onHidden:() => inputRef.current?.blur()
+  })
 
   const onPointerDown:PointerEventHandler = (e) => {
     mouseCoords.current = {x:e.clientX, y:e.clientY};
