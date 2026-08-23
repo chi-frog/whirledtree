@@ -48,6 +48,7 @@ export const Card:React.FC<Props> = memo(function Card({
     useCardRotate(node, subDrag, startDragging, dragStateRef);
 
   const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
+  const mousedoverRef = useRef<boolean>(false);
   const [mousedover, setMousedover] = useState<boolean>(false);
   const ref = useCallback((el:HTMLDivElement|null) => setNode(el), []);
   const raf = useRef<number>(-1);
@@ -224,15 +225,16 @@ export const Card:React.FC<Props> = memo(function Card({
     return () => cancelAnimationFrame(raf.current);
   }, [node]);
 
-  const handleCardPointerEnter = (e:React.PointerEvent) => {
+  const handleCardPointerEnter = () => {
     if (loadSequence !== LoadSequence.IMAGE)
       return;
 
     glow(false);
+    mousedoverRef.current = true;
     setMousedover(true);
   };
 
-  const handleCardPointerLeave = (e:React.PointerEvent) => {
+  const handleCardPointerLeave = () => {
     if ((!node) ||
         (loadSequence !== LoadSequence.IMAGE)) return;
 
@@ -242,6 +244,8 @@ export const Card:React.FC<Props> = memo(function Card({
     node.style.position = "auto";
     node.style.top = "";
 
+    mousedoverRef.current = false;
+    lastMousePress.current = undefined;
     setMousedover(false);
     cancelAnimationFrame(raf.current);
   };
@@ -257,6 +261,9 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const handleCardPointerDown = useCallback((e:React.PointerEvent) => {
     e.stopPropagation();
+
+    if (e.button !== 0) return;
+
     setIsRaised(true);
     glow(true);
     lastMousePress.current = e;
@@ -264,12 +271,14 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [glow]);
 
   const handleCardPointerUp = useCallback((e:React.PointerEvent) => {
+    if (e.button !== 0) return;
+
     if ((lastMousePress.current) &&
         (e.clientX === lastMousePress.current.clientX) &&
         (e.clientY === lastMousePress.current.clientY)) {
       showModal(card);
       setIsRaised(false);
-      glow(false);
+      cancelAnimationFrame(raf.current);
       if (node)
         node.style.boxShadow = "none";
     }
@@ -325,6 +334,9 @@ export const Card:React.FC<Props> = memo(function Card({
   const handleDoublesidedPointerDown = useCallback((e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (e.button !== 0) return;
+
     if (!dir) dir = (reversed) ? -1 : 1
     startRotating(e, dir);
     lastMousePress.current = e;
@@ -333,6 +345,8 @@ export const Card:React.FC<Props> = memo(function Card({
   const handleDoublesidedPointerUp:PointerEventHandler = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (e.button !== 0) return;
 
     if ((lastMousePress.current) &&
         (e.clientX === lastMousePress.current.clientX) &&
@@ -372,7 +386,9 @@ export const Card:React.FC<Props> = memo(function Card({
           marginTop:'auto',
           position:'absolute',
           objectFit:'cover',
-          visibility: (showFront) ? 'visible' : 'hidden'
+          visibility: (showFront) ? 'visible' : 'hidden',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         }}/>);
   }, [imageHeightString, showFront, loadSequence, frontImageSrc]);
 
@@ -390,6 +406,8 @@ export const Card:React.FC<Props> = memo(function Card({
           marginTop:'auto',
           position: 'absolute',
           visibility: (showBack) ? 'visible' : 'hidden',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         }}/>);
   }, [backImageSrc, imageHeightString, showBack, loadSequence]);
 
@@ -408,6 +426,8 @@ export const Card:React.FC<Props> = memo(function Card({
         position:'absolute',
         pointerEvents:'none',
         visibility: (!showFront && !showBack) ? 'visible' : 'hidden',
+        userSelect: 'none',
+          WebkitUserSelect: 'none',
       }}/>
     )
   }, [showFront, showBack, imageHeightString, loadSequence, cardBackImagePacket]);
@@ -456,7 +476,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   return (
     <motion.div
-      layoutId={card.name}
+      layoutId={(dragging) ? undefined : card.name}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
         setIsRaised(false);
