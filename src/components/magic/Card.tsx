@@ -142,7 +142,7 @@ export const Card:React.FC<Props> = memo(function Card({
     if (!card) return [];
 
     if (isAnimating) {
-      console.log('Being Animated!!');
+      //console.log('Being Animated!!');
     }
 
     const getHighestQualityImage = (set:ImageSet|undefined) =>

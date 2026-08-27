@@ -1,7 +1,7 @@
 'use client'
 
 import { createImageMap, createImagePacket, ImageMap, ImagePacket, ImageSize } from "@/hooks/magic/useMagicCards";
-import { createContext, ReactNode, useContext, useRef } from "react";
+import { createContext, ReactNode, useCallback, useContext, useRef } from "react";
 import { MagicCard } from "../magic/types/default";
 
 type ImageRepository = {
@@ -25,7 +25,7 @@ type Props = {
 export const ImageRepoProvider = ({children}:Props) => {
   const imageMap = useRef<ImageMap>(createImageMap());
 
-  const addImage = (card:MagicCard, url:string, side:keyof ImagePacket, size:ImageSize) => {
+  const addImage = useCallback((card:MagicCard, url:string, side:keyof ImagePacket, size:ImageSize) => {
     let oracleIdMap = imageMap.current.get(card.oracleId);
     let imagePacket = oracleIdMap?.get(card.id);
 
@@ -38,13 +38,13 @@ export const ImageRepoProvider = ({children}:Props) => {
 
     imagePacket[side][size] = url;
     oracleIdMap.set(card.id, imagePacket);
-  };
+  }, []);
 
-  const getImagePacket = (card:MagicCard) => {
+  const getImagePacket = useCallback((card:MagicCard) => {
     if (!card) return undefined;
 
     return imageMap.current.get(card.oracleId)?.get(card.id);
-  };
+  }, []);
 
   return (
     <ImageRepositoryContext.Provider value={{
