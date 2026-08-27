@@ -6,6 +6,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useS
 import { WError } from "@/components/magic/CardDisplay";
 import { partition } from "@/helpers/arrays";
 import { useCardRepositoryContext } from "@/components/general/CardRepoProvider";
+import { fileExists } from "@/helpers/files";
 
 export const cardHeightRatio = 938/672;
 export const cardAspectRatio = 672/938;
@@ -265,14 +266,6 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     
     return normalCards;
   }, [cardData]);
-
-  async function fileExists(url: string) {
-    const response = await fetch(url, {
-      method: "HEAD",
-    });
-
-    return response.ok;
-  }
 
   // Get the card back image
   useEffect(() => {

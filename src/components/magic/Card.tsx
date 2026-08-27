@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { useImageRepositoryContext } from "../general/ImageRepoProvider";
 import { useModalContext } from "../general/ModalProvider";
 import { useCardRepositoryContext } from "../general/CardRepoProvider";
+import CardFace from "./CardFace";
 
 // As the cards load, first 
 enum LoadSequence {
@@ -376,41 +377,6 @@ export const Card:React.FC<Props> = memo(function Card({
     setLoadSequence(LoadSequence.IMAGE);
   }, [loadSequence]);
 
-  const frontFace = useMemo(() => {
-    return (
-      <img
-        src={frontImageSrc} loading="lazy" draggable={false} onLoad={imgOnLoad}
-        style={{
-          width:'100%',
-          ...(imageHeightString && { height: imageHeightString }),
-          marginTop:'auto',
-          position:'absolute',
-          objectFit:'cover',
-          visibility: (showFront) ? 'visible' : 'hidden',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-        }}/>);
-  }, [imageHeightString, showFront, loadSequence, frontImageSrc]);
-
-  const backFace = useMemo(() => {
-    return (
-      <img
-        src={backImageSrc} loading="lazy" draggable={false}
-        style={{
-          maxWidth:'100%',
-          ...(imageHeightString && { height: imageHeightString }),
-          top:0,
-          left:0,
-          width:'100%',
-          height:'100%',
-          marginTop:'auto',
-          position: 'absolute',
-          visibility: (showBack) ? 'visible' : 'hidden',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-        }}/>);
-  }, [backImageSrc, imageHeightString, showBack, loadSequence]);
-
   const loadFace = useMemo(() => {
     return (
       <img src={cardBackImagePacket?.front.large} loading="lazy" onLoad={bgOnLoad}
@@ -527,8 +493,8 @@ export const Card:React.FC<Props> = memo(function Card({
             '',
       }}>
       {loadFace}
-      {frontFace}
-      {backFace}
+      <CardFace src={frontImageSrc} onLoad={imgOnLoad} visible={showFront} height={imageHeightString}/>
+      <CardFace src={backImageSrc} onLoad={imgOnLoad} visible={showBack} height={imageHeightString}/>
       { isCardDoublesided(card) &&
         doublesidedCircle
       }
