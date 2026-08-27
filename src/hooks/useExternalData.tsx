@@ -4,12 +4,14 @@ import { _err, _noError, _notFound, WError, WErrorCode } from "@/components/magi
 import { useEffect, useState } from "react";
 
 export type Transform<T> = (input:any)=>T;
-export type ExternalDataOptions = {
+export type ExternalDataOptions<T> = {
   // Represents the amount of data to fetch before
   // waiting for a command to fetch more.
   dataLimit?:number,
   // Return the total number of cards
   totalCards?:boolean,
+  // A function to run on a *transformed* piece of data.
+  onTransform?:(obj:T)=>void,
 };
 
 type ReturnOptions = {
@@ -20,7 +22,7 @@ type Return<T> = [WError, boolean, T[], ReturnOptions]
 function useExternalData<T> (
     url:string|undefined,
     transform:Transform<T>,
-    options:ExternalDataOptions={},
+    options:ExternalDataOptions<T>={},
   ):Return<T> {
   const [data, setData] = useState<T[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -39,6 +41,12 @@ function useExternalData<T> (
       while ((!overflow) && (chunkUrl)) {
         let [chunkData, totalCards, nextUrl] = await chunk(chunkUrl);
         let transformedData = chunkData.map(transform);
+        const {onTransform} = options;
+
+        if (onTransform) {
+          console.log('Applying Function');
+          transformedData.forEach((_transformedData) => onTransform(_transformedData));
+        }
 
         if (options.totalCards) {
           setTotalCards(totalCards);
@@ -104,18 +112,22 @@ function useExternalData<T> (
   };
 
   const fetchNextData = (url=nextUrl, sustain=true) => {
-    const controller = new AbortController();
-    if (!url) {
-      console.log('Nothing to fetch');
+    if (!url)
       return;
-    }
+
+    const controller = new AbortController();
+    let finished = false;
 
     console.log('Fetching...', url);
-    fetchData(url, controller, sustain);
+    fetchData(url, controller, sustain).finally(() => {
+      finished = true;
+    });
 
     return () => {
-      controller.abort();
-      console.log('Cut off!', url);
+      if (!finished) {
+        controller.abort();
+        console.log('Cut off!', url);
+      }
     }
   }
 

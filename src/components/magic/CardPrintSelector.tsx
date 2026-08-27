@@ -1,6 +1,6 @@
 'use client'
 
-import { PointerEventHandler, useCallback, useEffect, useMemo, useState } from "react";
+import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
 
 const widthRatio = 578/669;
@@ -168,13 +168,15 @@ const bulbSvg = (highlighted:boolean) => (
 )
 
 type Props = {
-  location:string
+  location:string,
+  func:(amount:number)=>void,
 };
 const CardPrintSelector:React.FC<Props> = ({
-  location,
+  location, func
 }) => {
   const [highlighted, setHighlighted] = useState<boolean>(false);
   const [dragging, setDragging] = useState<boolean>(false);
+  const lastMousePress = useRef<{x:number, y:number}|undefined>(undefined);
   const {subDrag} = useDragContext();
 
   useEffect(() => {
@@ -219,10 +221,30 @@ const CardPrintSelector:React.FC<Props> = ({
     setHighlighted(false);
   }, []);
 
+  const pointerDown:PointerEventHandler = useCallback((e:React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    lastMousePress.current = {x:e.clientX, y:e.clientY};
+  }, []);
+
+  const pointerUp:PointerEventHandler = useCallback((e:React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if ((lastMousePress.current) &&
+        (lastMousePress.current.x === e.clientX) &&
+        (lastMousePress.current.y === e.clientY))
+      func((location === 'right') ? 1 : -1);
+
+  }, [func])
+
   return (
     <div 
       onPointerEnter={pointerEnter}
       onPointerLeave={pointerLeave}
+      onPointerDown={pointerDown}
+      onPointerUp={pointerUp}
         style={{
       width:`${72/669*100}%`,
       height:`${72/933*100}%`,

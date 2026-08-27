@@ -10,6 +10,7 @@ import { cardAspectRatio, createImagePacket, fetchImage, ImagePacket, ImageSet }
 import { motion } from "framer-motion";
 import { useImageRepositoryContext } from "../general/ImageRepoProvider";
 import { useModalContext } from "../general/ModalProvider";
+import { useCardRepositoryContext } from "../general/CardRepoProvider";
 
 // As the cards load, first 
 enum LoadSequence {
@@ -38,6 +39,7 @@ export const Card:React.FC<Props> = memo(function Card({
   }:Props) {
   const [reversed, setReversed] = useState<boolean>(false);
   const [isRaised, setIsRaised] = useState(false);
+  const isAnimating = useRef<boolean>(false);
   const [node, setNode] = useState<HTMLDivElement|null>(null);
   const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
 
@@ -70,7 +72,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const showBack = useMemo(() =>
     (loadSequence === LoadSequence.IMAGE) &&
       ((reversed && rotateState.angle <= 90) ||
-       (!reversed && rotateState.angle > 90)), [reversed, rotateState.angle, loadSequence]);  
+       (!reversed && rotateState.angle > 90)), [reversed, rotateState.angle, loadSequence]);
 
   useEffect(() => {
     if (!node) return;
@@ -130,10 +132,6 @@ export const Card:React.FC<Props> = memo(function Card({
         setFrontImageSet(newImagePacket.front);
       else if (side === 'back')
         setBackImageSet(newImagePacket.back);
-
-      if (card.name === '+2 Mace') {
-        console.table(newImagePacket);
-      }
     }
 
     getImage('front');
@@ -142,6 +140,10 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const [frontImageSrc, backImageSrc] = useMemo(() => {
     if (!card) return [];
+
+    if (isAnimating) {
+      console.log('Being Animated!!');
+    }
 
     const getHighestQualityImage = (set:ImageSet|undefined) =>
       (!set) ?
@@ -169,10 +171,6 @@ export const Card:React.FC<Props> = memo(function Card({
 
     return [front, back];
   }, [cardBackImagePacket, frontImageSet, backImageSet]);
-
-  if (card.name === "+2 Mace") {
-    //console.log('The source! ' + frontImageSrc);
-  }
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -239,7 +237,9 @@ export const Card:React.FC<Props> = memo(function Card({
         (loadSequence !== LoadSequence.IMAGE)) return;
 
     if (location !== "modal")
-      node.style.outline = '1px solid rgba(255, 255, 255, 0.7)',
+      node.style.outline = '1px solid rgba(255, 255, 255, 0.7)'
+    else
+      node.style.outline = "";
     node.style.boxShadow = "none";
     node.style.position = "auto";
     node.style.top = "";
@@ -476,14 +476,17 @@ export const Card:React.FC<Props> = memo(function Card({
 
   return (
     <motion.div
-      layoutId={(dragging) ? undefined : card.name}
+      layoutId={card.name}
+      layout={!dragging}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
         setIsRaised(false);
+        isAnimating.current = false;
         console.log('Lowering (' + location + ")");
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
+        isAnimating.current = true;
         console.log('Raising (' + location + ")");
       }}
       style={{

@@ -5,6 +5,7 @@ import useExternalData, { Transform } from "../useExternalData";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WError } from "@/components/magic/CardDisplay";
 import { partition } from "@/helpers/arrays";
+import { useCardRepositoryContext } from "@/components/general/CardRepoProvider";
 
 export const cardHeightRatio = 938/672;
 export const cardAspectRatio = 672/938;
@@ -208,6 +209,7 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
                                transformMagicCard,
                                {dataLimit:displayLimit, totalCards:true});
   const reserveCards = useRef<MagicCard[]>([]);
+  const {addCard} = useCardRepositoryContext();
 
   // Filter card data
   const cards:MagicCard[] = useMemo(() => {
@@ -258,6 +260,8 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
              (nameA > nameB) ? 1 :
                                0;
       });*/
+
+    normalCards.forEach((_card) => addCard(_card));
     
     return normalCards;
   }, [cardData]);

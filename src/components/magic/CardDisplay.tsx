@@ -53,12 +53,6 @@ const CardDisplay:React.FC<Props> = ({
     setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
 
   useEffect(() => {
-    console.log('-----db.cards-----');
-
-    console.log('TOTAL CARDS CHANGED', db.totalCards);
-    console.log('message', db);
-    console.log('-----db.cards-----');
-
     setCards(db.cards);
   } , [db.cards]);
 

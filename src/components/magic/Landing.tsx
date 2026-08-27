@@ -7,6 +7,7 @@ import useFilters from "@/hooks/magic/useFilters";
 import { useEffect, useMemo, useState } from "react";
 import { ModalProvider } from "../general/ModalProvider";
 import { ImageRepoProvider } from "../general/ImageRepoProvider";
+import { CardRepoProvider } from "../general/CardRepoProvider";
 
 type Props = {};
 const Landing:React.FC<Props> = () => {
@@ -31,7 +32,7 @@ const Landing:React.FC<Props> = () => {
         handlers={handlers}/>
     </ModalProvider>
     </ImageRepoProvider>
-  )
+  );
 };
 
 export default Landing;

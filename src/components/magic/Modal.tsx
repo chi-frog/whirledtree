@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, PointerEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, } from "./types/default";
 import { Card } from "./Card";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
@@ -16,6 +16,7 @@ import Tooltip, { tooltipMargin, TooltipState } from "./Tooltip";
 import { renderToStaticMarkup } from "react-dom/server";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 import useExternalData from "@/hooks/useExternalData";
+import { useCardRepositoryContext } from "../general/CardRepoProvider";
 
 export const searchFields = {
   game: "game",
@@ -125,8 +126,12 @@ const Modal:React.FC<Props> = ({
   const divRef = useRef(null);
   const nameRef = useRef(null);
   const [expanded, setExpanded] = useState<boolean>(false);
+  const {addCard, getCardPrints} = useCardRepositoryContext();
   const [error, loaded, printsData] =
-    useExternalData<MagicCard>(card?.printsUri, transformMagicCard);
+    useExternalData<MagicCard>(card?.printsUri, transformMagicCard, {
+      onTransform:(card:MagicCard) => addCard(card)
+    });
+  const [printIndex, setPrintIndex] = useState<number>(-1);
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -255,15 +260,53 @@ const Modal:React.FC<Props> = ({
   }, [card?.toughness, card?.reversed]);
 
   useEffect(() => {
-    if (!card) return;
-
-    console.log('card uri: ' + card.printsUri);
-    console.log('data:', printsData);
+    if (!card) {
+      setExpanded(false);
+      setPrintIndex(-1);
+      return;
+    }
   }, [card]);
 
   useEffect(() => {
-    console.log('PrintsData', printsData);
+    if (!card) return;
+
+    const cardPrints = getCardPrints(card.oracleId);
+
+    const index = cardPrints.findIndex((_print) => {
+      return (_print.id === card.id)
+    });
+
+    setPrintIndex(index);
   }, [printsData]);
+
+  const cardPrints = useMemo(() => {
+    if (!card) return [];
+
+    return getCardPrints(card.oracleId);
+  }, [card, printsData]);
+
+  const changeCardPrint = useCallback((amount:number) => {
+    if (!card) return;
+    
+    setPrintIndex((prev) => {
+      let i = prev + amount;
+      let prints = getCardPrints(card.oracleId);
+      console.log('prints', prints);
+
+      if (i < 0) i = prints.length - 1;
+      else if (i >= prints.length) i = 0;
+
+      return i;
+    });
+  }, [card?.oracleId]);
+
+  const displayedCard = useMemo(() =>
+    (printIndex >= 0) ?
+      cardPrints[printIndex] :
+      card
+  , [card, printIndex]);
+
+  console.log('displayed card', displayedCard);
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -283,7 +326,7 @@ const Modal:React.FC<Props> = ({
         pointerEvents:(shown) ? 'auto' : 'none',
         transition:'background 0.3s ease-in-out'
       }}>
-      {card && <motion.div id="inner"
+      {displayedCard && <motion.div id="inner"
         layoutId={`inner-${card?.name}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
@@ -306,16 +349,17 @@ const Modal:React.FC<Props> = ({
           width: 'fit-content',
           height: '100%',
           filter: 'drop-shadow(black 0px 10px 15px)'}}>
-          <CardPrintSelector location="right"/>
-          <CardPrintSelector location="left"/>
+          {((!expanded) || (printIndex >=0)) && <>
+          <CardPrintSelector location="right" func={changeCardPrint}/>
+          <CardPrintSelector location="left" func={changeCardPrint}/>
           <Card
             location='modal'
             widthString={'fit-content'}
             heightString={'100%'}
             imageHeightString={'100%'}
-            card={card}
+            card={displayedCard}
             cardBackImagePacket={cardBackImagePacket}
-          />
+          /></>}
         </div>
         <div id="cardInformation"
           style={{
