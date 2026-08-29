@@ -59,21 +59,17 @@ export const Card:React.FC<Props> = memo(function Card({
 
   const repoImagePacket = getImagePacket(card);
 
-  const [loadSequence, setLoadSequence] = useState<LoadSequence>(
-    (!repoImagePacket) ? LoadSequence.PRE_BACKGROUND : LoadSequence.IMAGE);
   const [frontImageSet, setFrontImageSet] = useState<ImageSet|undefined>(undefined);
   const [backImageSet, setBackImageSet] = useState<ImageSet|undefined>(undefined);
   const {showModal} = useModalContext();
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
-    (loadSequence === LoadSequence.IMAGE) &&
       ((!reversed && rotateState.angle <= 90) ||
-       (reversed && rotateState.angle > 90)), [reversed, rotateState.angle, loadSequence]);
+       (reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
   const showBack = useMemo(() =>
-    (loadSequence === LoadSequence.IMAGE) &&
       ((reversed && rotateState.angle <= 90) ||
-       (!reversed && rotateState.angle > 90)), [reversed, rotateState.angle, loadSequence]);
+       (!reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
 
   useEffect(() => {
     if (!node) return;
@@ -225,17 +221,13 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [node]);
 
   const handleCardPointerEnter = () => {
-    if (loadSequence !== LoadSequence.IMAGE)
-      return;
-
     glow(false);
     mousedoverRef.current = true;
     setMousedover(true);
   };
 
   const handleCardPointerLeave = () => {
-    if ((!node) ||
-        (loadSequence !== LoadSequence.IMAGE)) return;
+    if ((!node)) return;
 
     if (location !== "modal")
       node.style.outline = '1px solid rgba(255, 255, 255, 0.7)'
@@ -367,19 +359,9 @@ export const Card:React.FC<Props> = memo(function Card({
     }
   }, [node]);
 
-  const bgOnLoad = useCallback(() => {
-    setLoadSequence((prev) => {
-      return prev === (LoadSequence.PRE_BACKGROUND) ? LoadSequence.PRE_IMAGE : prev
-    });
-  }, [loadSequence]);
-
-  const imgOnLoad = useCallback(() => {
-    setLoadSequence(LoadSequence.IMAGE);
-  }, [loadSequence]);
-
   const loadFace = useMemo(() => {
     return (
-      <img src={cardBackImagePacket?.front.large} loading="lazy" onLoad={bgOnLoad}
+      <img src={cardBackImagePacket?.front.large} loading="lazy"
         draggable={false}
         style={{
         width:'100%',
@@ -387,7 +369,6 @@ export const Card:React.FC<Props> = memo(function Card({
         ...(imageHeightString && { height: imageHeightString }),
         marginTop:'auto',
         aspectRatio: cardAspectRatio,
-        opacity: (loadSequence === LoadSequence.PRE_BACKGROUND) ? 0 : 1,
         transition: 'opacity 1s ease-in-out',
         position:'absolute',
         pointerEvents:'none',
@@ -396,7 +377,7 @@ export const Card:React.FC<Props> = memo(function Card({
           WebkitUserSelect: 'none',
       }}/>
     )
-  }, [showFront, showBack, imageHeightString, loadSequence, cardBackImagePacket]);
+  }, [showFront, showBack, imageHeightString, cardBackImagePacket]);
 
   const doublesidedCircle = useMemo(() => {
     return (
@@ -479,8 +460,7 @@ export const Card:React.FC<Props> = memo(function Card({
         transition:'outline 1s ease-in-out',
         borderRadius:(location ==='view') ? '12px' : '20px',
         outline:
-          ((loadSequence !== LoadSequence.PRE_BACKGROUND) &&
-           (location !== "modal")) ?
+           (location !== "modal") ?
             '1px solid rgba(255, 255, 255, 0.7)' :
             'none',
         transform:
@@ -492,9 +472,8 @@ export const Card:React.FC<Props> = memo(function Card({
             `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
             '',
       }}>
-      {loadFace}
-      <CardFace src={frontImageSrc} onLoad={imgOnLoad} visible={showFront} height={imageHeightString}/>
-      <CardFace src={backImageSrc} onLoad={imgOnLoad} visible={showBack} height={imageHeightString}/>
+      <CardFace src={frontImageSrc} visible={showFront} height={imageHeightString}/>
+      <CardFace src={backImageSrc} visible={showBack} height={imageHeightString}/>
       { isCardDoublesided(card) &&
         doublesidedCircle
       }
