@@ -43,7 +43,9 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
 
   const keys = (Object.keys(selected) as SKey[]);
   const relevantKeys = keys.filter(
-    (key) => Object.hasOwn(selected, key) && selected[key].length > 0);
+    (key) => (Object.hasOwn(selected, key)) &&
+             (selected[key].length > 0) &&
+             (selected[key][0] !== ''));
 
   let query = "";
   query = relevantKeys.reduce<string>((query, key, index) => {

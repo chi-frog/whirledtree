@@ -7,14 +7,15 @@ const defaultCoords = {x:-1, y:-1};
 
 type Props = {
   id:string,
+  value:string[],
   onChange:ChangeEventHandler
 };
-const FilterButton:React.FC<Props> = ({id, onChange}) => {
+const FilterButton:React.FC<Props> = ({id, value, onChange}) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [circleWidth, setCircleWidth] = useState(10);
   const [inputWidth, setInputWidth] = useState(circleWidth);
-  const [liveText, setLiveText] = useState('');
+  const [liveText, setLiveText] = useState(value[0]);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
   const savedText = useRef<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -84,6 +85,7 @@ const FilterButton:React.FC<Props> = ({id, onChange}) => {
   }, []);
 
   const displayedText = isTyping ? liveText : (mousedOver ? savedText.current : '');
+  console.log('displayedText:' + displayedText);
 
   useLayoutEffect(() => {
     if (mousedOver || isTyping) {
@@ -147,9 +149,7 @@ const FilterButton:React.FC<Props> = ({id, onChange}) => {
       onKeyDown={onKeyDown}
       onBlur={onBlur}
       onChange={onChangeInput}
-      {...(isTyping && { value: liveText })}
-      {...((mousedOver && !isTyping) && { value: savedText.current })}
-      {...((!mousedOver && !isTyping) && { value: '' })}
+      value={displayedText}
       style={{
       backgroundColor:
         (mousedOver || isTyping) ?

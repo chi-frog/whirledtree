@@ -178,6 +178,7 @@ const Filter:React.FC<Props> = ({
         height:(whole)?'calc(100vh - 40px - 30px)' : '50px', 
         }}>
         <FilterButton id="oracleText"
+          value={selected.oracleText}
           onChange={handlers.oracleText}/>
         <CardsPerRow
           numCards={maxCards}

@@ -40,7 +40,7 @@ export const Card:React.FC<Props> = memo(function Card({
   }:Props) {
   const [reversed, setReversed] = useState<boolean>(false);
   const [isRaised, setIsRaised] = useState(false);
-  const isAnimating = useRef<boolean>(false);
+  const isAnimating = useRef<{s:boolean, img:string|undefined}>({s:false, img:undefined});
   const [node, setNode] = useState<HTMLDivElement|null>(null);
   const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
 
@@ -56,8 +56,6 @@ export const Card:React.FC<Props> = memo(function Card({
   const ref = useCallback((el:HTMLDivElement|null) => setNode(el), []);
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<React.PointerEvent|undefined>(undefined);
-
-  const repoImagePacket = getImagePacket(card);
 
   const [frontImageSet, setFrontImageSet] = useState<ImageSet|undefined>(undefined);
   const [backImageSet, setBackImageSet] = useState<ImageSet|undefined>(undefined);
@@ -138,8 +136,9 @@ export const Card:React.FC<Props> = memo(function Card({
   const [frontImageSrc, backImageSrc] = useMemo(() => {
     if (!card) return [];
 
-    if (isAnimating) {
-      //console.log('Being Animated!!');
+    if (isAnimating.current.s) {
+      console.log('Being Animated!!');
+      return [isAnimating.current.img, isAnimating.current.img];
     }
 
     const getHighestQualityImage = (set:ImageSet|undefined) =>
@@ -167,7 +166,7 @@ export const Card:React.FC<Props> = memo(function Card({
       back = cardBackImagePacket?.front.large;
 
     return [front, back];
-  }, [cardBackImagePacket, frontImageSet, backImageSet]);
+  }, [isAnimating.current.s, frontImageSet, backImageSet]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -359,26 +358,6 @@ export const Card:React.FC<Props> = memo(function Card({
     }
   }, [node]);
 
-  const loadFace = useMemo(() => {
-    return (
-      <img src={cardBackImagePacket?.front.large} loading="lazy"
-        draggable={false}
-        style={{
-        width:'100%',
-        height:'100%',
-        ...(imageHeightString && { height: imageHeightString }),
-        marginTop:'auto',
-        aspectRatio: cardAspectRatio,
-        transition: 'opacity 1s ease-in-out',
-        position:'absolute',
-        pointerEvents:'none',
-        visibility: (!showFront && !showBack) ? 'visible' : 'hidden',
-        userSelect: 'none',
-          WebkitUserSelect: 'none',
-      }}/>
-    )
-  }, [showFront, showBack, imageHeightString, cardBackImagePacket]);
-
   const doublesidedCircle = useMemo(() => {
     return (
       <div 
@@ -428,12 +407,15 @@ export const Card:React.FC<Props> = memo(function Card({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
         setIsRaised(false);
-        isAnimating.current = false;
+        isAnimating.current.s = false;
+        isAnimating.current.img = undefined;
         console.log('Lowering (' + location + ")");
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
-        isAnimating.current = true;
+        isAnimating.current.s = true;
+        isAnimating.current.img =
+          (showFront) ? frontImageSrc : backImageSrc;
         console.log('Raising (' + location + ")");
       }}
       style={{

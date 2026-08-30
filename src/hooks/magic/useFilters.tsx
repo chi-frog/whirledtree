@@ -18,14 +18,14 @@ export type SKey = keyof Selected;
 
 export const defaultSelected = {
   game:[GAME_TYPE.PAPER, GAME_TYPE.MTGO, GAME_TYPE.ARENA],
-  name:[],
-  format:[],
-  set:[],
-  type:[],
-  power:[],
-  toughness:[],
-  oracleText:[],
-  manaValue:[]
+  name:[''],
+  format:[''],
+  set:[''],
+  type:[''],
+  power:[''],
+  toughness:[''],
+  oracleText:[''],
+  manaValue:[''],
 }
 
 export type FilterUpdate = {

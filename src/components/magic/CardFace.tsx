@@ -1,7 +1,6 @@
 'use client'
 
 import { memo, useEffect, useMemo } from "react";
-import { useImageRepositoryContext } from "../general/ImageRepoProvider";
 import useDefaultCardBack from "@/hooks/magic/useDefaultCardBack";
 
 type Props = {
@@ -15,14 +14,15 @@ const CardFace:React.FC<Props> = ({
   visible,
   height,
 }) => {
-  const {getImagePacket} = useImageRepositoryContext();
   const {ready, uri} = useDefaultCardBack();
   const srcReady = useMemo(() => src && (src !== ''), [src]);
 
-  return (<>
-    {(ready || srcReady) &&
+  return (
     <img
-      src={!srcReady ? uri : src} loading="lazy" draggable={false}
+      src={srcReady ? src :
+           ready    ? uri :
+           'magic/defaultCardBack.png'}
+      loading="lazy" draggable={false}
       style={{
         width:'100%',
         ...(height && { height: height }),
@@ -32,8 +32,8 @@ const CardFace:React.FC<Props> = ({
         visibility: (visible) ? 'visible' : 'hidden',
         userSelect: 'none',
         WebkitUserSelect: 'none',
-    }}/>}
-  </>);
+    }}/>
+  );
 };
 
 export default memo(CardFace);
