@@ -9,16 +9,9 @@ import useCardDrag from "@/hooks/useCardDrag";
 import { cardAspectRatio, createImagePacket, fetchImage, ImagePacket, ImageSet } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
 import { useImageRepositoryContext } from "../general/ImageRepoProvider";
-import { useModalContext } from "../general/ModalProvider";
+import { useIsCardInModal, useModalContext } from "../general/ModalProvider";
 import { useCardRepositoryContext } from "../general/CardRepoProvider";
 import CardFace from "./CardFace";
-
-// As the cards load, first 
-enum LoadSequence {
-  PRE_BACKGROUND = 'preBackground',
-  PRE_IMAGE = 'preImage',
-  IMAGE = 'image',
-}
 
 export type CardLocation =
   'view' | 'modal';
@@ -28,7 +21,6 @@ type Props = {
   heightString?:string,
   imageHeightString?:string,
   card:MagicCard,
-  cardBackImagePacket?:ImagePacket,
 };
 export const Card:React.FC<Props> = memo(function Card({
     location,
@@ -36,7 +28,6 @@ export const Card:React.FC<Props> = memo(function Card({
     heightString,
     imageHeightString,
     card,
-    cardBackImagePacket,
   }:Props) {
   const [reversed, setReversed] = useState<boolean>(false);
   const [isRaised, setIsRaised] = useState(false);
@@ -60,6 +51,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const [frontImageSet, setFrontImageSet] = useState<ImageSet|undefined>(undefined);
   const [backImageSet, setBackImageSet] = useState<ImageSet|undefined>(undefined);
   const {showModal} = useModalContext();
+  const isInModal = useIsCardInModal(card.name);
 
   const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
   const showFront = useMemo(() =>
@@ -161,9 +153,6 @@ export const Card:React.FC<Props> = memo(function Card({
     if ((!back) &&
         (repoImagePacket))
       back = getHighestQualityImage(repoImagePacket.back);
-
-    if ((!back) || back === "")
-      back = cardBackImagePacket?.front.large;
 
     return [front, back];
   }, [isAnimating.current.s, frontImageSet, backImageSet]);
@@ -276,7 +265,7 @@ export const Card:React.FC<Props> = memo(function Card({
     }
 
     lastMousePress.current = undefined;
-  }, [glow]);
+  }, [showModal]);
 
   const tlaRatios = (dims:{width:number, height:number}) => {
     const circleSize = 55;
@@ -400,6 +389,8 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleDoublesidedPointerUp, handleDoublesidedPointerDown]);
 
+  console.log('RENDER ' + location, node?.getBoundingClientRect());
+
   return (
     <motion.div
       layoutId={card.name}
@@ -407,12 +398,14 @@ export const Card:React.FC<Props> = memo(function Card({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
         setIsRaised(false);
+        if (location === 'view') return;
         isAnimating.current.s = false;
         isAnimating.current.img = undefined;
         console.log('Lowering (' + location + ")");
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
+        if (location === 'view') return;
         isAnimating.current.s = true;
         isAnimating.current.img =
           (showFront) ? frontImageSrc : backImageSrc;
@@ -426,6 +419,8 @@ export const Card:React.FC<Props> = memo(function Card({
         aspectRatio:cardAspectRatio,
         position: 'relative',
         zIndex: (isRaised) ? 30 : 0,
+        opacity: (location === 'view' && isInModal) ? 0 : 1,
+        pointerEvents: (location === 'view' && isInModal) ? 'none' : undefined,
       }}>
       <div
         ref={ref}
@@ -454,8 +449,8 @@ export const Card:React.FC<Props> = memo(function Card({
             `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
             '',
       }}>
-      <CardFace src={frontImageSrc} visible={showFront} height={imageHeightString}/>
-      <CardFace src={backImageSrc} visible={showBack} height={imageHeightString}/>
+      <CardFace loc={location} src={frontImageSrc} visible={showFront} height={imageHeightString}/>
+      <CardFace loc={location} src={backImageSrc} visible={showBack} height={imageHeightString}/>
       { isCardDoublesided(card) &&
         doublesidedCircle
       }

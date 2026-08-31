@@ -106,7 +106,6 @@ type Props = {
   symbolImageMap:Map<string, string>,
   updateSelected:FilterUpdateFunction,
   card?:MagicCard,
-  cardBackImagePacket?:ImagePacket,
 }
 const Modal:React.FC<Props> = ({
     shown,
@@ -115,7 +114,6 @@ const Modal:React.FC<Props> = ({
     symbolImageMap,
     updateSelected,
     card,
-    cardBackImagePacket,
   }:Props) => {
   const [selection, setSelection] = useState<string>("");
   const [selectionField, setSelectionField] = useState<string>("");
@@ -358,7 +356,6 @@ const Modal:React.FC<Props> = ({
             heightString={'100%'}
             imageHeightString={'100%'}
             card={displayedCard}
-            cardBackImagePacket={cardBackImagePacket}
           /></>}
         </div>
         <div id="cardInformation"

@@ -58,15 +58,15 @@ const CardDisplay:React.FC<Props> = ({
 
   const dragging = useMemo(() => dragState.stage === DragStage.ACTIVE, [dragState.stage]);
 
-  const onDragView = (e:PointerEvent) => {
+  const onDragView = () => {
     window.scrollTo(window.scrollX + dragStateRef.current.delta.x, window.scrollY - dragStateRef.current.delta.y*2);
   }
 
-  const onDragViewStart = ({x, y}:PointerEvent) => {
+  const onDragViewStart = () => {
     setDragState({...dragStateRef.current});
   }
 
-  const onDragViewEnd = (e:PointerEvent) => {
+  const onDragViewEnd = () => {
     setDragState({...dragStateRef.current});
   }
 
@@ -145,8 +145,7 @@ const CardDisplay:React.FC<Props> = ({
         dragState={dragState}
         filterState={filterState}
         numCardsRow={numCardsRow}
-        cards={cards}
-        imageMap={db.imageMap}/>
+        cards={cards}/>
     }
     {(!hasCardsError) && (cardsLoaded) && (db.totalCards === 0) &&
       <div id="no_cards_screen" style={{

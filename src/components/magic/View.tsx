@@ -5,36 +5,19 @@ import { FilterState } from "./CardDisplay";
 import { Card } from "./Card";
 import { _dragState, DragStage, DragState } from "../general/DragProvider";
 import { memo, useCallback } from "react";
-import { ImageMap } from "@/hooks/magic/useMagicCards";
 
 type Props = {
   dragState:DragState,
   filterState:FilterState,
   numCardsRow:number,
   cards:MagicCard[],
-  imageMap:ImageMap,
 };
 const View:React.FC<Props> = ({
     dragState,
     filterState,
     numCardsRow,
     cards,
-    imageMap,
   }:Props) => {
-
-  const card = useCallback((name:string, index:number) => {
-    const card = cards[index];
-    const cardBackImagePacket = imageMap.get("")?.get("");
-
-    return (
-      <Card
-        key={name}
-        location='view'
-        heightString={'fit-content'}
-        card={card}
-        cardBackImagePacket={cardBackImagePacket}
-        />)},
-    [imageMap, cards, numCardsRow]);
 
   return (
     <div className="hover:bg-blue" style={{
@@ -52,7 +35,12 @@ const View:React.FC<Props> = ({
       gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
       }}>
       {...cards.map((_card, _index)=>
-        card(_card.name, _index)
+        <Card
+          key={cards[_index].name}
+          location='view'
+          heightString={'fit-content'}
+          card={cards[_index]}
+          />
       )}
     </div>
   );

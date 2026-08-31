@@ -4,18 +4,24 @@ import { memo, useEffect, useMemo } from "react";
 import useDefaultCardBack from "@/hooks/magic/useDefaultCardBack";
 
 type Props = {
+  loc:string,
   src?:string,
   onLoad?:()=>void,
   visible?:boolean,
   height?:string,
 };
 const CardFace:React.FC<Props> = ({
+  loc,
   src,
   visible,
   height,
 }) => {
   const {ready, uri} = useDefaultCardBack();
   const srcReady = useMemo(() => src && (src !== ''), [src]);
+
+  if (loc === 'modal') {
+    console.log('src:' + src);
+  }
 
   return (
     <img

@@ -6,6 +6,7 @@ import Modal from "../magic/Modal";
 import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
 import { MagicCard } from "../magic/types/default";
 import { useImageRepositoryContext } from "./ImageRepoProvider";
+import { useSyncExternalStoreWithSelector } from "use-sync-external-store/with-selector";
 
 type Modal = {
   showModal:(card:MagicCard)=>void,
@@ -44,7 +45,26 @@ function createModalStore() {
       return () => listeners.delete(listener);
     },
   };
-}
+};
+
+// --- separate context exposing just the store, so components can
+// --- opt into reading modal state via a selector without forcing
+// --- every consumer to re-render on every store update ---
+const ModalStoreContext = createContext<ReturnType<typeof createModalStore> | undefined>(undefined);
+
+export const useIsCardInModal = (cardName: string) => {
+  const store = useContext(ModalStoreContext);
+
+  if (store === undefined)
+    throw new Error("useIsCardInModal not available");
+
+  return useSyncExternalStoreWithSelector(
+    store.subscribe,
+    store.getState,
+    store.getState,
+    (state) => state.shown && state.card?.name === cardName,
+  );
+};
 
 export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabase, updateSelected:FilterUpdateFunction, children: ReactNode}) => {
   const store = useRef(createModalStore()).current;
@@ -74,6 +94,7 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
 
   return (
     <ModalContext.Provider value={value}>
+    <ModalStoreContext.Provider value={store}>
       {children}
       <ModalSubscriber
         store={store}
@@ -81,6 +102,7 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
         db={db}
         updateSelected={updateSelected}
       />
+    </ModalStoreContext.Provider>
     </ModalContext.Provider>
   );
 };
@@ -100,7 +122,6 @@ function ModalSubscriber({ store, hideModal, db, updateSelected }: {
       symbols={db.symbols}
       symbolImageMap={db.symbolImageMap}
       updateSelected={updateSelected}
-      card={state.card}
-      cardBackImagePacket={db.imageMap.get("")?.get("")}/>
+      card={state.card}/>
   );
 }
