@@ -389,8 +389,6 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleDoublesidedPointerUp, handleDoublesidedPointerDown]);
 
-  console.log('RENDER ' + location, node?.getBoundingClientRect());
-
   return (
     <motion.div
       layoutId={card.name}

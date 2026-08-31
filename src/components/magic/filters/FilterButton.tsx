@@ -15,9 +15,7 @@ const FilterButton:React.FC<Props> = ({id, value, onChange}) => {
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [circleWidth, setCircleWidth] = useState(10);
   const [inputWidth, setInputWidth] = useState(circleWidth);
-  const [liveText, setLiveText] = useState(value[0]);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
-  const savedText = useRef<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -62,10 +60,6 @@ const FilterButton:React.FC<Props> = ({id, value, onChange}) => {
   const onBlur:FocusEventHandler<HTMLInputElement> = () => {
     setIsTyping(false);
     setMousedOver(false);
-    if (!inputRef.current) return;
-
-    const value = inputRef.current.value;
-    savedText.current = value;
   }
 
   useEffect(() => {
@@ -84,8 +78,9 @@ const FilterButton:React.FC<Props> = ({id, value, onChange}) => {
     return () => observer.disconnect();
   }, []);
 
-  const displayedText = isTyping ? liveText : (mousedOver ? savedText.current : '');
+  const displayedText = (isTyping || mousedOver) ? value[0] : '';
   console.log('displayedText:' + displayedText);
+  console.log('selected:', value);
 
   useLayoutEffect(() => {
     if (mousedOver || isTyping) {
@@ -99,7 +94,6 @@ const FilterButton:React.FC<Props> = ({id, value, onChange}) => {
 
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLiveText(e.target.value);
     onChange(e);
   };
 
@@ -154,7 +148,7 @@ const FilterButton:React.FC<Props> = ({id, value, onChange}) => {
       backgroundColor:
         (mousedOver || isTyping) ?
           'white' :
-        (savedText.current !== '') ?
+        (value[0] !== '') ?
           'rgb(50, 50, 248)' :
           'rgb(146, 148, 248)',
       aspectRatio: (mousedOver || isTyping) ? '' : 1,

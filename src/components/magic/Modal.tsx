@@ -348,8 +348,8 @@ const Modal:React.FC<Props> = ({
           height: '100%',
           filter: 'drop-shadow(black 0px 10px 15px)'}}>
           {((!expanded) || (printIndex >=0)) && <>
-          <CardPrintSelector location="right" func={changeCardPrint}/>
-          <CardPrintSelector location="left" func={changeCardPrint}/>
+          {(cardPrints.length > 1) && <CardPrintSelector location="right" func={changeCardPrint}/>}
+          {(cardPrints.length > 1) && <CardPrintSelector location="left" func={changeCardPrint}/>}
           <Card
             location='modal'
             widthString={'fit-content'}
