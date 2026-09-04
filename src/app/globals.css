@@ -42,3 +42,23 @@ body {
 .fieldSizing {
   field-sizing: content;
 }
+
+@keyframes ripple-out {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  40% {         
+    transform: scale(8);
+    opacity: 0;
+  }
+  100% {         
+    transform: scale(8);
+    opacity: 0;
+  }
+}
+
+.square-gradient {
+  position: relative;
+  background: rgba(146, 148, 248, 0.8); /* lighter blue base */
+}

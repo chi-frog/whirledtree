@@ -2,16 +2,16 @@
 
 import { ChangeEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { _magicCard, MagicCard } from "./types/default";
-import Filter from "./filters/Filter";
 import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
-import { useModalContext } from "../general/ModalProvider";
+import NewFilter from "./filters/NewFilter";
 
 export enum FilterState {
   HIDDEN = 'hidden',
+  MOUSEDOVER = 'mousedover',
   REDUCED = 'reduced',
   WHOLE = 'whole',
 }
@@ -131,19 +131,26 @@ const CardDisplay:React.FC<Props> = ({
     return () => observer.disconnect();
   }, [cards]);
 
-  return (
-  <div
-    onPointerDown={handlePointerDown}>
-    <Filter
+  /*
+  <Filter
       setState={setFilterState}
       state={filterState}
       numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
       selected={selected} handlers={handlers}
       sets={db.sets} maxCards={cards.length} formats={db.formats} types={db.types}/>
+      */
+
+  return (
+  <div
+    onPointerDown={handlePointerDown}>
+    <NewFilter
+      state={filterState}
+      setState={setFilterState}
+      />
     {(cards.length > 0) && !hasCardsError && 
       <View
+        paddingTop={(filterState === FilterState.REDUCED) ? '100px' : '10px'}
         dragState={dragState}
-        filterState={filterState}
         numCardsRow={numCardsRow}
         cards={cards}/>
     }
