@@ -14,6 +14,7 @@ const NewFilter:React.FC<Props> = ({
 }) => {
   const mousedOver = useMemo(() => (state === FilterState.MOUSEDOVER), [state]);
   const reduced = useMemo(() => (state === FilterState.REDUCED), [state]);
+  const [xMousedOver, setXMousedOver] = useState<boolean>(false);
 
   const onPointerEnter:PointerEventHandler = () => {
     if (state === FilterState.HIDDEN)
@@ -57,6 +58,14 @@ const NewFilter:React.FC<Props> = ({
     }
   }
 
+  const onXPointerEnter:PointerEventHandler = () => {
+    setXMousedOver(true);
+  }
+
+  const onXPointerLeave:PointerEventHandler = () => {
+    setXMousedOver(false);
+  }
+
   return (<>
     <div
       style={{
@@ -80,14 +89,15 @@ const NewFilter:React.FC<Props> = ({
       onPointerUp={onPointerUp}
       style={{
         position: 'fixed',
-        top: '10px',
-        left: '10px',
+        
         zIndex: 40,
         cursor: (!reduced) ? 'pointer' : 'default',
         background: 'rgba(146, 148, 248, 0.8)', // lighter blue base
         overflow: 'hidden', // keeps the blurred overlay clipped to this shape too
       }}
       animate={{
+        top: (mousedOver) ? '7px' : '10px',
+        left: (mousedOver) ? '7px' : '10px',
         width: (mousedOver) ? '50px' : (reduced) ? 'calc(100% - 20px)' : '30px',
         height: (mousedOver) ? '50px' : (reduced) ? '85px' : '30px',
         borderRadius: (reduced) ? '5px' : '50%',
@@ -100,11 +110,13 @@ const NewFilter:React.FC<Props> = ({
         opacity: (mousedOver || reduced) ? 1 : 0.4,
       }}
       transition={{ 
-        borderRadius: { duration: 0.3, ease: 'easeInOut' },
-        width: { duration: 0.3, ease: 'easeInOut', },
-        height: { duration: 0.3, ease: 'easeInOut', },
-        boxShadow: { duration: 0.3, ease: 'easeInOut' },
-        opacity: { duration: 0.3, ease: 'easeInOut' }}}>
+        top: { duration: 0.2, ease: 'easeInOut' },
+        left: { duration: 0.2, ease: 'easeInOut' },
+        borderRadius: { duration: 0.2, ease: 'easeInOut' },
+        width: { duration: 0.2, ease: 'easeInOut', },
+        height: { duration: 0.2, ease: 'easeInOut', },
+        boxShadow: { duration: 0.2, ease: 'easeInOut' },
+        opacity: { duration: 0.2, ease: 'easeInOut' }}}>
       <motion.div
         style={{
           position: 'absolute',
@@ -116,7 +128,7 @@ const NewFilter:React.FC<Props> = ({
           borderRadius: (reduced) ? '5px' : '50%',
         }}
         transition={{
-          borderRadius: { duration: 0.3, ease: 'easeInOut' },
+          borderRadius: { duration: 0.2, ease: 'easeInOut' },
         }}
       />
       <svg
@@ -129,34 +141,40 @@ const NewFilter:React.FC<Props> = ({
           padding:'5px',
           opacity:(mousedOver) ? 1 : 0,
           transition:'opacity 0.3s ease-in-out',
+          pointerEvents:(!mousedOver) ? 'none' : 'auto',
         }}>
         <path d="M4 5L10 5M10 5C10 6.10457 10.8954 7 12 7C13.1046 7 14 6.10457 14 5M10 5C10 3.89543 10.8954 3 12 3C13.1046 3 14 3.89543 14 5M14 5L20 5M4 12L16 12M16 12C16 13.1046 16.8954 14 18 14C19.1046 14 20 13.1046 20 12C20 10.8954 19.1046 10 18 10C16.8954 10 16 10.8954 16 12ZM8 19L20 19M8 19C8 17.8954 7.10457 17 6 17C4.89543 17 4 17.8954 4 19C4 20.1046 4.89543 21 6 21C7.10457 21 8 20.1046 8 19Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
+      <div className="xOut"
+        onPointerEnter={onXPointerEnter}
+        onPointerLeave={onXPointerLeave}
+        onPointerDown={onXPointerDown}
+        onPointerUp={onXPointerUp}
+        style={{
+          position:'absolute',
+          background:'black',
+          left:(xMousedOver) ? '1px' : '-8px',
+          top:(xMousedOver) ? '1px' : '-8px',
+          width:(xMousedOver) ? '23px' : '20px',
+          height:(xMousedOver) ? '23px' : '20px',
+          padding:'3px',
+          cursor:'pointer',
+          boxShadow:'0px 0px 10px white',
+          zIndex:45,
+          borderRadius:'50%',
+          opacity:(reduced) ? 1 : 0,
+          transition:'opacity 0.3s ease-in-out, left 0.1s ease-in-out, top 0.1s ease-in-out',
+          pointerEvents:(!reduced) ? 'none' : 'auto',
+        }}>
+        <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{
+          opacity:(xMousedOver) ? 1 : 0,
+          transition:'opacity 0.1s ease-in-out',
+        }}>
+          <line x1="5" y1="5" x2="19" y2="19" stroke="rgb(255, 88, 90)" strokeWidth="3" strokeLinecap="round"/>
+          <line x1="19" y1="5" x2="5" y2="19" stroke="rgb(255, 88, 90)" strokeWidth="3" strokeLinecap="round"/>
+        </svg>
+      </div>
     </motion.div>
-    <div
-      onPointerDown={onXPointerDown}
-      onPointerUp={onXPointerUp}
-      style={{
-        position:'fixed',
-        background:'black',
-        left:'10px',
-        top:'10px',
-        width:'20px',
-        height:'20px',
-        padding:'3px',
-        cursor:'pointer',
-        boxShadow:'0px 0px 10px white',
-        zIndex:45,
-        borderRadius:'50%',
-        opacity:(reduced) ? 1 : 0,
-        transition:'opacity 0.3s ease-in-out',
-        pointerEvents:(!reduced) ? 'none' : 'auto',
-      }}>
-      <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <line x1="5" y1="5" x2="19" y2="19" stroke="rgb(255, 88, 90)" strokeWidth="3" strokeLinecap="round"/>
-        <line x1="19" y1="5" x2="5" y2="19" stroke="rgb(255, 88, 90)" strokeWidth="3" strokeLinecap="round"/>
-      </svg>
-    </div>
   </>)
 };
 
