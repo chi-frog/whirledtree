@@ -1,20 +1,26 @@
 'use client'
 
-import { memo, PointerEventHandler, useMemo, useRef, useState } from "react";
+import { ChangeEventHandler, memo, PointerEventHandler, useMemo, useRef, useState } from "react";
 import { FilterState } from "../CardDisplay";
 import { motion } from "framer-motion";
+import FilterButton from "./FilterButton";
+import { Selected } from "@/hooks/magic/useFilters";
+import XOut from "./XOut";
 
 type Props = {
   state:FilterState,
   setState:(state:FilterState)=>void,
+  selected:Selected,
+  handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>,
 };
 const NewFilter:React.FC<Props> = ({
   state,
   setState,
+  selected,
+  handlers,
 }) => {
   const mousedOver = useMemo(() => (state === FilterState.MOUSEDOVER), [state]);
   const reduced = useMemo(() => (state === FilterState.REDUCED), [state]);
-  const [xMousedOver, setXMousedOver] = useState<boolean>(false);
 
   const onPointerEnter:PointerEventHandler = () => {
     if (state === FilterState.HIDDEN)
@@ -42,30 +48,6 @@ const NewFilter:React.FC<Props> = ({
     }
   }
 
-  const xPressed = useRef<boolean>(false);
-  const onXPointerDown:PointerEventHandler = (e:React.PointerEvent) => {
-    e.stopPropagation();
-
-    xPressed.current = true;
-  }
-
-  const onXPointerUp:PointerEventHandler = (e:React.PointerEvent) => {
-    e.stopPropagation();
-
-    if (xPressed.current) {
-      xPressed.current = false;
-      setState(FilterState.MOUSEDOVER);
-    }
-  }
-
-  const onXPointerEnter:PointerEventHandler = () => {
-    setXMousedOver(true);
-  }
-
-  const onXPointerLeave:PointerEventHandler = () => {
-    setXMousedOver(false);
-  }
-
   return (<>
     <div
       style={{
@@ -89,7 +71,7 @@ const NewFilter:React.FC<Props> = ({
       onPointerUp={onPointerUp}
       style={{
         position: 'fixed',
-        
+        display:'flex',
         zIndex: 40,
         cursor: (!reduced) ? 'pointer' : 'default',
         background: 'rgba(146, 148, 248, 0.8)', // lighter blue base
@@ -129,8 +111,7 @@ const NewFilter:React.FC<Props> = ({
         }}
         transition={{
           borderRadius: { duration: 0.2, ease: 'easeInOut' },
-        }}
-      />
+        }}/>
       <svg
         width="100%"
         height="100%"
@@ -138,6 +119,7 @@ const NewFilter:React.FC<Props> = ({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{
+          position:'absolute',
           padding:'5px',
           opacity:(mousedOver) ? 1 : 0,
           transition:'opacity 0.3s ease-in-out',
@@ -145,35 +127,19 @@ const NewFilter:React.FC<Props> = ({
         }}>
         <path d="M4 5L10 5M10 5C10 6.10457 10.8954 7 12 7C13.1046 7 14 6.10457 14 5M10 5C10 3.89543 10.8954 3 12 3C13.1046 3 14 3.89543 14 5M14 5L20 5M4 12L16 12M16 12C16 13.1046 16.8954 14 18 14C19.1046 14 20 13.1046 20 12C20 10.8954 19.1046 10 18 10C16.8954 10 16 10.8954 16 12ZM8 19L20 19M8 19C8 17.8954 7.10457 17 6 17C4.89543 17 4 17.8954 4 19C4 20.1046 4.89543 21 6 21C7.10457 21 8 20.1046 8 19Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
-      <div className="xOut"
-        onPointerEnter={onXPointerEnter}
-        onPointerLeave={onXPointerLeave}
-        onPointerDown={onXPointerDown}
-        onPointerUp={onXPointerUp}
-        style={{
-          position:'absolute',
-          background:'black',
-          left:(xMousedOver) ? '1px' : '-8px',
-          top:(xMousedOver) ? '1px' : '-8px',
-          width:(xMousedOver) ? '23px' : '20px',
-          height:(xMousedOver) ? '23px' : '20px',
-          padding:'3px',
-          cursor:'pointer',
-          boxShadow:'0px 0px 10px white',
-          zIndex:45,
-          borderRadius:'50%',
-          opacity:(reduced) ? 1 : 0,
-          transition:'opacity 0.3s ease-in-out, left 0.1s ease-in-out, top 0.1s ease-in-out',
-          pointerEvents:(!reduced) ? 'none' : 'auto',
-        }}>
-        <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{
-          opacity:(xMousedOver) ? 1 : 0,
-          transition:'opacity 0.1s ease-in-out',
-        }}>
-          <line x1="5" y1="5" x2="19" y2="19" stroke="rgb(255, 88, 90)" strokeWidth="3" strokeLinecap="round"/>
-          <line x1="19" y1="5" x2="5" y2="19" stroke="rgb(255, 88, 90)" strokeWidth="3" strokeLinecap="round"/>
-        </svg>
-      </div>
+      <XOut
+        cancel={() => setState(FilterState.MOUSEDOVER)}
+        visible={reduced}
+        offsets={{left:1, top:1}}
+        animateOffsets={{left:10, top:10}}/>
+      {(reduced) && <>
+      <FilterButton
+        id="name"
+        text="Name"
+        value={selected.name}
+        onChange={handlers.name}
+        />
+      </>}
     </motion.div>
   </>)
 };
