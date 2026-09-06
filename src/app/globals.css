@@ -39,8 +39,12 @@ body {
   text-shadow: 0px 0px 10px yellow
 }
 
-.fieldSizing {
+.fieldSizingContent {
   field-sizing: content;
+}
+
+.fieldSizingFixed {
+  field-sizing: fixed;
 }
 
 @keyframes ripple-out {

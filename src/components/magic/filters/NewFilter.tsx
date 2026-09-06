@@ -1,17 +1,17 @@
 'use client'
 
-import { ChangeEventHandler, memo, PointerEventHandler, useMemo, useRef, useState } from "react";
+import { memo, PointerEventHandler, useMemo, useRef } from "react";
 import { FilterState } from "../CardDisplay";
 import { motion } from "framer-motion";
 import FilterButton from "./FilterButton";
-import { Selected } from "@/hooks/magic/useFilters";
+import { FilterChangeFunction, Selected } from "@/hooks/magic/useFilters";
 import XOut from "./XOut";
 
 type Props = {
   state:FilterState,
   setState:(state:FilterState)=>void,
   selected:Selected,
-  handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>,
+  handlers:Record<keyof Selected, FilterChangeFunction<HTMLInputElement | HTMLSelectElement>>,
 };
 const NewFilter:React.FC<Props> = ({
   state,
@@ -136,7 +136,7 @@ const NewFilter:React.FC<Props> = ({
       <FilterButton
         id="name"
         text="Name"
-        value={selected.name}
+        values={selected.name}
         onChange={handlers.name}
         />
       </>}

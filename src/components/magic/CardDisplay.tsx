@@ -2,7 +2,7 @@
 
 import { ChangeEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { _magicCard, MagicCard } from "./types/default";
-import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
+import { FilterChangeFunction, FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
 import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
@@ -37,7 +37,7 @@ type Props = {
   db:MagicDatabase,
   selected:Selected,
   updateSelected:FilterUpdateFunction,
-  handlers:Record<keyof Selected, ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>
+  handlers:Record<keyof Selected, FilterChangeFunction<HTMLInputElement | HTMLSelectElement>>
 };
 const CardDisplay:React.FC<Props> = ({
   db, selected, updateSelected, handlers
@@ -130,15 +130,6 @@ const CardDisplay:React.FC<Props> = ({
 
     return () => observer.disconnect();
   }, [cards]);
-
-  /*
-  <Filter
-      setState={setFilterState}
-      state={filterState}
-      numCardsRow={numCardsRow} onChangeNumCardsRow={onChangeNumCardsRow}
-      selected={selected} handlers={handlers}
-      sets={db.sets} maxCards={cards.length} formats={db.formats} types={db.types}/>
-      */
 
   return (
   <div

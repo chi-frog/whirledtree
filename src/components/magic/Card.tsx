@@ -389,7 +389,7 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleDoublesidedPointerUp, handleDoublesidedPointerDown]);
 
-  return (
+  return (<>
     <motion.div
       layoutId={card.name}
       layout={!dragging}
@@ -464,5 +464,5 @@ export const Card:React.FC<Props> = memo(function Card({
           inset: 0,        // matches the card's own bounds exactly
           pointerEvents: 'none',
       }}/>)}
-    </motion.div>);
+    </motion.div></>);
 });
