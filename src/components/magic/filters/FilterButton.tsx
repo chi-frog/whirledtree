@@ -12,7 +12,7 @@ type SectionProps = {
   index:number,
   onChange:FilterChangeFunction<HTMLInputElement | HTMLSelectElement>
 };
-const Section: React.FC<SectionProps> = ({
+const Section:React.FC<SectionProps> = memo(({
   value,
   index,
   onChange
@@ -97,7 +97,7 @@ const Section: React.FC<SectionProps> = ({
   };
 
   return (<>
-    <input key={index} className={(expanded) ? "fieldSizingContent" : "fieldSizingFixed"}
+    <input className={(expanded) ? "fieldSizingContent" : "fieldSizingFixed"}
       ref={inputRef}
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
@@ -145,7 +145,7 @@ const Section: React.FC<SectionProps> = ({
       {value || ' '}
     </span>
   </>);
-};
+});
 
 type Props = {
   id:string,
@@ -199,10 +199,15 @@ const FilterButton:React.FC<Props> = ({
       }}>
       {text}&nbsp;
     </label>
-    <Section
-      value={values.length > 0 ? values[0] : ''}
-      index={0}
-      onChange={onChange}/>
+    {values.map((_value, _index) => {
+      return (
+        <Section
+          key={_index}
+          value={_value}
+          index={_index}
+          onChange={onChange}/>
+      );
+    })}
   </div>
 )};
 

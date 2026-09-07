@@ -29,7 +29,7 @@ export const defaultSelected = {
   toughness:[''],
   oracleText:[''],
   manaValue:[''],
-}
+};
 
 export type FilterUpdate = {
   property:keyof Selected,
@@ -54,13 +54,16 @@ const useFilters = () => {
         if (index !== undefined) {
           if (value === '')
             arr.splice(index, 1);
-          ellipse
+          else
             arr[index] = value;
         } else {
           if (value === '') return;
 
           arr.push(value);
         }
+
+        if (arr.length === 0) arr.push('');
+        else if (arr[arr.length - 1] !== '') arr.push('');
 
         newSelected[property] = arr;
       });

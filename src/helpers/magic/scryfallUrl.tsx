@@ -9,8 +9,8 @@ const bitCards = 'cards';
 const bitSearch = 'search?q=';
 const bitIncludeExtras = 'include_extras=true';
 
-const createSegment = (key:string, segment:string[]) => {
-  const value = segment[0].trim();
+const createSegment = (key:string, value:string) => {
+  value = value.trim();
 
   let result = "(";
 
@@ -50,14 +50,19 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
   let query = "";
   query = relevantKeys.reduce<string>((query, key, index) => {
     const arr = selected[key];
-    if (!arr) return '';
+    if (!arr || arr[0] === '') return '';
 
+    let segment = arr.slice(0, -1).reduce<string>((segment, value) => {
+      return segment + createSegment(key, value) + '+';
+    }, "");
+    
     return (index !== relevantKeys.length - 1) ?
-      query + createSegment(key, arr) + '+' :
-      query + createSegment(key, arr);
+      segment.substring(0, segment.length - 1) + '+':
+      segment.substring(0, segment.length - 1);
   }, query);
 
   url += query + '&order=name';
+  console.log('Constructed URL:' + url);
 
   return url;
 };
