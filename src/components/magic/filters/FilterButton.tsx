@@ -5,16 +5,26 @@ import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffec
 import XOut from "./XOut";
 import { FilterChangeFunction } from "@/hooks/magic/useFilters";
 
+const colorWheel:string[] = [
+  'rgb(248, 231, 185)',
+  'rgb(179, 206, 234)',
+  'rgb(166, 159, 157)',
+  'rgb(235, 159, 130)',
+  'rgb(196, 211, 202)',
+]
+
 const defaultCoords = {x:-1, y:-1};
 
 type SectionProps = {
   value:string,
   index:number,
+  last:boolean,
   onChange:FilterChangeFunction<HTMLInputElement | HTMLSelectElement>
 };
 const Section:React.FC<SectionProps> = memo(({
   value,
   index,
+  last,
   onChange
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
@@ -43,6 +53,8 @@ const Section:React.FC<SectionProps> = memo(({
     if (isTyping && inputRef.current && document.activeElement !== inputRef.current) {
       inputRef.current.focus();
     }
+
+    console.log('isTyping fired!', index);
   }, [isTyping]);
 
   useEffect(() => {
@@ -64,10 +76,14 @@ const Section:React.FC<SectionProps> = memo(({
     }
   }, [value, expanded, circleWidth]);
 
-  const onBlur: FocusEventHandler<HTMLInputElement> = () => {
+  const onBlur:FocusEventHandler<HTMLInputElement> = () => {
     setIsTyping(false);
     setMousedOver(false);
   };
+
+  const onFocus:FocusEventHandler<HTMLInputElement> = () => {
+    setIsTyping(true);
+  }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && (e.target instanceof HTMLInputElement)) {
@@ -105,17 +121,20 @@ const Section:React.FC<SectionProps> = memo(({
       onPointerUp={onPointerUp}
       onKeyDown={onKeyDown}
       onBlur={onBlur}
+      onFocus={onFocus}
       onChange={onChangeInput}
       value={value}
       style={{
         color: expanded ? 'inherit' : 'transparent',
         caretColor: expanded ? 'auto' : 'transparent',
         backgroundColor:
-          expanded ? 'white'
-          : (value !== '') ? 'rgb(50, 50, 248)'
-          : 'rgb(146, 148, 248)',
+          (expanded) ?     'white' :
+          (value !== '') ? colorWheel[index%colorWheel.length] :
+                           'rgb(146, 148, 248)',
         aspectRatio: expanded ? '' : 1,
-        height: expanded ? '40%' : '30%',
+        height: (expanded) ? '40%' :
+                (last)     ? '20%' :
+                             '30%',
         width: `${inputWidth}px`,
         paddingLeft: '5px',
         paddingRight: '5px',
@@ -205,6 +224,7 @@ const FilterButton:React.FC<Props> = ({
           key={_index}
           value={_value}
           index={_index}
+          last={_index === (values.length - 1)}
           onChange={onChange}/>
       );
     })}
