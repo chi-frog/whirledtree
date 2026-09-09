@@ -3,7 +3,7 @@
 import useTabVisibility from "@/hooks/useTabVisibility";
 import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
 import XOut from "./XOut";
-import { FilterChangeFunction } from "@/hooks/magic/useFilters";
+import { FilterChangeFunction, FilterUpdateFunction } from "@/hooks/magic/useFilters";
 
 const colorWheel:string[] = [
   'rgb(248, 231, 185)',
@@ -19,13 +19,13 @@ type SectionProps = {
   value:string,
   index:number,
   last:boolean,
-  onChange:FilterChangeFunction<HTMLInputElement | HTMLSelectElement>
+  onChange:FilterChangeFunction<HTMLInputElement | HTMLSelectElement>,
 };
 const Section:React.FC<SectionProps> = memo(({
   value,
   index,
   last,
-  onChange
+  onChange,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
@@ -45,16 +45,17 @@ const Section:React.FC<SectionProps> = memo(({
     setMousedOver(true);
   };
 
-  const onPointerLeave: PointerEventHandler = () => {
-    setMousedOver(false);
+  const onPointerLeave: PointerEventHandler = (e:React.PointerEvent) => {
+    if (!(e.relatedTarget as HTMLElement).className.includes('xOut'))
+      setMousedOver(false);
+
+    console.log('className:' + (e.relatedTarget as HTMLElement).className, e);
   };
 
   useEffect(() => {
     if (isTyping && inputRef.current && document.activeElement !== inputRef.current) {
       inputRef.current.focus();
     }
-
-    console.log('isTyping fired!', index);
   }, [isTyping]);
 
   useEffect(() => {
@@ -97,7 +98,7 @@ const Section:React.FC<SectionProps> = memo(({
   };
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e, index);
+    onChange(e.target.value, index);
   };
 
   const onPointerDown: PointerEventHandler = (e) => {
@@ -110,9 +111,31 @@ const Section:React.FC<SectionProps> = memo(({
     if (dx < 5 && dy < 5) {
       setIsTyping(true);
     }
+    console.log('onPointerUp FilterSection');
   };
 
-  return (<>
+  return (<div style={{
+    height:'100%',
+    position:'relative',
+    display:'flex',
+    justifyContent:'center',
+    alignItems:'center',
+  }}>
+    {!last && <XOut
+      cancel={()=>{
+        onChange('', index);
+      }}
+      visible={expanded}
+      offsets={{left:'-8px', top:'calc(50% - 22px)'}}
+      options={{
+        animated:true,
+        width:'14px',
+        height:'14px',
+        padding:'1px',
+        onPointerLeave:() => {
+          setMousedOver(false);
+        }
+      }}/>}
     <input className={(expanded) ? "fieldSizingContent" : "fieldSizingFixed"}
       ref={inputRef}
       onPointerEnter={onPointerEnter}
@@ -163,7 +186,7 @@ const Section:React.FC<SectionProps> = memo(({
       }}>
       {value || ' '}
     </span>
-  </>);
+  </div>);
 });
 
 type Props = {
@@ -179,7 +202,6 @@ const FilterButton:React.FC<Props> = ({
   onChange
 }) => {
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
-  const [sections, setSections] = useState<string[]>([]);
 
   const onPointerDown:PointerEventHandler = (e) => {
     mouseCoords.current = {x:e.clientX, y:e.clientY};
@@ -189,7 +211,7 @@ const FilterButton:React.FC<Props> = ({
     if ((mouseCoords.current.x === e.clientX) &&
         (mouseCoords.current.y === e.clientY))
       console.log('setIsTyping to a new one');
-
+    console.log('onPointerUp FilterButton');
   };
 
   return (
@@ -204,7 +226,6 @@ const FilterButton:React.FC<Props> = ({
     display: 'flex',
     alignItems: 'center',
     padding: '2px 5px 2px 5px',
-    cursor: 'pointer',
     zIndex:1,
     }}>
     <label htmlFor={id} 

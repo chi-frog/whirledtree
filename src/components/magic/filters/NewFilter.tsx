@@ -130,8 +130,11 @@ const NewFilter:React.FC<Props> = ({
       <XOut
         cancel={() => setState(FilterState.MOUSEDOVER)}
         visible={reduced}
-        offsets={{left:1, top:1}}
-        animateOffsets={{left:10, top:10}}/>
+        offsets={{left:'1px', top:'1px'}}
+        animateOffsets={{left:10, top:10}}
+        options={{
+          animated:true,
+        }}/>
       {(reduced) && <>
       <FilterButton
         id="name"

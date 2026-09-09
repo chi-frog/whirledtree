@@ -1,7 +1,6 @@
 'use client'
 
 import { GAME_TYPE } from "@/components/magic/types/magic";
-import { ellipse } from "framer-motion/m";
 import { useCallback, useMemo, useState } from "react";
 
 export const maxSections = 5;
@@ -38,7 +37,7 @@ export type FilterUpdate = {
                  // If the value is an empty string, the selection is deleted.
 }
 export type FilterUpdateFunction = (...updates:FilterUpdate[])=>void;
-export type FilterChangeFunction<T> = (e:React.ChangeEvent<T>, index:number)=>void;
+export type FilterChangeFunction<T> = (value:string, index:number)=>void;
 
 const useFilters = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
@@ -73,8 +72,8 @@ const useFilters = () => {
   }, []);
 
   const makeHandler = useCallback((property:SKey):FilterChangeFunction<HTMLInputElement | HTMLSelectElement> => {
-    return (e, index) => {
-      updateSelected({ property, value: e.target.value, index });
+    return (value, index) => {
+      updateSelected({ property, value, index });
     };
   }, [updateSelected]);
 

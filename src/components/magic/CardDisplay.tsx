@@ -40,7 +40,10 @@ type Props = {
   handlers:Record<keyof Selected, FilterChangeFunction<HTMLInputElement | HTMLSelectElement>>
 };
 const CardDisplay:React.FC<Props> = ({
-  db, selected, updateSelected, handlers
+  db,
+  selected,
+  updateSelected,
+  handlers
 }) => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
@@ -138,6 +141,7 @@ const CardDisplay:React.FC<Props> = ({
       state={filterState}
       setState={setFilterState}
       selected={selected}
+      updateSelected={updateSelected}
       handlers={handlers}
       />
     {(cards.length > 0) && !hasCardsError && 
