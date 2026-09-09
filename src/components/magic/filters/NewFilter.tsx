@@ -142,6 +142,12 @@ const NewFilter:React.FC<Props> = ({
         values={selected.name}
         onChange={handlers.name}
         />
+      <FilterButton
+        id="oracleText"
+        text="Oracle Text"
+        values={selected.oracleText}
+        onChange={handlers.oracleText}
+        />
       </>}
     </motion.div>
   </>)

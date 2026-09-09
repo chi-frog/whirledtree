@@ -57,8 +57,8 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
     }, "");
     
     return (index !== relevantKeys.length - 1) ?
-      segment.substring(0, segment.length - 1) + '+':
-      segment.substring(0, segment.length - 1);
+      query + segment.substring(0, segment.length - 1) + '+':
+      query + segment.substring(0, segment.length - 1);
   }, query);
 
   url += query + '&order=name';
