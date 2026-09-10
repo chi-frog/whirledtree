@@ -58,7 +58,7 @@ const XOut:React.FC<Props> = ({
   }
 
  return (<>
-  <div className="caller xOut"
+  <div className="caller xOut sub"
     onPointerEnter={onXPointerEnter}
     onPointerLeave={onXPointerLeave}
     style={{
@@ -72,7 +72,7 @@ const XOut:React.FC<Props> = ({
       zIndex:45,
       outline:'1px solid black',
     }}>
-    <div className="xOut"
+    <div className="xOut sub"
       onPointerDown={onXPointerDown}
       onPointerUp={onXPointerUp}
       onPointerLeave={options?.onPointerLeave}

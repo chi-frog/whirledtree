@@ -4,6 +4,7 @@ import useTabVisibility from "@/hooks/useTabVisibility";
 import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
 import XOut from "./XOut";
 import { FilterChangeFunction, FilterUpdateFunction } from "@/hooks/magic/useFilters";
+import Polarity from "./Polarity";
 
 const colorWheel:string[] = [
   'rgb(248, 231, 185)',
@@ -28,6 +29,7 @@ const Section:React.FC<SectionProps> = memo(({
   onChange,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
+  const [polarity, setPolarity] = useState<boolean>(true);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [circleWidth, setCircleWidth] = useState(10);
@@ -46,10 +48,10 @@ const Section:React.FC<SectionProps> = memo(({
   };
 
   const onPointerLeave: PointerEventHandler = (e:React.PointerEvent) => {
-    if (!(e.relatedTarget as HTMLElement).className.includes('xOut'))
+    if (!(e.relatedTarget) ||
+        !((e.relatedTarget as HTMLElement).className) ||
+        !(e.relatedTarget as HTMLElement).className.includes('sub'))
       setMousedOver(false);
-
-    console.log('className:' + (e.relatedTarget as HTMLElement).className, e);
   };
 
   useEffect(() => {
@@ -127,6 +129,20 @@ const Section:React.FC<SectionProps> = memo(({
       }}
       visible={expanded}
       offsets={{left:'-8px', top:'calc(50% - 22px)'}}
+      options={{
+        animated:true,
+        width:'14px',
+        height:'14px',
+        padding:'1px',
+        onPointerLeave:() => {
+          setMousedOver(false);
+        }
+      }}/>}
+    {!last && <Polarity
+      polarity={polarity}
+      setPolarity={setPolarity}
+      visible={expanded}
+      offsets={{left:'-7px', top:'calc(50% + 7px)'}}
       options={{
         animated:true,
         width:'14px',
