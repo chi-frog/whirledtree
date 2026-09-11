@@ -1,13 +1,12 @@
 'use client'
 
-import { Dispatch, PointerEventHandler, SetStateAction, useRef, useState } from "react";
+import {PointerEventHandler, useRef, useState } from "react";
 
 type Props = {
   polarity:boolean,
-  setPolarity:Dispatch<SetStateAction<boolean>>,
+  setPolarity:(polarity:boolean)=>void,
   visible:boolean,
   offsets:{left:string, top:string},
-  animateOffsets?:{left:number, top:number},
   options?:{
     animated?:boolean,
     width?:string,
@@ -23,12 +22,10 @@ const Polarity:React.FC<Props> = ({
   setPolarity,
   visible,
   offsets,
-  animateOffsets,
   options,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
   const pressed = useRef<boolean>(false);
-  const animated = (options && options.animated);
   const width = (options && options.width) ? options.width : '25px';
   const height = (options && options.height) ? options.height : '25px';
 
@@ -43,7 +40,7 @@ const Polarity:React.FC<Props> = ({
 
     if (pressed.current) {
       pressed.current = false;
-      setPolarity((prev) => !prev);
+      setPolarity(!polarity);
     }
 
     console.log('onPointerUp polarity', polarity);
@@ -88,8 +85,8 @@ const Polarity:React.FC<Props> = ({
     }}>
     {(polarity) &&
     <svg xmlns="http://w3.org" width="100%" height="100%" viewBox="0 0 24 24"
-      fill="none" stroke="rgb(146, 148, 248)" stroke-width="3"
-      stroke-linecap="round" stroke-linejoin="round" style={{
+      fill="none" stroke="rgb(146, 148, 248)" strokeWidth="3"
+      strokeLinecap="round" strokeLinejoin="round" style={{
       pointerEvents:'none',
     }}>
       <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -98,8 +95,8 @@ const Polarity:React.FC<Props> = ({
     }
     {(!polarity) &&
     <svg xmlns="http://w3.org" width="100%" height="100%" viewBox="0 0 24 24"
-      fill="none" stroke="rgb(146, 148, 248)" stroke-width="3"
-      stroke-linecap="round" stroke-linejoin="round" style={{
+      fill="none" stroke="rgb(146, 148, 248)" strokeWidth="3"
+      strokeLinecap="round" strokeLinejoin="round" style={{
       pointerEvents:'none',
     }}>
       <line x1="5" y1="12" x2="19" y2="12"></line>

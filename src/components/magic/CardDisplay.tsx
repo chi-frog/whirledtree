@@ -36,13 +36,11 @@ export const _err = (err:any) =>
 type Props = {
   db:MagicDatabase,
   selected:Selected,
-  updateSelected:FilterUpdateFunction,
-  handlers:Record<keyof Selected, FilterChangeFunction<HTMLInputElement | HTMLSelectElement>>
+  handlers:Record<keyof Selected, FilterChangeFunction>
 };
 const CardDisplay:React.FC<Props> = ({
   db,
   selected,
-  updateSelected,
   handlers
 }) => {
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
@@ -51,9 +49,6 @@ const CardDisplay:React.FC<Props> = ({
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const [cards, setCards] = useState<MagicCard[]>(db.cards);
   const scrollTrigger = useRef<HTMLDivElement|null>(null);
-
-  const changeCard = useCallback((index:number, card:MagicCard) =>
-    setCards((prev) => prev.map((_card, _index) => (_index === index) ? card : _card)), []);
 
   useEffect(() => {
     setCards(db.cards);
@@ -141,7 +136,6 @@ const CardDisplay:React.FC<Props> = ({
       state={filterState}
       setState={setFilterState}
       selected={selected}
-      updateSelected={updateSelected}
       handlers={handlers}
       />
     {(cards.length > 0) && !hasCardsError && 

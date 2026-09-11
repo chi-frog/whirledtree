@@ -45,15 +45,15 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
   const relevantKeys = keys.filter(
     (key) => (Object.hasOwn(selected, key)) &&
              (selected[key].length > 0) &&
-             (selected[key][0] !== ''));
+             (selected[key][0].value !== ''));
 
   let query = "";
   query = relevantKeys.reduce<string>((query, key, index) => {
-    const arr = selected[key];
-    if (!arr || arr[0] === '') return '';
+    const section = selected[key];
+    if (!section || section[0].value === '') return '';
 
-    let segment = arr.slice(0, -1).reduce<string>((segment, value) => {
-      return segment + createSegment(key, value) + '+';
+    let segment = section.slice(0, -1).reduce<string>((_segment, _section) => {
+      return _segment + createSegment(key, _section.value) + '+';
     }, "");
     
     return (index !== relevantKeys.length - 1) ?

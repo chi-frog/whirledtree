@@ -3,7 +3,7 @@
 import useTabVisibility from "@/hooks/useTabVisibility";
 import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
 import XOut from "./XOut";
-import { FilterChangeFunction, FilterUpdateFunction } from "@/hooks/magic/useFilters";
+import { FilterChangeFunction, SelectedSection } from "@/hooks/magic/useFilters";
 import Polarity from "./Polarity";
 
 const colorWheel:string[] = [
@@ -17,19 +17,18 @@ const colorWheel:string[] = [
 const defaultCoords = {x:-1, y:-1};
 
 type SectionProps = {
-  value:string,
+  section:SelectedSection,
   index:number,
   last:boolean,
-  onChange:FilterChangeFunction<HTMLInputElement | HTMLSelectElement>,
+  onChange:FilterChangeFunction,
 };
 const Section:React.FC<SectionProps> = memo(({
-  value,
+  section,
   index,
   last,
   onChange,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
-  const [polarity, setPolarity] = useState<boolean>(true);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [circleWidth, setCircleWidth] = useState(10);
@@ -77,7 +76,7 @@ const Section:React.FC<SectionProps> = memo(({
     } else if (circleWidth > 0) {
       setInputWidth(circleWidth);
     }
-  }, [value, expanded, circleWidth]);
+  }, [section.value, expanded, circleWidth]);
 
   const onBlur:FocusEventHandler<HTMLInputElement> = () => {
     setIsTyping(false);
@@ -100,11 +99,11 @@ const Section:React.FC<SectionProps> = memo(({
   };
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value, index);
+    onChange({value:e.target.value}, index);
   };
 
   const onPointerDown: PointerEventHandler = (e) => {
-    mouseCoords.current = { x: e.clientX, y: e.clientY };
+    mouseCoords.current = {x: e.clientX, y: e.clientY};
   };
 
   const onPointerUp: PointerEventHandler = (e) => {
@@ -125,7 +124,7 @@ const Section:React.FC<SectionProps> = memo(({
   }}>
     {!last && <XOut
       cancel={()=>{
-        onChange('', index);
+        onChange({value:''}, index);
       }}
       visible={expanded}
       offsets={{left:'-8px', top:'calc(50% - 22px)'}}
@@ -139,8 +138,8 @@ const Section:React.FC<SectionProps> = memo(({
         }
       }}/>}
     {!last && <Polarity
-      polarity={polarity}
-      setPolarity={setPolarity}
+      polarity={section.polarity}
+      setPolarity={(polarity:boolean) => onChange({polarity}, index)}
       visible={expanded}
       offsets={{left:'-7px', top:'calc(50% + 7px)'}}
       options={{
@@ -162,14 +161,14 @@ const Section:React.FC<SectionProps> = memo(({
       onBlur={onBlur}
       onFocus={onFocus}
       onChange={onChangeInput}
-      value={value}
+      value={section.value}
       style={{
         color: expanded ? 'inherit' : 'transparent',
         caretColor: expanded ? 'auto' : 'transparent',
         backgroundColor:
           (expanded) ?     'white' :
-          (value !== '') ? colorWheel[index%colorWheel.length] :
-                           'rgb(146, 148, 248)',
+          (section.value !== '') ? colorWheel[index%colorWheel.length] :
+                                   'rgb(146, 148, 248)',
         aspectRatio: expanded ? '' : 1,
         height: (expanded) ? '40%' :
                 (last)     ? '20%' :
@@ -200,7 +199,7 @@ const Section:React.FC<SectionProps> = memo(({
         paddingRight: '5px',
         font: 'inherit',
       }}>
-      {value || ' '}
+      {section.value ? section.value :  ' '}
     </span>
   </div>);
 });
@@ -208,13 +207,13 @@ const Section:React.FC<SectionProps> = memo(({
 type Props = {
   id:string,
   text:string,
-  values:string[],
-  onChange:FilterChangeFunction<HTMLInputElement | HTMLSelectElement>
+  sections:SelectedSection[],
+  onChange:FilterChangeFunction,
 };
 const FilterButton:React.FC<Props> = ({
   id,
   text,
-  values,
+  sections,
   onChange
 }) => {
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
@@ -255,13 +254,13 @@ const FilterButton:React.FC<Props> = ({
       }}>
       {text}&nbsp;
     </label>
-    {values.map((_value, _index) => {
+    {sections.map((_section, _index) => {
       return (
         <Section
           key={_index}
-          value={_value}
+          section={_section}
           index={_index}
-          last={_index === (values.length - 1)}
+          last={_index === (sections.length - 1)}
           onChange={onChange}/>
       );
     })}

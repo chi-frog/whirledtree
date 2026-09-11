@@ -37,7 +37,6 @@ const Landing:React.FC<Props> = () => {
       <CardDisplay
         db={database}
         selected={selected}
-        updateSelected={updateSelected}
         handlers={handlers}/>
     </ModalProvider>
     </ImageRepoProvider>
