@@ -133,10 +133,16 @@ const NewFilter:React.FC<Props> = ({
         visible={reduced}
         offsets={{left:'1px', top:'1px'}}
         animateOffsets={{left:10, top:10}}
+        index={0}
         options={{
           animated:true,
         }}/>
-      {(reduced) && <>
+      {(reduced) && <div style={{
+        display:'flex',
+        width:'100%',
+        height:'100%',
+        paddingLeft:10,
+      }}>
       <FilterButton
         id="name"
         text="Name"
@@ -149,7 +155,7 @@ const NewFilter:React.FC<Props> = ({
         sections={selected.oracleText}
         onChange={handlers.oracleText}
         />
-      </>}
+      </div>}
     </motion.div>
   </>)
 };

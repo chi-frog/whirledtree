@@ -20,12 +20,14 @@ type SectionProps = {
   section:SelectedSection,
   index:number,
   last:boolean,
+  visible:boolean,
   onChange:FilterChangeFunction,
 };
 const Section:React.FC<SectionProps> = memo(({
   section,
   index,
   last,
+  visible,
   onChange,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
@@ -40,7 +42,7 @@ const Section:React.FC<SectionProps> = memo(({
     onHidden: () => inputRef.current?.blur()
   });
 
-  const expanded = isTyping || mousedOver;
+  const expanded = (isTyping || mousedOver) || (visible);
 
   const onPointerEnter: PointerEventHandler = () => {
     setMousedOver(true);
@@ -49,7 +51,7 @@ const Section:React.FC<SectionProps> = memo(({
   const onPointerLeave: PointerEventHandler = (e:React.PointerEvent) => {
     if (!(e.relatedTarget) ||
         !((e.relatedTarget as HTMLElement).className) ||
-        !(e.relatedTarget as HTMLElement).className.includes('sub'))
+        !(e.relatedTarget as HTMLElement).className.includes('sub' + index))
       setMousedOver(false);
   };
 
@@ -128,6 +130,7 @@ const Section:React.FC<SectionProps> = memo(({
       }}
       visible={expanded}
       offsets={{left:'-8px', top:'calc(50% - 22px)'}}
+      index={index}
       options={{
         animated:true,
         width:'14px',
@@ -142,6 +145,7 @@ const Section:React.FC<SectionProps> = memo(({
       setPolarity={(polarity:boolean) => onChange({polarity}, index)}
       visible={expanded}
       offsets={{left:'-7px', top:'calc(50% + 7px)'}}
+      index={index}
       options={{
         animated:true,
         width:'14px',
@@ -216,23 +220,32 @@ const FilterButton:React.FC<Props> = ({
   sections,
   onChange
 }) => {
+  const [allVisible, setAllVisible] = useState<boolean>(false);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
+  const [mousedOver, setMousedOver] = useState<boolean>(false);
 
   const onPointerDown:PointerEventHandler = (e) => {
     mouseCoords.current = {x:e.clientX, y:e.clientY};
+    console.log('DOWN');
   };
 
   const onPointerUp:PointerEventHandler = (e) => {
     if ((mouseCoords.current.x === e.clientX) &&
         (mouseCoords.current.y === e.clientY))
-      console.log('setIsTyping to a new one');
+      setAllVisible((prev) => !prev);
     console.log('onPointerUp FilterButton');
   };
 
+  const onPointerEnter:PointerEventHandler = () => {
+    setMousedOver(true);
+  }
+
+  const onPointerLeave:PointerEventHandler = () => {
+    setMousedOver(false);
+  }
+
   return (
   <div
-    onPointerDown={onPointerDown}
-    onPointerUp={onPointerUp}
     style={{
     color:'black',
     borderRadius: '5px',
@@ -243,14 +256,22 @@ const FilterButton:React.FC<Props> = ({
     padding: '2px 5px 2px 5px',
     zIndex:1,
     }}>
-    <label htmlFor={id} 
+    <label
+      htmlFor={id} 
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       style={{
-      marginRight: 5,
+      marginRight: 2,
+      padding:5,
       color:'white',
       fontWeight: 'bold',
       textWrap: 'nowrap',
       cursor:'pointer',
+      borderRadius:5,
       whiteSpaceCollapse: 'preserve-spaces',
+      boxShadow:(mousedOver) ? '0px 0px 8px white inset, 0px 0px 4px white' : '',
       }}>
       {text}&nbsp;
     </label>
@@ -261,6 +282,7 @@ const FilterButton:React.FC<Props> = ({
           section={_section}
           index={_index}
           last={_index === (sections.length - 1)}
+          visible={allVisible}
           onChange={onChange}/>
       );
     })}

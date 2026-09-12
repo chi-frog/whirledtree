@@ -7,6 +7,7 @@ type Props = {
   visible:boolean,
   offsets:{left:string, top:string},
   animateOffsets?:{left:number, top:number},
+  index:number,
   options?:{
     animated?:boolean,
     width?:string,
@@ -22,6 +23,7 @@ const XOut:React.FC<Props> = ({
   visible,
   offsets,
   animateOffsets,
+  index,
   options,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
@@ -58,7 +60,7 @@ const XOut:React.FC<Props> = ({
   }
 
  return (<>
-  <div className="caller xOut sub"
+  <div className={`caller xOut sub${index}`}
     onPointerEnter={onXPointerEnter}
     onPointerLeave={onXPointerLeave}
     style={{
@@ -72,7 +74,7 @@ const XOut:React.FC<Props> = ({
       zIndex:45,
       outline:'1px solid black',
     }}>
-    <div className="xOut sub"
+    <div className={`xOut sub${index}`}
       onPointerDown={onXPointerDown}
       onPointerUp={onXPointerUp}
       onPointerLeave={options?.onPointerLeave}

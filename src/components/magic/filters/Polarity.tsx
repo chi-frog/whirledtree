@@ -7,6 +7,7 @@ type Props = {
   setPolarity:(polarity:boolean)=>void,
   visible:boolean,
   offsets:{left:string, top:string},
+  index:number,
   options?:{
     animated?:boolean,
     width?:string,
@@ -22,6 +23,7 @@ const Polarity:React.FC<Props> = ({
   setPolarity,
   visible,
   offsets,
+  index,
   options,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
@@ -41,9 +43,8 @@ const Polarity:React.FC<Props> = ({
     if (pressed.current) {
       pressed.current = false;
       setPolarity(!polarity);
+      e.preventDefault();
     }
-
-    console.log('onPointerUp polarity', polarity);
   }
 
   const onXPointerEnter:PointerEventHandler = (e:React.PointerEvent) => {
@@ -59,7 +60,7 @@ const Polarity:React.FC<Props> = ({
   }
 
  return (<>
-  <div className="polarity sub"
+  <div className={`polarity sub${index}`}
     onPointerEnter={onXPointerEnter}
     onPointerLeave={onXPointerLeave}
     onPointerDown={onXPointerDown}

@@ -2,17 +2,17 @@
 * Functions to construct valid scryfall requests
 */
 
-import { defaultSelected, Selected, SKey } from "@/hooks/magic/useFilters";
+import { defaultSelected, Selected, SelectedSection, SKey } from "@/hooks/magic/useFilters";
 
 const scryfallUrl = 'https://api.scryfall.com';
 const bitCards = 'cards';
 const bitSearch = 'search?q=';
 const bitIncludeExtras = 'include_extras=true';
 
-const createSegment = (key:string, value:string) => {
-  value = value.trim();
+const createSegment = (key:string, section:SelectedSection) => {
+  let value = section.value.trim();
 
-  let result = "(";
+  let result = (section.polarity) ? "(" : "-(";
 
   switch(key) {
     case 'oracleText':
@@ -53,7 +53,7 @@ export const constructSearchUrl = (selected:Selected=defaultSelected) => {
     if (!section || section[0].value === '') return '';
 
     let segment = section.slice(0, -1).reduce<string>((_segment, _section) => {
-      return _segment + createSegment(key, _section.value) + '+';
+      return _segment + createSegment(key, _section) + '+';
     }, "");
     
     return (index !== relevantKeys.length - 1) ?
