@@ -209,6 +209,10 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [node]);
 
   const handleCardPointerEnter = () => {
+    if (isAnimating.current.s) {
+      console.log('Tried to enter while animating!!!', location);
+      return;
+    }
     glow(false);
     mousedoverRef.current = true;
     setMousedover(true);
@@ -391,7 +395,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   return (<>
     <motion.div
-      layoutId={card.name}
+      layoutId={(location === 'view' && isInModal) ? undefined : card.name}
       layout={!dragging}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {

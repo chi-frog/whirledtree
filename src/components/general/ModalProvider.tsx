@@ -71,18 +71,6 @@ export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabas
   const {getImagePacket} = useImageRepositoryContext();
 
   const showModal = useCallback(async (card:MagicCard) => {
-    const src = getImagePacket(card);
-
-    if (src) {
-      const preload = new Image();
-      preload.src = (src.front.small) ? src.front.small : "";
-      try {
-        await preload.decode();
-      } catch {
-        // decode can reject (e.g. broken image, some Safari edge cases) — fall through anyway
-      }
-    }
-    
     store.setState({ shown: true, card });
   }, [getImagePacket, store]);
 
