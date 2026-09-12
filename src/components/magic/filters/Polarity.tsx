@@ -33,6 +33,7 @@ const Polarity:React.FC<Props> = ({
 
   const onXPointerDown:PointerEventHandler = (e:React.PointerEvent) => {
     e.stopPropagation();
+    e.preventDefault();
 
     pressed.current = true;
   }
@@ -61,6 +62,7 @@ const Polarity:React.FC<Props> = ({
 
  return (<>
   <div className={`polarity sub${index}`}
+    title={(polarity) ? 'Exclude Section' : 'Include Section'}
     onPointerEnter={onXPointerEnter}
     onPointerLeave={onXPointerLeave}
     onPointerDown={onXPointerDown}

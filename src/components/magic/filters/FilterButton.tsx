@@ -156,6 +156,7 @@ const Section:React.FC<SectionProps> = memo(({
         }
       }}/>}
     <input className={(expanded) ? "fieldSizingContent" : "fieldSizingFixed"}
+      title={(section.value !== '') ? 'Edit Section' : 'Add New Section'}
       ref={inputRef}
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
@@ -257,6 +258,7 @@ const FilterButton:React.FC<Props> = ({
     zIndex:1,
     }}>
     <label
+      title='Show All Sections'
       htmlFor={id} 
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}

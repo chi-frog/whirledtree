@@ -75,6 +75,7 @@ const XOut:React.FC<Props> = ({
       outline:'1px solid black',
     }}>
     <div className={`xOut sub${index}`}
+      title='Close'
       onPointerDown={onXPointerDown}
       onPointerUp={onXPointerUp}
       onPointerLeave={options?.onPointerLeave}
