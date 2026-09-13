@@ -7,17 +7,13 @@ import { cardBackUri } from '@/app/page';
 type Props = {
   loc: string;
   src?: string;
-  onLoad?: () => void;
   visible?: boolean;
-  height?: string;
 };
 
 const CardFace = ({
   loc,
   src,
   visible = true,
-  height,
-  onLoad,
 }: Props) => {
   const resolvedSrc = src ?? cardBackUri;
 
@@ -25,29 +21,9 @@ const CardFace = ({
     <FadeInImage
       src={resolvedSrc}
       visible={visible}
+      loading={(loc === 'view') ? 'lazy' : 'eager'}
     />
   </>);
-
-  /*return (
-    <img
-      src={resolvedSrc}
-      loading={loc === 'view' ? 'lazy' : 'eager'}
-      draggable={false}
-      alt=""
-      style={{
-        width: '100%',
-        ...(height ? { height } : {}),
-        marginTop: 'auto',
-        position: 'absolute',
-        objectFit: 'cover',
-        visibility: visible ? 'visible' : 'hidden',
-        opacity: loaded ? 1 : 0,
-        transition: loc === 'view' ? 'opacity 0.15s ease-in' : undefined,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-      }}
-    />
-  );*/
 };
 
 export default memo(CardFace);

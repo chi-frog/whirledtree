@@ -100,6 +100,8 @@ export const Card:React.FC<Props> = memo(function Card({
         return;
       }
 
+      console.log('rendering!', frontImageSrc);
+
       const newImagePacket = (repoImagePacket) ?
         repoImagePacket :
         createImagePacket();
@@ -451,8 +453,8 @@ export const Card:React.FC<Props> = memo(function Card({
             `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
             '',
       }}>
-      <CardFace loc={location} src={frontImageSrc} visible={showFront} height={imageHeightString}/>
-      <CardFace loc={location} src={backImageSrc} visible={showBack} height={imageHeightString}/>
+      <CardFace loc={location} src={frontImageSrc} visible={showFront}/>
+      <CardFace loc={location} src={backImageSrc} visible={showBack}/>
       { isCardDoublesided(card) &&
         doublesidedCircle
       }

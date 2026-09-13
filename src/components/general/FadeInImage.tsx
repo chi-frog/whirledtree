@@ -3,11 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
-  src: string;
-  visible: boolean;
+  src: string,
+  visible: boolean,
+  loading:"eager" | "lazy" | undefined,
 };
 
-const FadeInImage: React.FC<Props> = ({ src, visible }) => {
+const FadeInImage: React.FC<Props> = ({
+    src,
+    visible,
+    loading,
+  }) => {
   // two stable slots — which one is "front" (currently shown) alternates,
   // but neither slot's own <img> ever has its src changed while visible
   const [slots, setSlots] = useState<[string, string]>([src, src]);
@@ -62,6 +67,8 @@ const FadeInImage: React.FC<Props> = ({ src, visible }) => {
           <img
             key={i}
             src={slots[i]}
+            draggable={false}
+            loading={loading}
             style={{
               position: 'absolute',
               width: '100%',
@@ -71,6 +78,7 @@ const FadeInImage: React.FC<Props> = ({ src, visible }) => {
               transition: 'opacity 0.3s ease-in-out',
               userSelect: 'none',
               WebkitUserSelect: 'none',
+              pointerEvents:'none',
             }}
           />
         );
