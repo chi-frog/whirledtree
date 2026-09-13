@@ -34,7 +34,7 @@ const View:React.FC<Props> = ({
       display:'grid',
       gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
       }}>
-      {...cards.map((_card, _index)=>
+      {...cards.slice(0, 2).map((_card, _index)=>
         <Card
           key={cards[_index].name}
           location='view'

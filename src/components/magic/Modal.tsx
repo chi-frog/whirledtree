@@ -304,8 +304,6 @@ const Modal:React.FC<Props> = ({
       card
   , [card, printIndex]);
 
-  console.log('displayed card', displayedCard);
-
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
       onPointerDown={handlePointerDown}
@@ -329,7 +327,6 @@ const Modal:React.FC<Props> = ({
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
           setExpanded(true);
-          console.log('Modal Animation Complete');
         }}
         style={{
         backgroundColor:'white',

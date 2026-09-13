@@ -7,15 +7,12 @@ import useFilters from "@/hooks/magic/useFilters";
 import { useEffect, useMemo, useState } from "react";
 import { ModalProvider } from "../general/ModalProvider";
 import { ImageRepoProvider } from "../general/ImageRepoProvider";
-import { CardRepoProvider } from "../general/CardRepoProvider";
-import useDefaultCardBack from "@/hooks/magic/useDefaultCardBack";
 
 type Props = {};
 const Landing:React.FC<Props> = () => {
   const {selected, updateSelected, handlers} = useFilters();
   const url = useMemo(() => constructSearchUrl(selected), [selected]);
   const [displayLimit, setDisplayLimit] = useState<number>(175);
-  const {ready, uri} = useDefaultCardBack();
   const database = useMagicDatabase(url, displayLimit);
 
   useEffect(() => {
@@ -25,11 +22,6 @@ const Landing:React.FC<Props> = () => {
   useEffect(() => {
     console.log('Url is: ' + url);
   }, [url]);
-
-  useEffect(() => {
-    console.log('Ready:' + ready);
-    console.log('Uri:' + uri);
-  }, [ready, uri]);
 
   return (
     <ImageRepoProvider>

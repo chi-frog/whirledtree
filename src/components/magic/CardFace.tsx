@@ -1,72 +1,53 @@
-'use client'
+'use client';
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import useDefaultCardBack from "@/hooks/magic/useDefaultCardBack";
+import { memo, useEffect, useRef, useState } from 'react';
+import FadeInImage from '../general/FadeInImage';
+import { cardBackUri } from '@/app/page';
 
 type Props = {
-  loc:string,
-  src?:string,
-  onLoad?:()=>void,
-  visible?:boolean,
-  height?:string,
+  loc: string;
+  src?: string;
+  onLoad?: () => void;
+  visible?: boolean;
+  height?: string;
 };
-const CardFace: React.FC<Props> = ({
+
+const CardFace = ({
   loc,
   src,
-  visible,
+  visible = true,
   height,
-  onLoad
-}) => {
-  const { ready, uri } = useDefaultCardBack();
-  const [loaded, setLoaded] = useState(false);
-  const srcReady = useMemo(() => Boolean(src), [src]);
-  const resolvedSrc = srcReady ? src : ready ? uri : undefined;
-  const currentSrcRef = useRef<string | undefined>(undefined);
+  onLoad,
+}: Props) => {
+  const resolvedSrc = src ?? cardBackUri;
 
-  useEffect(() => {
-    if (!resolvedSrc) return;
+  return (<>
+    <FadeInImage
+      src={resolvedSrc}
+      visible={visible}
+    />
+  </>);
 
-    let cancelled = false;
-    currentSrcRef.current = resolvedSrc;
-    setLoaded(false); // reset crossfade state whenever the target src changes
-
-    const preload = new Image();
-    preload.src = resolvedSrc;
-
-    preload.decode()
-      .catch(() => {
-        // decode can reject (e.g. broken image, some Safari edge cases) — fall through anyway
-      })
-      .finally(() => {
-        // only mark loaded if this effect's src is still the one we care about
-        if (!cancelled && currentSrcRef.current === resolvedSrc) {
-          setLoaded(true);
-          onLoad?.();
-        }
-      });
-
-    return () => { cancelled = true; };
-  }, [resolvedSrc]);
-
-  return (
+  /*return (
     <img
       src={resolvedSrc}
-      loading={(loc === 'view') ? "lazy" : "eager"}
+      loading={loc === 'view' ? 'lazy' : 'eager'}
       draggable={false}
+      alt=""
       style={{
         width: '100%',
-        ...(height && { height }),
+        ...(height ? { height } : {}),
         marginTop: 'auto',
         position: 'absolute',
         objectFit: 'cover',
         visibility: visible ? 'visible' : 'hidden',
         opacity: loaded ? 1 : 0,
-        transition: (loc === 'view') ? 'opacity 0.15s ease-in' : '',
+        transition: loc === 'view' ? 'opacity 0.15s ease-in' : undefined,
         userSelect: 'none',
         WebkitUserSelect: 'none',
       }}
     />
-  );
+  );*/
 };
 
 export default memo(CardFace);

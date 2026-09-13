@@ -267,43 +267,6 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, dis
     return normalCards;
   }, [cardData]);
 
-  // Get the card back image
-  useEffect(() => {
-    const getBackImage = async () => {
-      let backUrl;
-      if (await fileExists('magic/defaultCardBack.png'))
-        backUrl = await fetchImage('magic/defaultCardBack.png');
-      else
-        backUrl = await fetchImage('https://cards.scryfall.io/back.png');
-
-      setImageMap((prev) => {
-        const imageMap = copyImageMap(prev);
-        let printsMap = imageMap.get("");
-        if (!printsMap)
-          printsMap = new Map<string, ImagePacket>();
-
-        const existing = printsMap.get("");
-        const imagePacket = (existing) ?
-          existing :
-          createImagePacket();
-
-        imagePacket.front[blobKey.large] = backUrl;
-        imagePacket.back[blobKey.large] = backUrl;
-        imagePacket.front[blobKey.small] = backUrl;
-        imagePacket.back[blobKey.small] = backUrl;
-
-        printsMap.set("", imagePacket);
-        imageMap.set("", printsMap);
-
-        return imageMap;
-      });
-
-      console.log('Finished with back image!', backUrl);
-    };
-
-    getBackImage();
-  }, []);
-
   const hydrateImage = useCallback(async (card:MagicCard, size:'small'|'large') => {
     hydrateImageMap(imageMap, setImageMap, [card], size);
   }, [cards, imageMap]);

@@ -10,7 +10,6 @@ import { cardAspectRatio, createImagePacket, fetchImage, ImagePacket, ImageSet }
 import { motion } from "framer-motion";
 import { useImageRepositoryContext } from "../general/ImageRepoProvider";
 import { useIsCardInModal, useModalContext } from "../general/ModalProvider";
-import { useCardRepositoryContext } from "../general/CardRepoProvider";
 import CardFace from "./CardFace";
 
 export type CardLocation =
@@ -97,6 +96,7 @@ export const Card:React.FC<Props> = memo(function Card({
           setFrontImageSet(repoImagePacket.front);
         else if (side === 'back')
           setBackImageSet(repoImagePacket.back);
+        console.log('Image already in repo: ' + repoImagePacket[side][size]);
         return;
       }
 

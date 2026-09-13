@@ -7,6 +7,8 @@ import Landing from "@/components/magic/Landing";
 import Focus from "@/components/test/Focus";
 import { _wpoint } from "@/helpers/wpoint";
 
+export const cardBackUri = 'magic/defaultCardBack.png';
+
 export default function Home() {
   const testing:string|null = null;
 

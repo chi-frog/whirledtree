@@ -102,7 +102,7 @@ const CardDisplay:React.FC<Props> = ({
   }, [db.loadMap]);
 
   const isFetchingRef = useRef(false);
-
+/*
   useEffect(() => {
     const el = scrollTrigger.current;
     if (!el) return;
@@ -127,7 +127,7 @@ const CardDisplay:React.FC<Props> = ({
     observer.observe(el);
 
     return () => observer.disconnect();
-  }, [cards]);
+  }, [cards]);*/
 
   return (
   <div
