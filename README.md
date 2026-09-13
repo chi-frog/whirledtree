@@ -39,3 +39,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 Tasks:
 * remove imageMap from the database and put everything
 * into the ImageRepository
+
+* Make certain queries wait for input - like for set and type

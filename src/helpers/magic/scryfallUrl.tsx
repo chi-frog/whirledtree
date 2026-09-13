@@ -24,11 +24,11 @@ const createSegment = (key:string, section:SelectedSection) => {
 
   switch(key) {
   case 'oracleText':
+  case 'set':
   case 'name':
     result += ':\'' + value + '\'';
     break;
   case 'type': 
-  case 'set': 
   case 'format': 
   case 'game':
   default:

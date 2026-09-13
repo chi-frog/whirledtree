@@ -6,18 +6,22 @@ import { motion } from "framer-motion";
 import FilterButton from "./FilterButton";
 import { FilterChangeFunction, Selected } from "@/hooks/magic/useFilters";
 import XOut from "./XOut";
+import FilterList from "./FilterList";
+import { MagicSet } from "../types/default";
 
 type Props = {
   state:FilterState,
   setState:(state:FilterState)=>void,
   selected:Selected,
   handlers:Record<keyof Selected, FilterChangeFunction>,
+  sets:MagicSet[],
 };
 const NewFilter:React.FC<Props> = ({
   state,
   setState,
   selected,
   handlers,
+  sets
 }) => {
   const mousedOver = useMemo(() => (state === FilterState.MOUSEDOVER), [state]);
   const reduced = useMemo(() => (state === FilterState.REDUCED), [state]);
@@ -154,6 +158,13 @@ const NewFilter:React.FC<Props> = ({
         text="Oracle Text"
         sections={selected.oracleText}
         onChange={handlers.oracleText}
+        />
+      <FilterList
+        id="set"
+        text="Sets"
+        sections={selected.set}
+        list={(sets) ? sets.map((_set) => _set.name) : undefined}
+        onChange={handlers.set}
         />
       </div>}
     </motion.div>

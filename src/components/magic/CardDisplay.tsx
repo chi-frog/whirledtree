@@ -137,6 +137,7 @@ const CardDisplay:React.FC<Props> = ({
       setState={setFilterState}
       selected={selected}
       handlers={handlers}
+      sets={db.sets}
       />
     {(cards.length > 0) && !hasCardsError && 
       <View
