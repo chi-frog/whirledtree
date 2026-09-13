@@ -351,7 +351,6 @@ const Modal:React.FC<Props> = ({
             location='modal'
             widthString={'fit-content'}
             heightString={'100%'}
-            imageHeightString={'100%'}
             card={displayedCard}
           /></>}
         </div>

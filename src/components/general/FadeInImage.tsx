@@ -61,7 +61,7 @@ const FadeInImage: React.FC<Props> = ({
 
   return (
     <>
-      {[0, 1].map((i) => {
+      {(visible) && [0, 1].map((i) => {
         const isFront = i === frontIndex;
         return (
           <img
@@ -74,7 +74,7 @@ const FadeInImage: React.FC<Props> = ({
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              opacity: !visible ? 0 : isFront ? 1 : backLoaded ? 1 : 0,
+              opacity: isFront ? 1 : backLoaded ? 1 : 0,
               transition: 'opacity 0.3s ease-in-out',
               userSelect: 'none',
               WebkitUserSelect: 'none',

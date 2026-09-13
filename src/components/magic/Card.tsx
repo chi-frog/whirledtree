@@ -18,14 +18,12 @@ type Props = {
   location:CardLocation,
   widthString?:string,
   heightString?:string,
-  imageHeightString?:string,
   card:MagicCard,
 };
 export const Card:React.FC<Props> = memo(function Card({
     location,
     widthString,
     heightString,
-    imageHeightString,
     card,
   }:Props) {
   const [reversed, setReversed] = useState<boolean>(false);
