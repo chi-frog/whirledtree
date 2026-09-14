@@ -219,8 +219,10 @@ const Modal:React.FC<Props> = ({
     if (!card) return [];
 
     let face = (card.reversed) ? card.back : card;
+    if ((!face) ||
+        !(face.manaCost)) return [];
 
-    const manaCost = (face) ? face.manaCost : "";
+    const manaCost = face.manaCost;
     const manaSymbols = symbols.filter((symbol) => card.manaCost.includes(symbol.symbol));
     const indices = manaSymbols.reduce<{manaCostIndex:number, symbol:MagicSymbol}[]>((indices, symbol) => {
       let newIndices = [...indices];
@@ -358,7 +360,8 @@ const Modal:React.FC<Props> = ({
           style={{
           flexGrow:1,
           flexDirection:'column',
-          overflow:'hidden',
+          overflowX:'hidden',
+          overflowY:'scroll',
           textWrap:'wrap',
           width:(expanded) ? 'auto' : '0px',
         }}>
@@ -425,12 +428,12 @@ const Modal:React.FC<Props> = ({
               }, [] as React.JSX.Element[])}
             </h3>
           </div>
-          <div className="selectable oracle" title="Search By Oracle Text"
+          {(oracleText && oracleText !== '') && <div className="selectable oracle" title="Search By Oracle Text"
             data-field={searchFields.oracleText}>
             <OracleText
               oracleText={oracleText}
               symbols={symbols}/>
-          </div>
+          </div>}
           {power && toughness &&
           <div title="Search By Power/Toughness" style={{
               display:'flex',

@@ -56,13 +56,13 @@ type Return = MagicDatabase;
 type UseMagicData = (
   url:string,
   displayLimit:number,
+  sets:MagicSet[],
 ) => Return;
-const useMagicDatabase:UseMagicData = (url, displayLimit) => {
+const useMagicDatabase:UseMagicData = (url, displayLimit, sets) => {
   const [typesError, typesLoaded, types] = useMagicTypes();
   const [symbolsError, symbolsLoaded, symbols] = useMagicSymbols();
   const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
-  const [setsError, setsLoaded, sets] = useMagicSets();
   const [cardsError, cardsLoaded, cards, imageMap, hydrateImage, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
@@ -100,17 +100,6 @@ const useMagicDatabase:UseMagicData = (url, displayLimit) => {
         errorMap).set('formats', formatsErrors?.concat(_notFound('formats'))));
     }
   }, [formats]);
-
-  useMemo(() => {
-    if (setsLoaded)
-      setLoadMap(copyMap(loadMap.set('sets', true)));
-    else {
-      const setsErrors = errorMap.get('sets');
-      if (!setsErrors) return;
-      setErrorMap(copyMap(
-        errorMap).set('sets', setsErrors?.concat(setsError)));
-    }
-  }, [setsError, setsLoaded]);
 
   useMemo(() => {
     if (cardsLoaded)

@@ -2,6 +2,7 @@
 * Functions to construct valid scryfall requests
 */
 
+import { MagicSet } from "@/components/magic/types/default";
 import { defaultSelected, Selected, SelectedSection, SKey } from "@/hooks/magic/useFilters";
 
 const scryfallUrl = 'https://api.scryfall.com';
@@ -9,36 +10,48 @@ const bitCards = 'cards';
 const bitSearch = 'search?q=';
 const bitIncludeExtras = 'include_extras=true';
 
-const createSegment = (key:string, section:SelectedSection) => {
-  let value = section.value.trim();
+export const constructSearchUrl = (
+  selected:Selected=defaultSelected,
+  sets:MagicSet[],
+) => {
+  const createSegment = (key:string, section:SelectedSection) => {
+    let value = section.value.trim();
+    let translation;
 
-  let result = (section.polarity) ? "(" : "-(";
+    if (key === 'set') {
+      translation = sets.find((_set) => _set.name.toLowerCase() === value.toLowerCase());
+      if (!translation)
+        return "";
+    }
 
-  switch(key) {
-    case 'oracleText':
-      result += 'oracle';
-      break;
-    default:
-      result += key;
-  }
+    let result = (section.polarity) ? "(" : "-(";
 
-  switch(key) {
-  case 'oracleText':
-  case 'set':
-  case 'name':
-    result += ':\'' + value + '\'';
-    break;
-  case 'type': 
-  case 'format': 
-  case 'game':
-  default:
-    result += ':' + value;
-  }
+    switch(key) {
+      case 'oracleText':
+        result += 'oracle';
+        break;
+      default:
+        result += key;
+    }
 
-  return result + ")";
-};
+    switch(key) {
+      case 'set':
+        result += ':' + translation?.acronym;
+        break;
+      case 'oracleText':
+      case 'name':
+        result += ':\'' + value + '\'';
+        break;
+      case 'type': 
+      case 'format': 
+      case 'game':
+      default:
+        result += ':' + value;
+    }
 
-export const constructSearchUrl = (selected:Selected=defaultSelected) => {
+    return result + ")";
+  };
+
   let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
 
   const keys = (Object.keys(selected) as SKey[]);
