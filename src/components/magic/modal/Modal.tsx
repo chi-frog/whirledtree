@@ -1,22 +1,22 @@
 'use client'
 
 import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MagicCard, } from "./types/default";
-import { Card } from "./Card";
-import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
-import { _dragState, } from "../general/DragProvider";
+import { MagicCard, } from "../types/default";
+import { Card } from "../Card";
+import { SelectionChangeFunc, useSelectionContext } from "../../general/SelectionProvider";
+import { _dragState, } from "../../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
 import { FilterUpdateFunction, SKey } from "@/hooks/magic/useFilters";
-import OracleText from "./OracleText";
+import OracleText from "../OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
-import { ImagePacket, transformMagicCard } from "@/hooks/magic/useMagicCards";
-import CardPrintSelector from "./CardPrintSelector";
-import Tooltip, { tooltipMargin, TooltipState } from "./Tooltip";
+import { transformMagicCard } from "@/hooks/magic/useMagicCards";
+import Tooltip, { tooltipMargin, TooltipState } from "../Tooltip";
 import { renderToStaticMarkup } from "react-dom/server";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 import useExternalData from "@/hooks/useExternalData";
-import { useCardRepositoryContext } from "../general/CardRepoProvider";
+import { useCardRepositoryContext } from "../../general/CardRepoProvider";
+import ModalCardDisplay from "./ModalCardDisplay";
 
 export const searchFields = {
   game: "game",
@@ -125,9 +125,9 @@ const Modal:React.FC<Props> = ({
   const nameRef = useRef(null);
   const [expanded, setExpanded] = useState<boolean>(false);
   const {addCard, getCardPrints} = useCardRepositoryContext();
-  const [error, loaded, printsData] =
-    useExternalData<MagicCard>(card?.printsUri, transformMagicCard, {
-      onTransform:(card:MagicCard) => addCard(card)
+  const [printsError, printsLoaded, rawPrints] =
+    useExternalData<MagicCard>((card) ? card.printsUri : '', transformMagicCard, {
+      onTransform:(card:MagicCard) => addCard(card),
     });
   const [printIndex, setPrintIndex] = useState<number>(-1);
 
@@ -199,6 +199,7 @@ const Modal:React.FC<Props> = ({
 
   const handlePointerDown:PointerEventHandler = (e) => {
     e.stopPropagation();
+    e.preventDefault();
 
     if ((e.target as HTMLElement).id === 'modal')
       close();
@@ -208,12 +209,11 @@ const Modal:React.FC<Props> = ({
     return 30;
   }, [card?.name, card?.reversed]);
 
-  const oracleText = useMemo(() =>
-    (!card) ? "" :
-    (!card.reversed) ? card.oracleText :
-    (card.back)      ? card.back?.oracleText :
-                        ""
-  , [card?.reversed, card?.oracleText, card?.back]);
+  const oracleText:[string, string] = useMemo(() =>
+    (!card)      ? ["", ""] :
+    (!card.back) ? [card.oracleText, ""] :
+                   [card.oracleText, card.back.oracleText]
+  , [card?.oracleText]);
 
   const manaCostImages = useMemo(() => {
     if (!card) return [];
@@ -262,49 +262,46 @@ const Modal:React.FC<Props> = ({
   useEffect(() => {
     if (!card) {
       setExpanded(false);
-      setPrintIndex(-1);
+      setPrintIndex(0);
       return;
     }
   }, [card]);
 
+  const prints = useMemo(() =>
+    (!card) ?
+      [] :
+    ((rawPrints.length === 0) ||
+     (rawPrints[0].oracleId !== card.oracleId)) ?
+      [card] :
+      rawPrints
+  , [card, rawPrints]);
+
   useEffect(() => {
     if (!card) return;
 
-    const cardPrints = getCardPrints(card.oracleId);
+    const index = prints.findIndex((_print) =>
+      (_print.id === card.id));
 
-    const index = cardPrints.findIndex((_print) => {
-      return (_print.id === card.id)
-    });
+    console.log('index:' + index);
 
     setPrintIndex(index);
-  }, [printsData]);
+  }, [prints]);
 
-  const cardPrints = useMemo(() => {
-    if (!card) return [];
-
-    return getCardPrints(card.oracleId);
-  }, [card, printsData]);
-
-  const changeCardPrint = useCallback((amount:number) => {
-    if (!card) return;
+  const changePrint = useCallback((amount:number) => {
+    if (!card || prints.length <= 1) return;
     
     setPrintIndex((prev) => {
       let i = prev + amount;
-      let prints = getCardPrints(card.oracleId);
-      console.log('prints', prints);
 
       if (i < 0) i = prints.length - 1;
       else if (i >= prints.length) i = 0;
 
       return i;
     });
-  }, [card?.oracleId]);
+  }, [card?.oracleId, prints, card]);
 
-  const displayedCard = useMemo(() =>
-    (printIndex >= 0) ?
-      cardPrints[printIndex] :
-      card
-  , [card, printIndex]);
+  console.log('RENDER MODAL', card);
+  console.log('RENDER MODAL', prints);
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -324,15 +321,17 @@ const Modal:React.FC<Props> = ({
         pointerEvents:(shown) ? 'auto' : 'none',
         transition:'background 0.3s ease-in-out'
       }}>
-      {displayedCard && <motion.div id="inner"
-        layoutId={`inner-${card?.name}`}
+      {card && <motion.div id="inner"
+        layoutId={`inner-${card.id}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
-          setExpanded(true);
+          console.log('expanded?' + expanded);
+          setTimeout(()=>{setExpanded(true); console.log('expanded?' + expanded)}, 1000);
         }}
         style={{
         backgroundColor:'white',
-        width:'80vw',
+        width:'fit-content',
+        maxWidth:'80vw',
         height:'80vh',
         borderRadius:'20px',
         display:'flex',
@@ -341,21 +340,10 @@ const Modal:React.FC<Props> = ({
         textAlign:'center',
         border: '2px solid rgba(146, 148, 248, 0.8)',
       }}>
-        <div style={{
-          position: 'relative',
-          width: 'fit-content',
-          height: '100%',
-          filter: 'drop-shadow(black 0px 10px 15px)'}}>
-          {((!expanded) || (printIndex >=0)) && <>
-          {(cardPrints.length > 1) && <CardPrintSelector location="right" func={changeCardPrint}/>}
-          {(cardPrints.length > 1) && <CardPrintSelector location="left" func={changeCardPrint}/>}
-          <Card
-            location='modal'
-            widthString={'fit-content'}
-            heightString={'100%'}
-            card={displayedCard}
-          /></>}
-        </div>
+        <ModalCardDisplay
+          index={printIndex}
+          prints={prints}
+          changePrint={changePrint}/>
         <div id="cardInformation"
           style={{
           flexGrow:1,
@@ -428,12 +416,13 @@ const Modal:React.FC<Props> = ({
               }, [] as React.JSX.Element[])}
             </h3>
           </div>
-          {(oracleText && oracleText !== '') && <div className="selectable oracle" title="Search By Oracle Text"
-            data-field={searchFields.oracleText}>
-            <OracleText
-              oracleText={oracleText}
-              symbols={symbols}/>
-          </div>}
+          {(oracleText) &&
+            <div className="selectable oracle" title="Search By Oracle Text"
+              data-field={searchFields.oracleText}>
+              <OracleText
+                oracleText={(card?.reversed) ? oracleText[1] : oracleText[0]}
+                symbols={symbols}/>
+            </div>}
           {power && toughness &&
           <div title="Search By Power/Toughness" style={{
               display:'flex',

@@ -28,10 +28,13 @@ export enum MagicCardLayout {
 
 export const isCardDoublesided = (card:MagicCard) =>
   (card.layout === MagicCardLayout.MODAL_DFC) ||
+  (card.layout === MagicCardLayout.ART_SERIES) ||
+  (card.layout === MagicCardLayout.DFC_TOKEN) ||
   (card.layout === MagicCardLayout.TRANSFORM);
 
 export const isCardMultiple = (card:MagicCard) =>
   (card.layout === MagicCardLayout.ADVENTURE) ||
+  (card.layout === MagicCardLayout.SPLIT) ||
   (card.layout === MagicCardLayout.PREPARE);
 
 export type MagicCard = {

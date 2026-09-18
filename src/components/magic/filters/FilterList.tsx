@@ -21,7 +21,7 @@ type SectionProps = {
   index:number,
   last:boolean,
   visible:boolean,
-  list:string[],
+  datalistId:string,
   onChange:FilterChangeFunction,
 };
 const Section:React.FC<SectionProps> = memo(({
@@ -29,7 +29,7 @@ const Section:React.FC<SectionProps> = memo(({
   index,
   last,
   visible,
-  list,
+  datalistId,
   onChange,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
@@ -169,7 +169,7 @@ const Section:React.FC<SectionProps> = memo(({
       onFocus={onFocus}
       onChange={onChangeInput}
       value={section.value}
-      list={`dataList${index}`}
+      list={datalistId}
       style={{
         color: expanded ? 'inherit' : 'transparent',
         caretColor: expanded ? 'auto' : 'transparent',
@@ -196,11 +196,6 @@ const Section:React.FC<SectionProps> = memo(({
         outline: '2px solid rgb(146, 148, 248)',
         transition: `border-radius 0.2s ease-in-out, background-color 0.2s ease-in-out, width ${isTyping ? 0 : 0.2}s ease-out, height ${isTyping ? 0 : 0.2}s ease-out`,
       }}/>
-    <datalist id={`dataList${index}`}>
-      {list.map((_item, _index) => (
-        <option key={_index} value={_item}/>
-      ))}
-    </datalist>
     <span
       ref={spanRef}
       style={{
@@ -221,14 +216,14 @@ type Props = {
   id:string,
   text:string,
   sections:SelectedSection[],
-  list?:string[],
+  list:string[],
   onChange:FilterChangeFunction,
 };
 const FilterList:React.FC<Props> = ({
   id,
   text,
   sections,
-  list,
+  list = [],
   onChange
 }) => {
   const [allVisible, setAllVisible] = useState<boolean>(false);
@@ -287,7 +282,12 @@ const FilterList:React.FC<Props> = ({
       }}>
       {text}&nbsp;
     </label>
-    {(list) && sections.map((_section, _index) => {
+    <datalist id='dataList'>
+      {list.map((_item, _index) => (
+        <option key={_index} value={_item}/>
+      ))}
+    </datalist>
+    {sections.map((_section, _index) => {
       return (
         <Section
           key={_index}
@@ -295,7 +295,7 @@ const FilterList:React.FC<Props> = ({
           index={_index}
           last={_index === (sections.length - 1)}
           visible={allVisible}
-          list={list}
+          datalistId="dataList"
           onChange={onChange}/>
       );
     })}

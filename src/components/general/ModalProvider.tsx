@@ -2,7 +2,7 @@
 
 import { createContext, ReactNode, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from "react";
 import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
-import Modal from "../magic/Modal";
+import Modal from "../magic/modal/Modal";
 import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
 import { MagicCard } from "../magic/types/default";
 import { useImageRepositoryContext } from "./ImageRepoProvider";

@@ -19,12 +19,14 @@ type Props = {
   widthString?:string,
   heightString?:string,
   card:MagicCard,
+  visible?:boolean,
 };
 export const Card:React.FC<Props> = memo(function Card({
     location,
     widthString,
     heightString,
     card,
+    visible=true,
   }:Props) {
   const [reversed, setReversed] = useState<boolean>(false);
   const [isRaised, setIsRaised] = useState(false);
@@ -94,11 +96,8 @@ export const Card:React.FC<Props> = memo(function Card({
           setFrontImageSet(repoImagePacket.front);
         else if (side === 'back')
           setBackImageSet(repoImagePacket.back);
-        console.log('Image already in repo: ' + repoImagePacket[side][size]);
         return;
       }
-
-      console.log('rendering!', frontImageSrc);
 
       const newImagePacket = (repoImagePacket) ?
         repoImagePacket :
@@ -395,7 +394,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   return (<>
     <motion.div
-      layoutId={(location === 'view' && isInModal) ? undefined : card.name}
+      layoutId={(location === 'view' && isInModal) ? undefined : card.id}
       layout={!dragging}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
@@ -403,7 +402,6 @@ export const Card:React.FC<Props> = memo(function Card({
         if (location === 'view') return;
         isAnimating.current.s = false;
         isAnimating.current.img = undefined;
-        console.log('Lowering (' + location + ")");
       }}
       onLayoutAnimationStart={() => {
         setIsRaised(true);
@@ -411,7 +409,6 @@ export const Card:React.FC<Props> = memo(function Card({
         isAnimating.current.s = true;
         isAnimating.current.img =
           (showFront) ? frontImageSrc : backImageSrc;
-        console.log('Raising (' + location + ")");
       }}
       style={{
         cursor:'pointer',
@@ -419,9 +416,9 @@ export const Card:React.FC<Props> = memo(function Card({
         width:widthString,
         height:heightString,
         aspectRatio:cardAspectRatio,
-        position: 'relative',
+        position:(location === 'modal') ? 'absolute' : 'relative',
         zIndex: (isRaised) ? 30 : 0,
-        opacity: (location === 'view' && isInModal) ? 0 : 1,
+        opacity: ((!visible) || (location === 'view' && isInModal)) ? 0 : 1,
         pointerEvents: (location === 'view' && isInModal) ? 'none' : undefined,
       }}>
       <div
@@ -461,7 +458,7 @@ export const Card:React.FC<Props> = memo(function Card({
       </div>
       {location === 'view' && (
       <motion.div
-        layoutId={`inner-${card.name}`}
+        layoutId={`inner-${card.id}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
           position: 'absolute',

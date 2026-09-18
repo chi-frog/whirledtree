@@ -1,7 +1,7 @@
 'use client'
 
-import { PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DragStage, useDragContext } from "../general/DragProvider";
+import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDragContext } from "../general/DragProvider";
 
 const widthRatio = 578/669;
 const heightRatio = 550/933;
@@ -168,11 +168,12 @@ const bulbSvg = (highlighted:boolean) => (
 )
 
 type Props = {
+  visible:boolean,
   location:string,
   func:(amount:number)=>void,
 };
 const CardPrintSelector:React.FC<Props> = ({
-  location, func
+  visible, location, func
 }) => {
   const [highlighted, setHighlighted] = useState<boolean>(false);
   const [dragging, setDragging] = useState<boolean>(false);
@@ -254,8 +255,9 @@ const CardPrintSelector:React.FC<Props> = ({
       top:`${heightRatio*100}%`,
       left:left,
       cursor:'pointer',
+      opacity:(visible) ? 1 : 0,
       transform:transform,
-      transition:'transform 100ms ease-in-out',
+      transition:'transform 0.1s ease-in-out, opacity 0.1s ease-in-out',
       transformOrigin:'left',
     }}>
       {bulbSvg(highlighted)}
@@ -263,4 +265,4 @@ const CardPrintSelector:React.FC<Props> = ({
   )
 }
 
-export default CardPrintSelector;
+export default memo(CardPrintSelector);

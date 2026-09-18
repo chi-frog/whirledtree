@@ -2,7 +2,7 @@
 
 import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
 import { memo, PointerEventHandler, useMemo, useRef, useState } from "react";
-import { findNearestField, searchFields } from "./Modal";
+import { findNearestField, searchFields } from "./modal/Modal";
 
 export const tooltipMargin = 5;
 

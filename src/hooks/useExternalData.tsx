@@ -12,6 +12,9 @@ export type ExternalDataOptions<T> = {
   totalCards?:boolean,
   // A function to run on a *transformed* piece of data.
   onTransform?:(obj:T)=>void,
+  // An array to be substituted for the returned info *if* the
+  // response hasn't been received yet.
+  defaultValue?:T[],
 };
 
 type ReturnOptions = {
@@ -24,7 +27,9 @@ function useExternalData<T> (
     transform:Transform<T>,
     options:ExternalDataOptions<T>={},
   ):Return<T> {
-  const [data, setData] = useState<T[]>([]);
+  const [data, setData] = useState<T[]>(
+    (options.defaultValue) ?? []
+  );
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<WError>(_noError);
   const [totalCards, setTotalCards] = useState<number>(0);

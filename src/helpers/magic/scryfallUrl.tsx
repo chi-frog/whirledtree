@@ -75,7 +75,6 @@ export const constructSearchUrl = (
   }, query);
 
   url += query + '&order=name';
-  console.log('Constructed URL:' + url);
 
   return url;
 };
