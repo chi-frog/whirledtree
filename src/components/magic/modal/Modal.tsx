@@ -2,7 +2,6 @@
 
 import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, } from "../types/default";
-import { Card } from "../Card";
 import { SelectionChangeFunc, useSelectionContext } from "../../general/SelectionProvider";
 import { _dragState, } from "../../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
@@ -129,7 +128,7 @@ const Modal:React.FC<Props> = ({
     useExternalData<MagicCard>((card) ? card.printsUri : '', transformMagicCard, {
       onTransform:(card:MagicCard) => addCard(card),
     });
-  const [printIndex, setPrintIndex] = useState<number>(-1);
+  const [printIndex, setPrintIndex] = useState<number>(0);
 
   const onSelectionChange:SelectionChangeFunc = (e) => {
     const newSelection = e.toString();
@@ -201,8 +200,12 @@ const Modal:React.FC<Props> = ({
     e.stopPropagation();
     e.preventDefault();
 
-    if ((e.target as HTMLElement).id === 'modal')
+    if ((e.target as HTMLElement).id === 'modal') {
+      setExpanded(false);
+      setPrintIndex(0);
       close();
+      console.log('closing');
+    }
   }
 
   const nameFontSize = useMemo(() => {
@@ -258,14 +261,6 @@ const Modal:React.FC<Props> = ({
     } else
       return card?.toughness;
   }, [card?.toughness, card?.reversed]);
-
-  useEffect(() => {
-    if (!card) {
-      setExpanded(false);
-      setPrintIndex(0);
-      return;
-    }
-  }, [card]);
 
   const prints = useMemo(() =>
     (!card) ?

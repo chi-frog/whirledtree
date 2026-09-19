@@ -24,7 +24,7 @@ export const _cardRotateState:CardRotateState = {
   maxAngle:80,
 }
 
-type StartRotatingCard = (e:PointerEvent|React.PointerEvent, dir:-1|1)=>void;
+export type StartRotatingCard = (e:PointerEvent|React.PointerEvent, dir:-1|1)=>void;
 type ForceRotate = (angle:number)=>void;
 type UseCardRotateReturn = [
   cardRotateState:CardRotateState,

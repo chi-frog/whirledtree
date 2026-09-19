@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { useImageRepositoryContext } from "../general/ImageRepoProvider";
 import { useIsCardInModal, useModalContext } from "../general/ModalProvider";
 import CardFace from "./CardFace";
+import DoublesidedOverlay from "./card/DoublesidedOverlay";
 
 export type CardLocation =
   'view' | 'modal';
@@ -40,7 +41,6 @@ export const Card:React.FC<Props> = memo(function Card({
   const [rotateState, rotateStateRef, startRotating, forceRotate] =
     useCardRotate(node, subDrag, startDragging, dragStateRef);
 
-  const [dims, setDims] = useState({ x:0, y:0, width: 0, height: 0 });
   const mousedoverRef = useRef<boolean>(false);
   const [mousedover, setMousedover] = useState<boolean>(false);
   const ref = useCallback((el:HTMLDivElement|null) => setNode(el), []);
@@ -52,31 +52,16 @@ export const Card:React.FC<Props> = memo(function Card({
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
 
-  const flipping = useMemo(() => rotateState.angle > 90, [rotateState.angle]);
+  if (location === 'modal' &&
+      !frontImageSet
+  ) {
+    console.log('ITS UNDEFINED');
+  }
+
+  const flipping = useMemo(() => (rotateState.angle > 90), [rotateState.angle]);
   const showFront = useMemo(() =>
-      ((!reversed && rotateState.angle <= 90) ||
-       (reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
-  const showBack = useMemo(() =>
-      ((reversed && rotateState.angle <= 90) ||
-       (!reversed && rotateState.angle > 90)), [reversed, rotateState.angle]);
-
-  useEffect(() => {
-    if (!node) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        const { x, y } = entry.target.getBoundingClientRect();
-        setDims({
-          x, y,
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [node]);
+      ((!reversed && !flipping) ||
+       (reversed && flipping)), [reversed, flipping]);
 
   useEffect(() => {
     const size = (location === 'view') ?
@@ -270,63 +255,18 @@ export const Card:React.FC<Props> = memo(function Card({
     lastMousePress.current = undefined;
   }, [showModal]);
 
-  const tlaRatios = (dims:{width:number, height:number}) => {
-    const circleSize = 55;
-    const imgWidth = 670;
-    const imgHeight = 935;
-    const sizeRatio = circleSize/imgWidth;
-    const topRatio = 46/imgHeight;
-    const leftRatio = 39/imgWidth;
-
-    return {
-      x:dims.width*leftRatio,
-      y:dims.height*topRatio,
-      w:dims.width*sizeRatio,
-      h:dims.width*sizeRatio,
-    };
-  }
-
-  const khmRatios = (dims:{width:number, height:number}) => {
-    const circleSize = 50;
-    const imgWidth = 670;
-    const imgHeight = 935;
-    const sizeRatio = circleSize/imgWidth;
-    const topRatio = 44/imgHeight;
-    const leftRatio = 34.5/imgWidth;
-
-    return {
-      x:dims.width*leftRatio,
-      y:dims.height*topRatio,
-      w:dims.width*sizeRatio,
-      h:dims.width*sizeRatio,
-    };
-  }
-
-  const doubleSidedCircleOffset:{x:number, y:number, w:number, h:number} = useMemo(() => {
-    const def = {x:0, y:0, w:0, h:0};
-    
-    if (isCardDoublesided(card)) {
-      if (!node) return def;
-
-      return (card.set === 'tla') ? tlaRatios(dims) :
-             (card.set === 'khm') ? khmRatios(dims) :
-                                    tlaRatios(dims);
-    }
-    return def;
-  }, [dims, node]);
-
-  const handleDoublesidedPointerDown = useCallback((e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
+  const handleRotationPointerDown = useCallback((e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
     e.stopPropagation();
-
+  
     if (e.button !== 0) return;
-
+  
     if (!dir) dir = (reversed) ? -1 : 1
     startRotating(e, dir);
     lastMousePress.current = e;
   }, [reversed, node]);
 
-  const handleDoublesidedPointerUp:PointerEventHandler = useCallback((e) => {
+  const handleRotationPointerUp:PointerEventHandler = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -350,35 +290,12 @@ export const Card:React.FC<Props> = memo(function Card({
     }
   }, [node]);
 
-  const doublesidedCircle = useMemo(() => {
-    return (
-      <div 
-        onPointerDown={(e) => handleDoublesidedPointerDown(e)}
-        onPointerUp={handleDoublesidedPointerUp}
-        style={{
-        borderRadius:'50%',
-        position:'absolute',
-        left:(showFront) ? doubleSidedCircleOffset.x + 'px' : `${dims.width - doubleSidedCircleOffset.w - doubleSidedCircleOffset.x}px`,
-        top:doubleSidedCircleOffset.y + 'px',
-        width:doubleSidedCircleOffset.w + 'px',
-        height:doubleSidedCircleOffset.h + 'px',
-        backgroundColor:'transparent',
-        visibility:(mousedover) ? 'visible' : 'hidden',
-        transition:'box-shadow 0.3s ease',
-        boxShadow: (mousedover) ?
-          '0px 0px 5px 5px rgba(236, 236, 26), inset 0px 0px 2px 3px rgba(236, 236, 26, 1)' :
-          'none',
-        cursor:'url("images/Cursor_Rotate.svg") 16 16, auto',
-      }}/>
-    )
-  }, [showFront, handleDoublesidedPointerDown, handleDoublesidedPointerUp, dims.width, doubleSidedCircleOffset, mousedover])
-
   const rotationBar = useCallback((left:string='0', dir:-1|1=1) => {
     return (
       <div
         className="leftSideRotate"
-        onPointerDown={(e) => handleDoublesidedPointerDown(e, dir)}
-        onPointerUp={handleDoublesidedPointerUp}
+        onPointerDown={(e) => handleRotationPointerDown(e, dir)}
+        onPointerUp={handleRotationPointerUp}
         style={{
           width:"10px",
           height:"100%",
@@ -390,7 +307,7 @@ export const Card:React.FC<Props> = memo(function Card({
         }}
         />
     )
-  }, [handleDoublesidedPointerUp, handleDoublesidedPointerDown]);
+  }, [handleRotationPointerUp, handleRotationPointerDown]);
 
   return (<>
     <motion.div
@@ -449,9 +366,16 @@ export const Card:React.FC<Props> = memo(function Card({
             '',
       }}>
       <CardFace loc={location} src={frontImageSrc} visible={showFront}/>
-      <CardFace loc={location} src={backImageSrc} visible={showBack}/>
+      <CardFace loc={location} src={backImageSrc} visible={!showFront}/>
       { isCardDoublesided(card) &&
-        doublesidedCircle
+        <DoublesidedOverlay 
+          cardMousedover={mousedover}
+          node={node}
+          set={card.set}
+          showFront={showFront}
+          pointerDown={handleRotationPointerDown}
+          pointerUp={handleRotationPointerUp}
+        />
       }
       {rotationBar("", 1)}
       {rotationBar("calc(100% - 10px)", -1)}
