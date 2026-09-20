@@ -60,27 +60,19 @@ const useFilters = () => {
 
       updates.forEach(({ property, value, polarity, connector, index }) => {
         const arr = [...newSelected[property]];
+        index = (index) ?? (arr.length - 1);
 
-        if (index !== undefined) {
-          if (value === '')
-            arr.splice(index, 1);
-          else {
-            arr[index] = {
-              ...arr[index],
-              ...(value !== undefined && { value }),
-              ...(polarity !== undefined && { polarity }),
-              ...(connector !== undefined && { connector }),
-            };
-          }
-        } else {
-          if (value === '') return;
-
-          arr.push({
-            value:(value) ?? '',
-            polarity:(polarity) ?? true,
-            connector:(connector) ?? AND,
-          });
+        if (value === '')
+          arr.splice(index, 1);
+        else {
+          arr[index] = {
+            ...arr[index],
+            ...(value !== undefined && { value }),
+            ...(polarity !== undefined && { polarity }),
+            ...(connector !== undefined && { connector }),
+          };
         }
+
 
         if ((arr.length === 0) ||
             (arr[arr.length - 1].value !== ''))

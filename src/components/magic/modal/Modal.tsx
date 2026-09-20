@@ -2,101 +2,18 @@
 
 import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MagicCard, } from "../types/default";
-import { SelectionChangeFunc, useSelectionContext } from "../../general/SelectionProvider";
 import { _dragState, } from "../../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
-import { FilterUpdateFunction, SKey } from "@/hooks/magic/useFilters";
+import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
 import OracleText from "../OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
 import { transformMagicCard } from "@/hooks/magic/useMagicCards";
-import Tooltip, { tooltipMargin, TooltipState } from "../Tooltip";
-import { renderToStaticMarkup } from "react-dom/server";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 import useExternalData from "@/hooks/useExternalData";
 import { useCardRepositoryContext } from "../../general/CardRepoProvider";
 import ModalCardDisplay from "./ModalCardDisplay";
-
-export const searchFields = {
-  game: "game",
-  name: "name",
-  format: "format",
-  set: "set",
-  type: "type",
-  power: "power",
-  toughness: "toughness",
-  oracleText: "oracleText",
-  manaValue: "manaValue",
-} as const satisfies Record<SKey, SKey>;
-
-const tooltipText = (selectionField:string, selection:string) => {
-  const span = (<span style={{fontWeight:'bold', color:'rgba(146, 148, 248, 1)'}}>{selection}</span>);
-  const text =
-    (selectionField === searchFields.oracleText) ?
-      (<h1>Search for cards with {span} in their oracle text.</h1>) :
-      (<h1>Search for cards with {span} in their {selectionField}</h1>);
-
-  return text;
-};
-
-type SearchTooltipProps = {
-  selection:string,
-  selectionPoint:{x:number, y:number},
-  selectionField:string,
-  tooltipMargin:number,
-}
-function createSearchTooltip({
-  selection,
-  selectionPoint,
-  selectionField,
-  tooltipMargin,
-}:SearchTooltipProps) {
-  // Root
-  const div = document.createElement("div");
-  div.id = "searchTooltip";
-
-  Object.assign(div.style, {
-    position: "absolute",
-    userSelect: "none",
-    top: `${selectionPoint.y - 35 - tooltipMargin}px`,
-    left: `${selectionPoint.x}px`,
-    width: "fit-content",
-    display: "flex",
-    flexDirection: "column",
-    borderRadius: "5px",
-    justifyContent: "center",
-    border: "2px solid rgba(146, 148, 248, 0.8)",
-    padding: "2px 5px 2px 5px",
-    visibility: "hidden",
-    zIndex:500,
-  });
-
-  div.innerHTML = renderToStaticMarkup(tooltipText(selectionField, selection));
-
-  return div;
-}
-
-function getField(node:Node|null):Element|null {
-  if (!node) return null;
-
-  // Text nodes and img elements don't have .closest — use parentElement
-  const el = (node instanceof Element) ? node : node.parentElement;
-  return el?.closest('[data-field]') ?? null;
-}
-
-export function findNearestField(node:Node|null) {
-  if (!node) return null;
-
-  let currentNode:HTMLElement|null = (node as HTMLElement);
-  let property = currentNode?.dataset?.field;
-
-  while ((currentNode) && !(property)) {
-    currentNode = currentNode.parentElement;
-    property = currentNode?.dataset?.field;
-  }
-
-  return property;
-}
+import CardTooltip, { searchFields } from "@/components/magic/CardTooltip";
 
 type Props = {
   shown:boolean,
@@ -114,13 +31,7 @@ const Modal:React.FC<Props> = ({
     updateSelected,
     card,
   }:Props) => {
-  const [selection, setSelection] = useState<string>("");
-  const [selectionField, setSelectionField] = useState<string>("");
-  const [selectionPoint, setSelectionPoint] = useState<{x:number, y:number}>({x:0, y:0});
-  const [tooltipState, setTooltipState] = useState<TooltipState>(TooltipState.HIDDEN);
-  const [tooltipOverhang, setTooltipOverhang] = useState<number>(0);
-  const {subSelection} = useSelectionContext();
-  const divRef = useRef(null);
+  const divRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef(null);
   const [expanded, setExpanded] = useState<boolean>(false);
   const {addCard, getCardPrints} = useCardRepositoryContext();
@@ -129,82 +40,17 @@ const Modal:React.FC<Props> = ({
       onTransform:(card:MagicCard) => addCard(card),
     });
   const [printIndex, setPrintIndex] = useState<number>(0);
-
-  const onSelectionChange:SelectionChangeFunc = (e) => {
-    const newSelection = e.toString();
-
-    if ((newSelection === '') ||
-        (!divRef.current) ||
-        (e.rangeCount === 0)) {
-
-      setSelection(newSelection);
-      setTooltipState(TooltipState.HIDDEN);
-      setSelectionField("");
-      return;
-
-    } else if ((newSelection === selection))
-      return;
-
-    const range = e.getRangeAt(0);
-    const selectionBox = range?.getBoundingClientRect();
-
-    const startField = getField(range.startContainer);
-    const endField = getField(range.endContainer);
-
-    // No zone found, or selection spans two different zones -> reject it
-    if (!startField || !endField || startField !== endField) {
-      e.removeAllRanges();
-      return;
-    }
-
-    if (selectionBox) {
-      let x = selectionBox.x;
-      const y = selectionBox.y;
-      const windowWidth = window.innerWidth;
-
-      let property = findNearestField(e.anchorNode);
-      if (!property) {
-        console.warn('No Property Found');
-        return;
-      }
-
-      setSelectionField(property);
-
-      const testTooltip = createSearchTooltip({
-        selection: newSelection,
-        selectionPoint: {x, y},
-        selectionField: property,
-        tooltipMargin,
-      });
-
-      (divRef.current as HTMLElement).appendChild(testTooltip);
-
-      const tooltipWidth = testTooltip.offsetWidth;
-      const overhang = (windowWidth - (x + tooltipWidth + 2));
-
-      testTooltip.remove();
-
-      setSelectionPoint({x:x, y:y});
-      setTooltipOverhang(overhang < 0 ? overhang : 0);
-    }
-
-    setSelection(newSelection);
-    setTooltipState(TooltipState.SHOWN);
-  };
-
-  useEffect(() => {
-    return subSelection({tag:'modal', onSelectionChange});
-  }, []);
+  const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
 
   const handlePointerDown:PointerEventHandler = (e) => {
     e.stopPropagation();
-    e.preventDefault();
 
     if ((e.target as HTMLElement).id === 'modal') {
+      e.preventDefault();
       setExpanded(false);
       setPrintIndex(0);
+      setTooltipVisible(false);
       close();
-      console.log('closing');
     }
   }
 
@@ -320,8 +166,7 @@ const Modal:React.FC<Props> = ({
         layoutId={`inner-${card.id}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
-          console.log('expanded?' + expanded);
-          setTimeout(()=>{setExpanded(true); console.log('expanded?' + expanded)}, 1000);
+          setTimeout(()=>{setExpanded(true);}, 100);
         }}
         style={{
         backgroundColor:'white',
@@ -451,14 +296,12 @@ const Modal:React.FC<Props> = ({
           }
         </div>
       </motion.div>}
-      <Tooltip 
+      <CardTooltip
+        visible={tooltipVisible}
+        setVisible={setTooltipVisible}
+        divRef={divRef}
         updateSelected={updateSelected}
-        selection={selection}
-        selectionPoint={selectionPoint}
-        selectionField={selectionField}
-        overhang={tooltipOverhang}
-        state={tooltipState}
-        />
+      />
     </div>
   )
 };
