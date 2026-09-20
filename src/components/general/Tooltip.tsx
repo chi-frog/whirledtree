@@ -1,6 +1,6 @@
 'use client'
 
-import { FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
+import { SelectionUpdateFunction, Selected } from "@/hooks/magic/useSelection";
 import { memo, PointerEventHandler, useMemo, useRef, useState } from "react";
 import { searchFields } from "../magic/CardTooltip";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -78,7 +78,7 @@ export function findNearestField(node:Node|null) {
 
 type Props = {
   visible:boolean,
-  updateSelected:FilterUpdateFunction,
+  updateSelected:SelectionUpdateFunction,
   selection:string,
   selectionPoint:{x:number, y:number},
   selectionField:string,

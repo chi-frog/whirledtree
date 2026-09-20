@@ -3,7 +3,7 @@
 import useTabVisibility from "@/hooks/useTabVisibility";
 import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
 import XOut from "./XOut";
-import { FilterChangeFunction, SelectedSection } from "@/hooks/magic/useFilters";
+import { FilterChangeFunction, SelectedSection } from "@/hooks/magic/useSelection";
 import Polarity from "./Polarity";
 
 const colorWheel:string[] = [

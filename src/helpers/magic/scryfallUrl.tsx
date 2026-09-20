@@ -3,7 +3,7 @@
 */
 
 import { MagicSet } from "@/components/magic/types/default";
-import { defaultSelected, Selected, SelectedSection, SKey } from "@/hooks/magic/useFilters";
+import { defaultSelected, Selected, SelectedSection, SKey } from "@/hooks/magic/useSelection";
 
 const scryfallUrl = 'https://api.scryfall.com';
 const bitCards = 'cards';

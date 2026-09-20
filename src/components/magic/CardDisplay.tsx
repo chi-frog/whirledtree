@@ -2,7 +2,7 @@
 
 import { ChangeEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { _magicCard, MagicCard } from "./types/default";
-import { FilterChangeFunction, FilterUpdateFunction, Selected } from "@/hooks/magic/useFilters";
+import { SelectionChangeFunction, Selected } from "@/hooks/magic/useSelection";
 import View from "./View";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
@@ -36,7 +36,7 @@ export const _err = (err:any) =>
 type Props = {
   db:MagicDatabase,
   selected:Selected,
-  handlers:Record<keyof Selected, FilterChangeFunction>
+  handlers:Record<keyof Selected, SelectionChangeFunction>
 };
 const CardDisplay:React.FC<Props> = ({
   db,

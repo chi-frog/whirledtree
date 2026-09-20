@@ -4,7 +4,7 @@ import { memo, PointerEventHandler, useMemo, useRef } from "react";
 import { FilterState } from "../CardDisplay";
 import { motion } from "framer-motion";
 import FilterButton from "./FilterButton";
-import { FilterChangeFunction, Selected } from "@/hooks/magic/useFilters";
+import { FilterChangeFunction, Selected } from "@/hooks/magic/useSelection";
 import XOut from "./XOut";
 import FilterList from "./FilterList";
 import { MagicSet } from "../types/default";

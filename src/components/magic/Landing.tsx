@@ -3,7 +3,7 @@
 import useMagicDatabase from "@/hooks/magic/useMagicDatabase";
 import CardDisplay from "./CardDisplay";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
-import useFilters from "@/hooks/magic/useFilters";
+import useFilters from "@/hooks/magic/useSelection";
 import { useEffect, useMemo, useState } from "react";
 import { ModalProvider } from "../general/ModalProvider";
 import { ImageRepoProvider } from "../general/ImageRepoProvider";

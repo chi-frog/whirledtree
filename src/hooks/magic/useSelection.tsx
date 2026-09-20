@@ -38,7 +38,7 @@ export const defaultSelected:Selected = {
   manaValue:[{value:'', polarity:true, connector:AND}],
 };
 
-export type FilterUpdate = {
+export type SelectionUpdate = {
   property: keyof Selected,
   value?: string,
   polarity?:boolean,
@@ -46,13 +46,13 @@ export type FilterUpdate = {
   index?: number, // If there is no index, it's treated as an append
                   // If the value is an empty string, the selection is deleted.
 };
-export type FilterUpdateFunction = (...updates:FilterUpdate[])=>void;
-export type FilterChangeFunction = (section:Partial<SelectedSection>, index:number)=>void;
+export type SelectionUpdateFunction = (...updates:SelectionUpdate[])=>void;
+export type SelectionChangeFunction = (section:Partial<SelectedSection>, index:number)=>void;
 
 const useFilters = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
 
-  const updateSelected:FilterUpdateFunction = useCallback((...updates) => {
+  const updateSelected:SelectionUpdateFunction = useCallback((...updates) => {
     console.log('updates', updates);
     
     setSelected((prev) => {
@@ -88,19 +88,19 @@ const useFilters = () => {
     });
   }, []);
 
-  const makeHandler = useCallback((property:SKey):FilterChangeFunction => {
+  const makeHandler = useCallback((property:SKey):SelectionChangeFunction => {
     return ({value, polarity, connector}, index) => {
       updateSelected({ property, value, polarity, connector, index });
     };
   }, [updateSelected]);
 
   const handlers = useMemo(() => {
-    const entries:[SKey, FilterChangeFunction][] =
+    const entries:[SKey, SelectionChangeFunction][] =
       (Object.keys(defaultSelected) as SKey[]).map((key) => [
         key,
         makeHandler(key),
       ]);
-    return Object.fromEntries(entries) as Record<SKey, FilterChangeFunction>;
+    return Object.fromEntries(entries) as Record<SKey, SelectionChangeFunction>;
   }, [makeHandler]);
 
   return {selected, updateSelected, handlers};

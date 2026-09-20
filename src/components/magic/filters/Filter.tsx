@@ -9,7 +9,7 @@ import FilterFormat from "./FilterFormat";
 import FilterName from "./FilterName";
 import useMouseLeavePage from "@/hooks/useMouseLeavePage";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
-import { Selected } from "@/hooks/magic/useFilters";
+import { Selected } from "@/hooks/magic/useSelection";
 import FilterType from "./FilterType";
 import FilterButton from "./FilterButton";
 

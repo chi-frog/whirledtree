@@ -1,6 +1,6 @@
 'use client';
 
-import { FilterUpdateFunction, SKey } from "@/hooks/magic/useFilters";
+import { SelectionUpdateFunction, SKey } from "@/hooks/magic/useSelection";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
 import { Dispatch, RefObject, SetStateAction, useEffect, useState } from "react";
 import Tooltip, { createSearchTooltip, findNearestField, getField, tooltipMargin, } from "../general/Tooltip";
@@ -21,7 +21,7 @@ type Props = {
   visible:boolean,
   setVisible:Dispatch<SetStateAction<boolean>>,
   divRef:RefObject<HTMLDivElement|null>,
-  updateSelected:FilterUpdateFunction,
+  updateSelected:SelectionUpdateFunction,
 };
 const CardTooltip:React.FC<Props> = ({
   visible,

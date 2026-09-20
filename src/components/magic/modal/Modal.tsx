@@ -4,7 +4,7 @@ import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, use
 import { MagicCard, } from "../types/default";
 import { _dragState, } from "../../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
-import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
+import { SelectionUpdateFunction } from "@/hooks/magic/useSelection";
 import OracleText from "../OracleText";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
@@ -20,7 +20,7 @@ type Props = {
   close:()=>void,
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
-  updateSelected:FilterUpdateFunction,
+  updateSelected:SelectionUpdateFunction,
   card?:MagicCard,
 }
 const Modal:React.FC<Props> = ({

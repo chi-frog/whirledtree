@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from "react";
 import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import Modal from "../magic/modal/Modal";
-import { FilterUpdateFunction } from "@/hooks/magic/useFilters";
+import { SelectionUpdateFunction } from "@/hooks/magic/useSelection";
 import { MagicCard } from "../magic/types/default";
 import { useImageRepositoryContext } from "./ImageRepoProvider";
 import { useSyncExternalStoreWithSelector } from "use-sync-external-store/with-selector";
@@ -66,7 +66,11 @@ export const useIsCardInModal = (cardName: string) => {
   );
 };
 
-export const ModalProvider = ({ db, updateSelected, children }: {db:MagicDatabase, updateSelected:FilterUpdateFunction, children: ReactNode}) => {
+export const ModalProvider = ({
+  db,
+  updateSelected,
+  children
+}:{db:MagicDatabase, updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
   const store = useRef(createModalStore()).current;
   const {getImagePacket} = useImageRepositoryContext();
 
@@ -99,7 +103,7 @@ function ModalSubscriber({ store, hideModal, db, updateSelected }: {
   store: ReturnType<typeof createModalStore>,
   hideModal: () => void,
   db: MagicDatabase,
-  updateSelected: FilterUpdateFunction,
+  updateSelected: SelectionUpdateFunction,
 }) {
   const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);
 
