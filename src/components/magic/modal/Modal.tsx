@@ -35,10 +35,6 @@ const Modal:React.FC<Props> = ({
   const nameRef = useRef(null);
   const [expanded, setExpanded] = useState<boolean>(false);
   const {addCard, getCardPrints} = useCardRepositoryContext();
-  const [printsError, printsLoaded, rawPrints] =
-    useExternalData<MagicCard>((card) ? card.printsUri : '', transformMagicCard, {
-      onTransform:(card:MagicCard) => addCard(card),
-    });
   const [printIndex, setPrintIndex] = useState<number>(0);
   const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
 
@@ -53,37 +49,6 @@ const Modal:React.FC<Props> = ({
       close();
     }
   }
-
-  const prints = useMemo(() =>
-    (!card) ?
-      [] :
-    ((rawPrints.length === 0) ||
-     (rawPrints[0].oracleId !== card.oracleId)) ?
-      [card] :
-      rawPrints
-  , [card, rawPrints]);
-
-  useEffect(() => {
-    if (!card) return;
-
-    const index = prints.findIndex((_print) =>
-      (_print.id === card.id));
-
-    setPrintIndex(index);
-  }, [prints]);
-
-  const changePrint = useCallback((amount:number) => {
-    if (!card || prints.length <= 1) return;
-    
-    setPrintIndex((prev) => {
-      let i = prev + amount;
-
-      if (i < 0) i = prints.length - 1;
-      else if (i >= prints.length) i = 0;
-
-      return i;
-    });
-  }, [card?.oracleId, prints, card]);
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -105,7 +70,7 @@ const Modal:React.FC<Props> = ({
       }}>
       {card &&
       <motion.div id="inner"
-        layoutId={`inner-${card.id}`}
+        layoutId={`inner-${card.oracleId}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
           setTimeout(()=>{setExpanded(true);}, 100);
@@ -124,8 +89,8 @@ const Modal:React.FC<Props> = ({
         }}>
         <ModalCardDisplay
           index={printIndex}
-          prints={prints}
-          changePrint={changePrint}/>
+          prints={[]}
+          changePrint={()=>{}}/>
         <CardInfoDisplay
           card={card}
           expanded={expanded}

@@ -36,10 +36,9 @@ export const Card:React.FC<Props> = memo(function Card({
   const [isRaised, setIsRaised] = useState(false);
   const isAnimating = useRef<{s:boolean, img:string|undefined}>({s:false, img:undefined});
   const [node, setNode] = useState<HTMLDivElement|null>(null);
-  const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
 
-  const {addImage, getPrint} = useImageRepositoryContext();
   const {subDrag, startDragging, dragStateRef} = useDragContext();
+  const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
   const [dragState, startDraggingCard] = useCardDrag(startDragging, dragStateRef, onDragEnd);
   const [rotateState, rotateStateRef, startRotating, forceRotate] =
     useCardRotate(node, subDrag, startDragging, dragStateRef);
@@ -50,65 +49,22 @@ export const Card:React.FC<Props> = memo(function Card({
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<React.PointerEvent|undefined>(undefined);
 
-  const imgSize = useMemo(() => (location === 'modal') ? 'large' : 'small', [location]);
+  const {addImage, getPrint} = useImageRepositoryContext();
+  const [printsError, printsLoaded, rawPrints] = useExternalData<MagicCard>(card.printsUri, transformMagicCard, {
+    signal:mousedover
+  });
 
-  const print = getPrint(card.oracleId, card.id);
-  const [frontImgSrc, setFrontImgSrc] = useState<string|undefined>(
-    (print?.front.large && (print?.front.large !== '')) ?
-      print?.front.large :
-      print?.front.small);
-  const [backImgSrc, setBackImgSrc] =
-    useState<string|undefined>(print?.back.large ?? print?.back.small);
+  useEffect(() => {
+    console.log('rawPrints:', rawPrints);
+  }, [rawPrints]);
   
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
-
-  if (card.name === 'Aang, Air Nomad' && visible) {
-    console.log('frontImgSrc:' + frontImgSrc + ' | location:' + location);
-    console.log('print', print);
-  }
 
   const flipping = useMemo(() => (rotateState.angle > 90), [rotateState.angle]);
   const showFront = useMemo(() =>
       ((!reversed && !flipping) ||
        (reversed && flipping)), [reversed, flipping]);
-
-  const loadingFrontImg = useRef<boolean>(false);
-  const loadingBackImg = useRef<boolean>(false);
-
-  async function getImageUrl(url:string, side:PrintSide) {
-    const blob = await fetchImage(url);
-    if (!blob) return;
-
-    addImage(card.oracleId, card.id, side, imgSize, blob);
-
-    if (side === 'front') {
-      setFrontImgSrc(blob);
-      loadingFrontImg.current = false;
-
-    } else {
-      setBackImgSrc(blob);
-      loadingBackImg.current = false;
-    }
-  }
-
-  useEffect(() => {
-    if ((!loadingFrontImg.current) &&
-        ((!frontImgSrc) ||
-         (frontImgSrc === ''))) {
-      // Only get the image if we can't find it in the repo
-      loadingFrontImg.current = true;
-      getImageUrl(card.imageUris[imgSize], 'front');
-    }
-  }, [frontImgSrc]);
-
-  useEffect(() => {
-    if (((!backImgSrc) ||
-         (backImgSrc === '')) &&
-        (card.back)) {
-      //getImageUrl(card.back.imageUris[imgSize], 'back');
-    }
-  }, [frontImgSrc]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -278,7 +234,7 @@ export const Card:React.FC<Props> = memo(function Card({
 
   return (<>
     <motion.div
-      layoutId={(location === 'view' && isInModal) ? undefined : card.id}
+      layoutId={(location === 'view' && isInModal) ? undefined : card.oracleId}
       layout={!dragging}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
@@ -291,8 +247,7 @@ export const Card:React.FC<Props> = memo(function Card({
         setIsRaised(true);
         if (location === 'view') return;
         isAnimating.current.s = true;
-        isAnimating.current.img =
-          (showFront) ? frontImgSrc : backImgSrc;
+        isAnimating.current.img = '';
       }}
       style={{
         cursor:'pointer',
@@ -332,8 +287,8 @@ export const Card:React.FC<Props> = memo(function Card({
             `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
             '',
       }}>
-      <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
-      <CardFace loc={location} src={backImgSrc} visible={!showFront}/>
+      <CardFace loc={location} src={''} visible={showFront}/>
+      <CardFace loc={location} src={''} visible={!showFront}/>
       { isCardDoublesided(card) &&
         <DoublesidedOverlay 
           cardMousedover={mousedover}
@@ -349,7 +304,7 @@ export const Card:React.FC<Props> = memo(function Card({
       </div>
       {location === 'view' && (
       <motion.div
-        layoutId={`inner-${card.id}`}
+        layoutId={`inner-${card.oracleId}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
           position: 'absolute',

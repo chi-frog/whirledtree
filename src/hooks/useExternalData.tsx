@@ -1,7 +1,7 @@
 'use client'
 
 import { _err, _noError, _notFound, WError, WErrorCode } from "@/components/magic/CardDisplay";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type Transform<T> = (input:any)=>T;
 export type ExternalDataOptions<T> = {
@@ -15,6 +15,9 @@ export type ExternalDataOptions<T> = {
   // An array to be substituted for the returned info *if* the
   // response hasn't been received yet.
   defaultValue?:T[],
+  // A signal to begin searching - when false, search isn't
+  // set off.  When true, search is set off *once* per url change.
+  signal?:boolean,
 };
 
 type ReturnOptions = {
@@ -27,13 +30,12 @@ function useExternalData<T> (
     transform:Transform<T>,
     options:ExternalDataOptions<T>={},
   ):Return<T> {
-  const [data, setData] = useState<T[]>(
-    (options.defaultValue) ?? []
-  );
+  const [data, setData] = useState<T[]>((options.defaultValue) ?? []);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<WError>(_noError);
   const [totalCards, setTotalCards] = useState<number>(0);
   const [nextUrl, setNextUrl] = useState<string|undefined>(url);
+  const lastUrl = useRef<string>('');
 
   const fetchData = async (url:string, controller:AbortController, sustain:boolean=true) => {
     let dataCount = 0;
@@ -77,6 +79,7 @@ function useExternalData<T> (
       
       setError(_noError);
       setLoaded(true);
+      lastUrl.current = url;
       console.info('-Loaded ', url);
 
     } catch (err) {
@@ -135,10 +138,15 @@ function useExternalData<T> (
   }
 
   useEffect(() => {
-    if (!url) return;
+    if ((!url) ||
+        (url === '') ||
+        (url === lastUrl.current) ||
+        ((options) &&
+         (options.signal !== undefined) &&
+         (!options.signal))) return;
 
     return fetchNextData(url, false);
-  }, [url, transform]);
+  }, [url, transform, options?.signal]);
 
   return [error, loaded, data, {fetchNextData, totalCards}];
 };

@@ -15,7 +15,7 @@ const CardFace = ({
   src,
   visible = true,
 }: Props) => {
-  const resolvedSrc = src ?? cardBackUri;
+  const resolvedSrc = (src && src !== '') ? src : cardBackUri;
 
   return (<>
     <FadeInImage

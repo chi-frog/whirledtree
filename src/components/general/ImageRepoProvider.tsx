@@ -1,8 +1,7 @@
 'use client'
 
-import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useRef } from "react";
-import { MagicCard } from "../magic/types/default";
-import { copyFace, copyImageMap, copyPrint, copyPrintMap, Face, ImageMap, initImageMap, initPrint, initPrintMap, Print, PrintMap, PrintSide, PrintSize } from "../magic/types/imageRepo";
+import { createContext, ReactNode, useCallback, useContext, useRef } from "react";
+import { copyFace,  copyPrint, copyPrintMap, Face, ImageMap, initImageMap, initPrint, initPrintMap, Print, PrintMap, PrintSide, PrintSize } from "../magic/types/imageRepo";
 
 export const fetchImage = async (
   uri: string
@@ -19,57 +18,6 @@ export const fetchImage = async (
     console.error('fetchImageFailed:', err);
     return "";
   }
-};
-
-export const hydrateImageMap = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateAction<ImageMap>>, cards:MagicCard[], size:'small'|'large') => {
-  const hydrateCard = async (uris:string[]) => 
-    await Promise.all(uris.map(async (_uri, _index) =>
-      (_uri === "") ? "" : await fetchImage(_uri)))
-  
-  await Promise.all(cards.map(async (_card, _index) => {
-    let oracleId = _card.oracleId;
-    let printId = _card.id;
-
-    const cardImages = imageMap.get(oracleId)?.get(printId);
-    let frontUri = _card.imageUris[size];
-    let backUri = (_card.back) ? _card.back.imageUris[size] : "";
-
-    if (cardImages) {
-      if (cardImages.front[size])
-        frontUri = "";
-      if (cardImages.back[size])
-        backUri = "";
-    }
-
-    if (frontUri === "" && backUri === "")
-      return;
-
-    const imageUrls = await hydrateCard([frontUri, backUri]);
-      /*
-    setImageMap((prev) => {
-      const imageMap = copyImageMap(prev);
-      let printsMap = imageMap.get(oracleId);
-      if (!printsMap)
-        printsMap = new Map<string, Print>();
-
-      const existing = printsMap.get(printId);
-      const imagePacket = (existing) ?
-        {...existing} :
-        initPrint();
-
-      imagePacket.front[size] = {imageUrls[0] ?? '';
-      imagePacket.back[blobKey[size]] = imageUrls[1];
-
-      printsMap.set(printId, imagePacket);
-      imageMap.set(oracleId, printsMap);
-
-      return imageMap;
-    });*/
-  }));
-};
-
-export const hydrateImage = async (imageMap:ImageMap, setImageMap:Dispatch<SetStateAction<ImageMap>>, card:MagicCard, size:'small'|'large') => {
-  hydrateImageMap(imageMap, setImageMap, [card], size);
 };
 
 type ImageRepository = {

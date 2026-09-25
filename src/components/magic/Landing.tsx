@@ -14,7 +14,7 @@ const Landing:React.FC<Props> = () => {
   const [setsError, setsLoaded, sets] = useMagicSets();
   const {selected, updateSelected, handlers} = useFilters();
   const url = useMemo(() => constructSearchUrl(selected, sets), [selected, sets]);
-  const [displayLimit, setDisplayLimit] = useState<number>(175);
+  const [displayLimit, setDisplayLimit] = useState<number>(50);
   const database = useMagicDatabase(url, displayLimit, sets);
 
   useEffect(() => {

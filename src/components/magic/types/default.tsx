@@ -1,3 +1,5 @@
+import { Print } from "./imageRepo";
+
 export enum MagicCardLayout {
   NORMAL='normal',
   SPLIT='split',
@@ -38,7 +40,6 @@ export const isCardMultiple = (card:MagicCard) =>
   (card.layout === MagicCardLayout.PREPARE);
 
 export type MagicCard = {
-  id:string,
   oracleId:string,
   name:string,
   reversed:boolean,
@@ -50,18 +51,18 @@ export type MagicCard = {
   power:string,
   toughness:string,
   manaCost:string,
-  alchemy:boolean,
   siblings:MagicCard[],
-  imageUris:{ small: string, large: string },
   printsUri:string,
+  prints:Map<string, Print>, //Print.id
   layout:MagicCardLayout,
   extra?:MagicCard,
   back?:MagicCard,
   };
 
-export const _magicCard = {
-  reversed:false,
+export const _magicCard:MagicCard = {
+  oracleId:"",
   name:"",
+  reversed:false,
   legalities:{},
   set:"",
   typeLine:"",
@@ -70,11 +71,17 @@ export const _magicCard = {
   power:"",
   toughness:"",
   manaCost:"",
-  alchemy:false,
   siblings:[],
-  imageUris:{small:"", large:""},
   printsUri:"",
+  prints:new Map<string, Print>(),
   layout:MagicCardLayout.NORMAL,
+}
+
+export type MagicPrint = {
+  id:string,
+  isAlchemy:boolean,
+  imageUris:Print,
+  card:MagicCard,
 }
 
 export type MagicSet = {
