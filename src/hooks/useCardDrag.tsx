@@ -151,7 +151,6 @@ const useCardDrag:UseCardDrag = (
 
   const stopDraggingCard = () => {
     cancelAnimationFrame(raf.current);
-    console.log('Drag Cancelled!');
   };
 
   return [

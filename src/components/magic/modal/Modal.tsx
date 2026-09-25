@@ -69,8 +69,6 @@ const Modal:React.FC<Props> = ({
     const index = prints.findIndex((_print) =>
       (_print.id === card.id));
 
-    console.log('index:' + index);
-
     setPrintIndex(index);
   }, [prints]);
 
@@ -86,9 +84,6 @@ const Modal:React.FC<Props> = ({
       return i;
     });
   }, [card?.oracleId, prints, card]);
-
-  console.log('RENDER MODAL', card);
-  console.log('RENDER MODAL', prints);
 
   return (
     <div id="modal" className="w-screen h-screen" ref={divRef}
@@ -108,24 +103,25 @@ const Modal:React.FC<Props> = ({
         pointerEvents:(shown) ? 'auto' : 'none',
         transition:'background 0.3s ease-in-out'
       }}>
-      {card && <motion.div id="inner"
+      {card &&
+      <motion.div id="inner"
         layoutId={`inner-${card.id}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
           setTimeout(()=>{setExpanded(true);}, 100);
         }}
         style={{
-        backgroundColor:'white',
-        width:'fit-content',
-        maxWidth:'80vw',
-        height:'80vh',
-        borderRadius:'20px',
-        display:'flex',
-        flexDirection:'row',
-        color:'black',
-        textAlign:'center',
-        border: '2px solid rgba(146, 148, 248, 0.8)',
-      }}>
+          backgroundColor:'white',
+          width:'fit-content',
+          maxWidth:'80vw',
+          height:'80vh',
+          borderRadius:'20px',
+          display:'flex',
+          flexDirection:'row',
+          color:'black',
+          textAlign:'center',
+          border: '2px solid rgba(146, 148, 248, 0.8)',
+        }}>
         <ModalCardDisplay
           index={printIndex}
           prints={prints}

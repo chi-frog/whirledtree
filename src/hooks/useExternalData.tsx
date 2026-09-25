@@ -49,7 +49,6 @@ function useExternalData<T> (
         const {onTransform} = options;
 
         if (onTransform) {
-          console.log('Applying Function');
           transformedData.forEach((_transformedData) => onTransform(_transformedData));
         }
 
@@ -131,7 +130,6 @@ function useExternalData<T> (
     return () => {
       if (!finished) {
         controller.abort();
-        console.log('Cut off!', url);
       }
     }
   }

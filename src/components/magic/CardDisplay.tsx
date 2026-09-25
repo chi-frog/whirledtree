@@ -92,7 +92,6 @@ const CardDisplay:React.FC<Props> = ({
 
   const hasCardsError:boolean = useMemo(() => {
     const cardsError = db.errorMap.get('cards');
-    console.log('cardsError', cardsError);
     return cardsError ? cardsError.length > 0 : true;
   }, [db.errorMap]);
 

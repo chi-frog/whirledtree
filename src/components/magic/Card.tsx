@@ -6,12 +6,14 @@ import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, use
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
-import { cardAspectRatio, createImagePacket, fetchImage, ImagePacket, ImageSet } from "@/hooks/magic/useMagicCards";
+import { cardAspectRatio, transformMagicCard } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
-import { useImageRepositoryContext } from "../general/ImageRepoProvider";
+import { fetchImage, useImageRepositoryContext } from "../general/ImageRepoProvider";
 import { useIsCardInModal, useModalContext } from "../general/ModalProvider";
 import CardFace from "./CardFace";
 import DoublesidedOverlay from "./card/DoublesidedOverlay";
+import { PrintSide } from "./types/imageRepo";
+import useExternalData from "@/hooks/useExternalData";
 
 export type CardLocation =
   'view' | 'modal';
@@ -30,12 +32,13 @@ export const Card:React.FC<Props> = memo(function Card({
     visible=true,
   }:Props) {
   const [reversed, setReversed] = useState<boolean>(false);
+  // Consider making this a ref
   const [isRaised, setIsRaised] = useState(false);
   const isAnimating = useRef<{s:boolean, img:string|undefined}>({s:false, img:undefined});
   const [node, setNode] = useState<HTMLDivElement|null>(null);
   const onDragEnd = useCallback(() => { setIsRaised(false) }, []);
 
-  const {addImage, getImagePacket} = useImageRepositoryContext();
+  const {addImage, getPrint} = useImageRepositoryContext();
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, startDraggingCard] = useCardDrag(startDragging, dragStateRef, onDragEnd);
   const [rotateState, rotateStateRef, startRotating, forceRotate] =
@@ -47,15 +50,22 @@ export const Card:React.FC<Props> = memo(function Card({
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<React.PointerEvent|undefined>(undefined);
 
-  const [frontImageSet, setFrontImageSet] = useState<ImageSet|undefined>(undefined);
-  const [backImageSet, setBackImageSet] = useState<ImageSet|undefined>(undefined);
+  const imgSize = useMemo(() => (location === 'modal') ? 'large' : 'small', [location]);
+
+  const print = getPrint(card.oracleId, card.id);
+  const [frontImgSrc, setFrontImgSrc] = useState<string|undefined>(
+    (print?.front.large && (print?.front.large !== '')) ?
+      print?.front.large :
+      print?.front.small);
+  const [backImgSrc, setBackImgSrc] =
+    useState<string|undefined>(print?.back.large ?? print?.back.small);
+  
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
 
-  if (location === 'modal' &&
-      !frontImageSet
-  ) {
-    console.log('ITS UNDEFINED');
+  if (card.name === 'Aang, Air Nomad' && visible) {
+    console.log('frontImgSrc:' + frontImgSrc + ' | location:' + location);
+    console.log('print', print);
   }
 
   const flipping = useMemo(() => (rotateState.angle > 90), [rotateState.angle]);
@@ -63,83 +73,42 @@ export const Card:React.FC<Props> = memo(function Card({
       ((!reversed && !flipping) ||
        (reversed && flipping)), [reversed, flipping]);
 
+  const loadingFrontImg = useRef<boolean>(false);
+  const loadingBackImg = useRef<boolean>(false);
+
+  async function getImageUrl(url:string, side:PrintSide) {
+    const blob = await fetchImage(url);
+    if (!blob) return;
+
+    addImage(card.oracleId, card.id, side, imgSize, blob);
+
+    if (side === 'front') {
+      setFrontImgSrc(blob);
+      loadingFrontImg.current = false;
+
+    } else {
+      setBackImgSrc(blob);
+      loadingBackImg.current = false;
+    }
+  }
+
   useEffect(() => {
-    const size = (location === 'view') ?
-      'small' :
-      'large';
-    const repoImagePacket = getImagePacket(card);
-
-    async function getImage(side:keyof ImagePacket) {
-      if (side === 'back' && !card.back) {
-        setBackImageSet(undefined);
-        return;
-      }
-
-      if ((repoImagePacket) &&
-          (repoImagePacket[side][size])) {
-        if (side === 'front')
-          setFrontImageSet(repoImagePacket.front);
-        else if (side === 'back')
-          setBackImageSet(repoImagePacket.back);
-        return;
-      }
-
-      const newImagePacket = (repoImagePacket) ?
-        repoImagePacket :
-        createImagePacket();
-
-      const blob =
-        (side === 'front') ? 
-          await fetchImage(card.imageUris[size]) :
-        (card.back) ?
-          await fetchImage(card.back.imageUris[size]) :
-          null;
-      if (!blob) return;
-
-      newImagePacket[side][size] = blob;
-      addImage(card, blob, side, size);
-
-      if (side === 'front')
-        setFrontImageSet(newImagePacket.front);
-      else if (side === 'back')
-        setBackImageSet(newImagePacket.back);
+    if ((!loadingFrontImg.current) &&
+        ((!frontImgSrc) ||
+         (frontImgSrc === ''))) {
+      // Only get the image if we can't find it in the repo
+      loadingFrontImg.current = true;
+      getImageUrl(card.imageUris[imgSize], 'front');
     }
+  }, [frontImgSrc]);
 
-    getImage('front');
-    getImage('back');
-  }, [card.imageUris, location]);
-
-  const [frontImageSrc, backImageSrc] = useMemo(() => {
-    if (!card) return [];
-
-    if (isAnimating.current.s) {
-      console.log('Being Animated!!');
-      return [isAnimating.current.img, isAnimating.current.img];
+  useEffect(() => {
+    if (((!backImgSrc) ||
+         (backImgSrc === '')) &&
+        (card.back)) {
+      //getImageUrl(card.back.imageUris[imgSize], 'back');
     }
-
-    const getHighestQualityImage = (set:ImageSet|undefined) =>
-      (!set) ?
-        undefined :
-      (set.large) ?
-        set.large :
-      (set.small) ?
-        set.small :
-        undefined;
-
-    let front = getHighestQualityImage(frontImageSet);
-    let back = getHighestQualityImage(backImageSet);
-    const repoImagePacket = getImagePacket(card);
-
-    if ((!front) &&
-        (repoImagePacket))
-      front = getHighestQualityImage(repoImagePacket.front);
-
-    if ((!back) &&
-        (repoImagePacket))
-      back = getHighestQualityImage(repoImagePacket.back);
-
-    return [front, back];
-  }, [isAnimating.current.s, frontImageSet, backImageSet]);
+  }, [frontImgSrc]);
 
   const x = useMemo(() => 
     (dragState) ? (dragState.point.x - dragState.start.x) : 0, [dragState]);
@@ -193,10 +162,8 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [node]);
 
   const handleCardPointerEnter = () => {
-    if (isAnimating.current.s) {
-      console.log('Tried to enter while animating!!!', location);
+    if (isAnimating.current.s)
       return;
-    }
     glow(false);
     mousedoverRef.current = true;
     setMousedover(true);
@@ -325,7 +292,7 @@ export const Card:React.FC<Props> = memo(function Card({
         if (location === 'view') return;
         isAnimating.current.s = true;
         isAnimating.current.img =
-          (showFront) ? frontImageSrc : backImageSrc;
+          (showFront) ? frontImgSrc : backImgSrc;
       }}
       style={{
         cursor:'pointer',
@@ -365,8 +332,8 @@ export const Card:React.FC<Props> = memo(function Card({
             `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
             '',
       }}>
-      <CardFace loc={location} src={frontImageSrc} visible={showFront}/>
-      <CardFace loc={location} src={backImageSrc} visible={!showFront}/>
+      <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
+      <CardFace loc={location} src={backImgSrc} visible={!showFront}/>
       { isCardDoublesided(card) &&
         <DoublesidedOverlay 
           cardMousedover={mousedover}

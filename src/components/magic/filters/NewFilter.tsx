@@ -4,7 +4,7 @@ import { memo, PointerEventHandler, useMemo, useRef } from "react";
 import { FilterState } from "../CardDisplay";
 import { motion } from "framer-motion";
 import FilterButton from "./FilterButton";
-import { FilterChangeFunction, Selected } from "@/hooks/magic/useSelection";
+import { Selected, SelectionChangeFunction } from "@/hooks/magic/useSelection";
 import XOut from "./XOut";
 import FilterList from "./FilterList";
 import { MagicSet } from "../types/default";
@@ -13,7 +13,7 @@ type Props = {
   state:FilterState,
   setState:(state:FilterState)=>void,
   selected:Selected,
-  handlers:Record<keyof Selected, FilterChangeFunction>,
+  handlers:Record<keyof Selected, SelectionChangeFunction>,
   sets:MagicSet[],
 };
 const NewFilter:React.FC<Props> = ({
@@ -163,7 +163,7 @@ const NewFilter:React.FC<Props> = ({
         id="set"
         text="Sets"
         sections={selected.set}
-        list={(sets) ? sets.map((_set) => _set.name) : undefined}
+        list={(sets) ? sets.map((_set) => _set.name) : []}
         onChange={handlers.set}
         />
       </div>}

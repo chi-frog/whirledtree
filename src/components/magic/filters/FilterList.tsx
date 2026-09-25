@@ -3,7 +3,7 @@
 import useTabVisibility from "@/hooks/useTabVisibility";
 import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
 import XOut from "./XOut";
-import { FilterChangeFunction, SelectedSection } from "@/hooks/magic/useSelection";
+import { SelectionChangeFunction, SelectedSection } from "@/hooks/magic/useSelection";
 import Polarity from "./Polarity";
 
 const colorWheel:string[] = [
@@ -22,7 +22,7 @@ type SectionProps = {
   last:boolean,
   visible:boolean,
   datalistId:string,
-  onChange:FilterChangeFunction,
+  onChange:SelectionChangeFunction,
 };
 const Section:React.FC<SectionProps> = memo(({
   section,
@@ -116,7 +116,6 @@ const Section:React.FC<SectionProps> = memo(({
     if (dx < 5 && dy < 5) {
       setIsTyping(true);
     }
-    console.log('onPointerUp FilterSection');
   };
 
   return (<div style={{
@@ -217,7 +216,7 @@ type Props = {
   text:string,
   sections:SelectedSection[],
   list:string[],
-  onChange:FilterChangeFunction,
+  onChange:SelectionChangeFunction,
 };
 const FilterList:React.FC<Props> = ({
   id,
@@ -232,14 +231,12 @@ const FilterList:React.FC<Props> = ({
 
   const onPointerDown:PointerEventHandler = (e) => {
     mouseCoords.current = {x:e.clientX, y:e.clientY};
-    console.log('DOWN');
   };
 
   const onPointerUp:PointerEventHandler = (e) => {
     if ((mouseCoords.current.x === e.clientX) &&
         (mouseCoords.current.y === e.clientY))
       setAllVisible((prev) => !prev);
-    console.log('onPointerUp FilterButton');
   };
 
   const onPointerEnter:PointerEventHandler = () => {

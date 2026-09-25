@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef } from "react";
+import { memo, useMemo, useRef } from "react";
 import { searchFields } from "../CardTooltip";
 import { MagicCard } from "../types/default";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
@@ -192,4 +192,4 @@ const CardInfoDisplay:React.FC<Props> = ({
       </div>}
     </div>)};
 
-export default CardInfoDisplay
+export default memo(CardInfoDisplay);

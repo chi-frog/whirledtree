@@ -49,7 +49,6 @@ const CardTooltip:React.FC<Props> = ({
         (!divRef.current) ||
         (e.rangeCount === 0)) {
       clear();
-      console.log('Clearing (' + e.rangeCount + ')', divRef.current);
       return;
     }
   

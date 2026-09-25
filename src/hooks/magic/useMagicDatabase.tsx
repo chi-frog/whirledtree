@@ -4,15 +4,15 @@
 */
 'use client'
 
-import { useEffect, useMemo, useState } from "react";
-import useMagicCards, { copyImageMap, fetchImage, ImageMap } from "./useMagicCards";
-import useMagicSets from "./useMagicSets";
+import { useMemo, useState } from "react";
+import useMagicCards from "./useMagicCards";
 import { MagicCard, MagicFormat, MagicSet } from "@/components/magic/types/default";
 import { capitalize } from "@/helpers/string";
 import { _noError, _notFound, WError, WErrorCode } from "@/components/magic/CardDisplay";
 import { copyMap } from "@/helpers/wmap";
 import useMagicSymbols, { MagicSymbol } from "./useMagicSymbols";
 import useMagicTypes from "./useMagicTypes";
+import { fetchImage } from "@/components/general/ImageRepoProvider";
 
 /*
 * Everything listed here has both a loaded/unloaded state,
@@ -47,8 +47,6 @@ export type MagicDatabase = {
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
   cards:MagicCard[],
-  imageMap:ImageMap,
-  hydrateImage:(card:MagicCard, size:'small'|'large')=>void,
   fetchNextData?:()=>void,
   totalCards?:number,
 }
@@ -63,7 +61,7 @@ const useMagicDatabase:UseMagicData = (url, displayLimit, sets) => {
   const [symbolsError, symbolsLoaded, symbols] = useMagicSymbols();
   const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
   const [formats, setFormats] = useState<MagicFormat[]>([]);
-  const [cardsError, cardsLoaded, cards, imageMap, hydrateImage, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
+  const [cardsError, cardsLoaded, cards, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
 
@@ -112,7 +110,7 @@ const useMagicDatabase:UseMagicData = (url, displayLimit, sets) => {
     }
   }, [cardsError, cardsLoaded]);
 
-  return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, cards, imageMap, hydrateImage, fetchNextData, totalCards};
+  return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap, cards, fetchNextData, totalCards};
 };
 
 export default useMagicDatabase;

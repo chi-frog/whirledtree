@@ -53,8 +53,6 @@ const useFilters = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
 
   const updateSelected:SelectionUpdateFunction = useCallback((...updates) => {
-    console.log('updates', updates);
-    
     setSelected((prev) => {
       const newSelected = { ...prev };
 
@@ -80,9 +78,6 @@ const useFilters = () => {
 
         newSelected[property] = arr;
       });
-
-
-      console.log('newSelected', newSelected);
 
       return newSelected;
     });

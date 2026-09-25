@@ -33,10 +33,6 @@ export const SelectionProvider = ({ children }: {children:ReactNode}) => {
     selectionSubscriptions.current.forEach((_ss) => _ss.onSelectionChange(selection));
   };
 
-  const onBlur = () => {
-    console.log('blurring');
-  }
-
   useEffect(() => {
     document.addEventListener('selectionchange', handleSelectionChange);
 
