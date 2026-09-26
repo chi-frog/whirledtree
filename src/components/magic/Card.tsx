@@ -12,7 +12,6 @@ import { fetchImage, useImageRepositoryContext } from "../general/ImageRepoProvi
 import { useIsCardInModal, useModalContext } from "../general/ModalProvider";
 import CardFace from "./CardFace";
 import DoublesidedOverlay from "./card/DoublesidedOverlay";
-import { PrintSide } from "./types/imageRepo";
 import useExternalData from "@/hooks/useExternalData";
 
 export type CardLocation =
@@ -53,10 +52,6 @@ export const Card:React.FC<Props> = memo(function Card({
   const [printsError, printsLoaded, rawPrints] = useExternalData<MagicCard>(card.printsUri, transformMagicCard, {
     signal:mousedover
   });
-
-  useEffect(() => {
-    console.log('rawPrints:', rawPrints);
-  }, [rawPrints]);
   
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
@@ -232,6 +227,9 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleRotationPointerUp, handleRotationPointerDown]);
 
+  const frontImgSrc = card.prints.get(card.printId)?.imageUris.front.small;
+  console.log('frontImgSrc:', frontImgSrc);
+
   return (<>
     <motion.div
       layoutId={(location === 'view' && isInModal) ? undefined : card.oracleId}
@@ -287,8 +285,8 @@ export const Card:React.FC<Props> = memo(function Card({
             `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
             '',
       }}>
-      <CardFace loc={location} src={''} visible={showFront}/>
-      <CardFace loc={location} src={''} visible={!showFront}/>
+      <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
+      <CardFace loc={location} src={card.prints.get(card.printId)?.imageUris.back?.small} visible={!showFront}/>
       { isCardDoublesided(card) &&
         <DoublesidedOverlay 
           cardMousedover={mousedover}

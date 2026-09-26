@@ -1,11 +1,13 @@
 'use client'
 
 import { createContext, ReactNode, useContext, useRef } from "react";
-import { MagicCard } from "../magic/types/default";
+import { MagicCard, MagicPrint } from "../magic/types/default";
 
 type CardRepository = {
+  findCard:(oracleId:string)=>MagicCard|undefined,
+  findPrint:(oracleId:string, id:string)=>MagicPrint|undefined,
   addCard:(card:MagicCard)=>void,
-  getCardPrints:(oracleId:string)=>MagicCard[],
+  addPrint:(oracleId:string, id:string, print:MagicPrint)=>void,
 }
 const CardRepositoryContext = createContext<CardRepository|undefined>(undefined);
 
@@ -18,36 +20,46 @@ export const useCardRepositoryContext = () => {
   return ctx;
 }
 
-type CardMap = Map<string, MagicCard[]>;
+type CardMap = Map<string, MagicCard>;
 type Props = {
   children:ReactNode
 };
 export const CardRepoProvider = ({children}:Props) => {
-  const cardMap = useRef<CardMap>(new Map<string, MagicCard[]>());
+  const cardMap = useRef<CardMap>(new Map<string, MagicCard>());
+
+  const findCard = (oracleId:string) => cardMap.current.get(oracleId)
+  const findPrint = (oracleId:string, id:string) => findCard(oracleId)?.prints.get(id)
 
   const addCard = (card:MagicCard) => {
-    let cardPrints = cardMap.current.get(card.oracleId);
-    cardPrints = (cardPrints) ? [...cardPrints] : [];
-    
-    if (cardPrints.find((_card) =>
-          (_card.oracleId === card.oracleId) &&
-          (_card.id === card.id)))
+    let storedCard = cardMap.current.get(card.oracleId);
+    if (storedCard) return;
+
+    cardMap.current.set(card.oracleId, card);
+    console.log('Added card ' + card.name + ' to repository', card);
+  };
+
+  const addPrint = (oracleId:string, id:string, print:MagicPrint) => {
+    let storedCard = cardMap.current.get(oracleId);
+    if (!storedCard) {
+      console.error("Shouldn't use addPrint if the card isn't already stored:" + oracleId);
       return;
-    
-    cardPrints.push(card);
-    cardMap.current.set(card.oracleId, cardPrints);
-  };
+    }
 
-  const getCardPrints = (oracleId:string) => {
-    const cardPrints = cardMap.current.get(oracleId);
+    if (storedCard.prints.get(id)) {
+      console.log('Print already exists:' + oracleId + ', ' + id);
+      return;
+    }
 
-    return (cardPrints) ? cardPrints : [];
-  };
+    console.log('Adding print ' + storedCard.name + ' to repository', print);
+    storedCard.prints.set(id, print);
+  }
 
   return (
     <CardRepositoryContext.Provider value={{
+      findCard,
+      findPrint,
       addCard,
-      getCardPrints,
+      addPrint,
     }}>
       {children}
     </CardRepositoryContext.Provider>

@@ -41,6 +41,7 @@ export const isCardMultiple = (card:MagicCard) =>
 
 export type MagicCard = {
   oracleId:string,
+  layout:MagicCardLayout,
   name:string,
   reversed:boolean,
   legalities:any,
@@ -53,14 +54,15 @@ export type MagicCard = {
   manaCost:string,
   siblings:MagicCard[],
   printsUri:string,
-  prints:Map<string, Print>, //Print.id
-  layout:MagicCardLayout,
+  prints:Map<string, MagicPrint>, //Print.id
+  printId:string,
   extra?:MagicCard,
   back?:MagicCard,
   };
 
 export const _magicCard:MagicCard = {
   oracleId:"",
+  layout:MagicCardLayout.NORMAL,
   name:"",
   reversed:false,
   legalities:{},
@@ -73,15 +75,13 @@ export const _magicCard:MagicCard = {
   manaCost:"",
   siblings:[],
   printsUri:"",
-  prints:new Map<string, Print>(),
-  layout:MagicCardLayout.NORMAL,
+  prints:new Map<string, MagicPrint>(), //by id
+  printId:"",
 }
 
 export type MagicPrint = {
-  id:string,
   isAlchemy:boolean,
   imageUris:Print,
-  card:MagicCard,
 }
 
 export type MagicSet = {

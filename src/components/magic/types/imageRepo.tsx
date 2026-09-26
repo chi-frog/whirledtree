@@ -5,7 +5,7 @@ export type Face = {
 export type PrintSize = keyof Face;
 export type Print = {
   front:Face,
-  back:Face,
+  back?:Face,
 }
 export type PrintSide = keyof Print;
 export type PrintMap = Map<string, Print>;
@@ -25,7 +25,7 @@ export const initImageMap:()=>ImageMap = () =>
 export const copyFace:(face:Face)=>Face =
   (face) => ({...face});
 export const copyPrint:(print:Print)=>Print =
-  (print) => ({front:copyFace(print.front), back:copyFace(print.back)});
+  (print) => ({front:copyFace(print.front), ...(print.back !== undefined && { back: copyFace(print.back) }),});
 export const copyPrintMap:(printMap:PrintMap)=>PrintMap =
   (printMap) => {
     const next = new Map<string, Print>();

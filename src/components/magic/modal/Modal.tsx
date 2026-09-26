@@ -34,7 +34,7 @@ const Modal:React.FC<Props> = ({
   const divRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef(null);
   const [expanded, setExpanded] = useState<boolean>(false);
-  const {addCard, getCardPrints} = useCardRepositoryContext();
+  const {addCard} = useCardRepositoryContext();
   const [printIndex, setPrintIndex] = useState<number>(0);
   const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
 

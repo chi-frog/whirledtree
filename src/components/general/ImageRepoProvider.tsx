@@ -50,7 +50,8 @@ export const ImageRepoProvider = ({children}:Props) => {
     let print:Print|undefined = printMap.get(id);
     print = (!print) ? initPrint() : copyPrint(print);
 
-    let face:Face = copyFace(print[side]);
+    let face:Face|undefined = print[side] ? copyFace(print[side]) : undefined;
+    if (!face) return;
 
     face[size] = url;
     print[side] = face;

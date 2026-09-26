@@ -11,7 +11,7 @@ type Props = {
   numCardsRow:number,
   cards:MagicCard[],
 };
-const View:React.FC<Props> = ({
+const CardView:React.FC<Props> = ({
     paddingTop,
     dragState,
     numCardsRow,
@@ -46,4 +46,4 @@ const View:React.FC<Props> = ({
   );
 };
 
-export default memo(View);
+export default memo(CardView);

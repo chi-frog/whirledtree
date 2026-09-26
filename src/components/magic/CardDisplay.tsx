@@ -3,7 +3,7 @@
 import { ChangeEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { _magicCard, MagicCard } from "./types/default";
 import { SelectionChangeFunction, Selected } from "@/hooks/magic/useSelection";
-import View from "./View";
+import CardView from "./CardView";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
 import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
@@ -139,7 +139,7 @@ const CardDisplay:React.FC<Props> = ({
       sets={db.sets}
       />
     {(cards.length > 0) && !hasCardsError && 
-      <View
+      <CardView
         paddingTop={(filterState === FilterState.REDUCED) ? '100px' : '10px'}
         dragState={dragState}
         numCardsRow={numCardsRow}
