@@ -36,7 +36,7 @@ const CardView:React.FC<Props> = ({
       }}>
       {...cards.map((_card, _index)=>
         <Card
-          key={cards[_index].name}
+          key={_card.name}
           location='view'
           heightString={'fit-content'}
           card={cards[_index]}

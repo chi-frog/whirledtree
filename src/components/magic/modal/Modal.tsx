@@ -1,16 +1,13 @@
 'use client'
 
-import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, PointerEventHandler, useRef, useState } from "react";
 import { MagicCard, } from "../types/default";
 import { _dragState, } from "../../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
 import { SelectionUpdateFunction } from "@/hooks/magic/useSelection";
 import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
-import { transformMagicCard } from "@/hooks/magic/useMagicCards";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
-import useExternalData from "@/hooks/useExternalData";
-import { useCardRepositoryContext } from "../../general/CardRepoProvider";
 import ModalCardDisplay from "./ModalCardDisplay";
 import CardTooltip from "@/components/magic/CardTooltip";
 import CardInfoDisplay from "../card/CardInfoDisplay";
@@ -32,10 +29,7 @@ const Modal:React.FC<Props> = ({
     card,
   }:Props) => {
   const divRef = useRef<HTMLDivElement>(null);
-  const nameRef = useRef(null);
   const [expanded, setExpanded] = useState<boolean>(false);
-  const {addCard} = useCardRepositoryContext();
-  const [printIndex, setPrintIndex] = useState<number>(0);
   const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
 
   const handlePointerDown:PointerEventHandler = (e) => {
@@ -44,7 +38,6 @@ const Modal:React.FC<Props> = ({
     if ((e.target as HTMLElement).id === 'modal') {
       e.preventDefault();
       setExpanded(false);
-      setPrintIndex(0);
       setTooltipVisible(false);
       close();
     }
@@ -70,7 +63,7 @@ const Modal:React.FC<Props> = ({
       }}>
       {card &&
       <motion.div id="inner"
-        layoutId={`inner-${card.oracleId}`}
+        layoutId={`inner-${card.printId}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
           setTimeout(()=>{setExpanded(true);}, 100);
@@ -88,9 +81,7 @@ const Modal:React.FC<Props> = ({
           border: '2px solid rgba(146, 148, 248, 0.8)',
         }}>
         <ModalCardDisplay
-          index={printIndex}
-          prints={[]}
-          changePrint={()=>{}}/>
+          card={card}/>
         <CardInfoDisplay
           card={card}
           expanded={expanded}

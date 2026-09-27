@@ -5,7 +5,6 @@ import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import Modal from "../magic/modal/Modal";
 import { SelectionUpdateFunction } from "@/hooks/magic/useSelection";
 import { MagicCard } from "../magic/types/default";
-import { useImageRepositoryContext } from "./ImageRepoProvider";
 import { useSyncExternalStoreWithSelector } from "use-sync-external-store/with-selector";
 
 type Modal = {
@@ -72,11 +71,10 @@ export const ModalProvider = ({
   children
 }:{db:MagicDatabase, updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
   const store = useRef(createModalStore()).current;
-  const {getImagePacket} = useImageRepositoryContext();
 
   const showModal = useCallback(async (card:MagicCard) => {
     store.setState({ shown: true, card });
-  }, [getImagePacket, store]);
+  }, [store]);
 
   const hideModal = useCallback(() => {
     store.setState({ shown: false, card: undefined });

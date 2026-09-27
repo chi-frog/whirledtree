@@ -1,18 +1,19 @@
 'use client'
 
 import { _wpoint } from "@/helpers/wpoint";
-import { isCardDoublesided, MagicCard } from "./types/default";
-import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { isCardDoublesided, MagicCard, MagicPrint } from "./types/default";
+import { memo, PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
-import { cardAspectRatio, transformMagicCard } from "@/hooks/magic/useMagicCards";
+import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
-import { fetchImage, useImageRepositoryContext } from "../general/ImageRepoProvider";
 import { useIsCardInModal, useModalContext } from "../general/ModalProvider";
 import CardFace from "./CardFace";
 import DoublesidedOverlay from "./card/DoublesidedOverlay";
 import useExternalData from "@/hooks/useExternalData";
+import { transformPrint } from "@/helpers/magic/transformMagicCard";
+import { useCardRepositoryContext } from "../general/CardRepoProvider";
 
 export type CardLocation =
   'view' | 'modal';
@@ -48,10 +49,15 @@ export const Card:React.FC<Props> = memo(function Card({
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<React.PointerEvent|undefined>(undefined);
 
-  const {addImage, getPrint} = useImageRepositoryContext();
-  const [printsError, printsLoaded, rawPrints] = useExternalData<MagicCard>(card.printsUri, transformMagicCard, {
-    signal:mousedover
-  });
+  const {addPrint} = useCardRepositoryContext();
+  const [printsError, printsLoaded, rawPrints] =
+    useExternalData<[string, MagicPrint]>(
+      card.printsUri,
+      transformPrint, {
+        onTransform:([printId, print])=>
+          addPrint(card.oracleId, printId, print),
+        ...(location === 'view' && {signal:mousedover})
+      });
   
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
@@ -162,7 +168,8 @@ export const Card:React.FC<Props> = memo(function Card({
 
     if ((lastMousePress.current) &&
         (e.clientX === lastMousePress.current.clientX) &&
-        (e.clientY === lastMousePress.current.clientY)) {
+        (e.clientY === lastMousePress.current.clientY) &&
+        (!(location === 'modal'))) {
       showModal(card);
       setIsRaised(false);
       cancelAnimationFrame(raf.current);
@@ -228,11 +235,16 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [handleRotationPointerUp, handleRotationPointerDown]);
 
   const frontImgSrc = card.prints.get(card.printId)?.imageUris.front.small;
-  console.log('frontImgSrc:', frontImgSrc);
+  const backImgSrc = card.prints.get(card.printId)?.imageUris.back?.small;
+
+  if (location === 'modal') {
+  console.log('frontImgSrc', frontImgSrc);
+  console.log('^^ printId:' + card.printId);
+  }
 
   return (<>
     <motion.div
-      layoutId={(location === 'view' && isInModal) ? undefined : card.oracleId}
+      layoutId={(location === 'view' && isInModal) ? undefined : card.printId}
       layout={!dragging}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
@@ -256,7 +268,7 @@ export const Card:React.FC<Props> = memo(function Card({
         position:(location === 'modal') ? 'absolute' : 'relative',
         zIndex: (isRaised) ? 30 : 0,
         opacity: ((!visible) || (location === 'view' && isInModal)) ? 0 : 1,
-        pointerEvents: (location === 'view' && isInModal) ? 'none' : undefined,
+        pointerEvents: ((!visible) || (location === 'view' && isInModal)) ? 'none' : undefined,
       }}>
       <div
         ref={ref}
@@ -286,7 +298,7 @@ export const Card:React.FC<Props> = memo(function Card({
             '',
       }}>
       <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
-      <CardFace loc={location} src={card.prints.get(card.printId)?.imageUris.back?.small} visible={!showFront}/>
+      <CardFace loc={location} src={backImgSrc} visible={!showFront}/>
       { isCardDoublesided(card) &&
         <DoublesidedOverlay 
           cardMousedover={mousedover}
@@ -302,7 +314,7 @@ export const Card:React.FC<Props> = memo(function Card({
       </div>
       {location === 'view' && (
       <motion.div
-        layoutId={`inner-${card.oracleId}`}
+        layoutId={`inner-${card.printId}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
           position: 'absolute',
