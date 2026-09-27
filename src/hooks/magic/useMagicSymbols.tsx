@@ -1,20 +1,8 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { MagicSymbol } from "@/components/magic/types/magic";
 import useExternalData, { Transform } from "../useExternalData";
-import { WError } from "@/components/magic/CardDisplay";
-
-type ImagePacket = {
-  name:string,
-  smallBlob?:string,
-  largeBlob?:string,
-  };
-export type ImageMap = Map<string, ImagePacket>;
-
-export type MagicSymbol = {
-  imageUri:string,
-  symbol:string,
-}
+import { WError } from "@/components/magic/types/werror";
 
 const transformMagicSymbol:Transform<MagicSymbol> = (data:any) => ({
   imageUri:data.svg_uri,
@@ -27,7 +15,6 @@ type UseMagicSymbols = () => [
   symbols:MagicSymbol[],
 ];
 const useMagicSymbols:UseMagicSymbols = () => {
-  const [imageMap, setImageMap] = useState<ImageMap>(new Map());
   const [error, loaded, symbols] = useExternalData(
     'https://api.scryfall.com/symbology',
     transformMagicSymbol,

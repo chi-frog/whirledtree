@@ -1,58 +1,53 @@
 'use client'
 
 import { ChangeEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { _magicCard, MagicCard } from "./types/default";
-import { SelectionChangeFunction, Selected } from "@/hooks/magic/useSelection";
-import CardView from "./CardView";
+import { _magicCard, MagicCard, MagicFormat } from "./types/default";
+import useSelection from "@/hooks/magic/useSelection";
+import CardView from "./card/CardView";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
-import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
 import NewFilter from "./filters/NewFilter";
+import { MagicResources } from "@/hooks/magic/useMagicResources";
+import useMagicCards from "@/hooks/magic/useMagicCards";
+import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
+import { capitalize } from "@/helpers/string";
+import { ModalProvider } from "../general/ModalProvider";
+import { isError } from "./types/werror";
 
 export enum FilterState {
   HIDDEN = 'hidden',
   MOUSEDOVER = 'mousedover',
   REDUCED = 'reduced',
   WHOLE = 'whole',
-}
-
-export enum WErrorCode {
-  NO_ERROR = 'no_error',
-  NOT_FOUND = 'not_found',
-  GENERAL = 'general',
-}
-export type WError = {
-  code:WErrorCode,
-  info?:any,
-}
-export const _noError = {
-  code:WErrorCode.NO_ERROR,
 };
-export const _notFound = (info:any) =>
-  ({code:WErrorCode.NOT_FOUND, info});
-export const _err = (err:any) =>
-  ({code:WErrorCode.GENERAL, err});
 
 type Props = {
-  db:MagicDatabase,
-  selected:Selected,
-  handlers:Record<keyof Selected, SelectionChangeFunction>
+  resources:MagicResources,
 };
-const CardDisplay:React.FC<Props> = ({
-  db,
-  selected,
-  handlers
-}) => {
+const SearchWindow:React.FC<Props> = ({
+    resources,
+  }) => {
+  const {selected, updateSelected, handlers} = useSelection();
+  const url = useMemo(() => constructSearchUrl(selected, resources.sets), [selected, resources.sets]);
+  const [displayLimit, setDisplayLimit] = useState<number>(50);
+  const [error, loaded, allCards, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
   const [filterState, setFilterState] = useState<FilterState>(FilterState.HIDDEN);
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
-  const [cards, setCards] = useState<MagicCard[]>(db.cards);
   const scrollTrigger = useRef<HTMLDivElement|null>(null);
 
+  const [cards, setCards] = useState<MagicCard[]>(allCards);
+  const [formats, setFormats] = useState<MagicFormat[]>([]);
+
   useEffect(() => {
-    setCards(db.cards);
-  } , [db.cards]);
+    setCards(allCards);
+  }, [allCards]);
+
+  useMemo(() => {
+    if ((cards.length > 0) && (formats.length === 0))
+      setFormats([...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
+  }, [cards]);
 
   const dragging = useMemo(() => dragState.stage === DragStage.ACTIVE, [dragState.stage]);
 
@@ -90,16 +85,6 @@ const CardDisplay:React.FC<Props> = ({
     startDragging(e, viewTag);
   }, [viewTag]);
 
-  const hasCardsError:boolean = useMemo(() => {
-    const cardsError = db.errorMap.get('cards');
-    return cardsError ? cardsError.length > 0 : true;
-  }, [db.errorMap]);
-
-  const cardsLoaded:boolean = useMemo(() => {
-    const cardsLoaded = db.loadMap.get('cards');
-    return cardsLoaded === true;
-  }, [db.loadMap]);
-
   const isFetchingRef = useRef(false);
 /*
   useEffect(() => {
@@ -128,24 +113,26 @@ const CardDisplay:React.FC<Props> = ({
     return () => observer.disconnect();
   }, [cards]);*/
 
+  const hasError = useMemo(() => isError(error), [error]);
+
   return (
-  <div
-    onPointerDown={handlePointerDown}>
-    <NewFilter
-      state={filterState}
-      setState={setFilterState}
-      selected={selected}
-      handlers={handlers}
-      sets={db.sets}
-      />
-    {(cards.length > 0) && !hasCardsError && 
+    <ModalProvider resources={resources} updateSelected={updateSelected}>
+    <div
+      onPointerDown={handlePointerDown}>
+      <NewFilter
+        state={filterState}
+        setState={setFilterState}
+        selected={selected}
+        handlers={handlers}
+        sets={resources.sets}
+        />
+      {(cards.length > 0) && !hasError && 
       <CardView
         paddingTop={(filterState === FilterState.REDUCED) ? '100px' : '10px'}
         dragState={dragState}
         numCardsRow={numCardsRow}
-        cards={cards}/>
-    }
-    {(!hasCardsError) && (cardsLoaded) && (db.totalCards === 0) &&
+        cards={cards}/>}
+      {(!error) && (loaded) && (totalCards === 0) &&
       <div id="no_cards_screen" style={{
         width:'100vw',
         height: '100vh',
@@ -154,11 +141,10 @@ const CardDisplay:React.FC<Props> = ({
         alignItems:'center',
         fontSize:'48px',
         fontWeight:'bold',
-      }}>
+        }}>
         <h1> No cards matched your search! </h1>
-      </div>
-    }
-    {(hasCardsError) &&
+      </div>}
+      {(hasError) &&
       <div id="error_screen" style={{
         width:'100vw',
         height: '100vh',
@@ -167,11 +153,10 @@ const CardDisplay:React.FC<Props> = ({
         alignItems:'center',
         fontSize:'48px',
         fontWeight:'bold',
-      }}>
+        }}>
         <h1> Error With Search! </h1>
-      </div>
-    }
-    {(!cardsLoaded) &&
+      </div>}
+      {(!loaded) &&
       <div id="loading_screen" style={{
         width:'100vw',
         height: '100vh',
@@ -180,11 +165,10 @@ const CardDisplay:React.FC<Props> = ({
         alignItems:'center',
         fontSize:'48px',
         fontWeight:'bold',
-      }}>
+        }}>
         <h1> Loading Cards... </h1>
-      </div>
-    }
-    {(cardsLoaded) &&
+      </div>}
+      {(loaded) &&
       <div id="countTracker" style={{
         position:"fixed",
         height:'30px',
@@ -200,16 +184,16 @@ const CardDisplay:React.FC<Props> = ({
         alignItems:'center',
         justifyContent:'center',
         pointerEvents:'none',
-      }}>
-        <h3>{db.totalCards} cards found, {db.cards.length} shown</h3>
-      </div>
-    }
-    <div id="scrollTrigger" ref={scrollTrigger} style={{
-      width:"100%",
-      height:"1px",
-      display:"hidden",
-    }}/>
-  </div>)
+        }}>
+        <h3>{totalCards} cards found, {cards.length} shown</h3>
+      </div>}
+      <div id="scrollTrigger" ref={scrollTrigger} style={{
+        width:"100%",
+        height:"1px",
+        display:"hidden",
+      }}/>
+    </div>
+    </ModalProvider>);
 };
 
-export default CardDisplay;
+export default SearchWindow;

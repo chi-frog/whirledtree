@@ -1,6 +1,6 @@
 'use client'
 
-import { _err, _noError, _notFound, WError, WErrorCode } from "@/components/magic/CardDisplay";
+import { WError, _noError, WErrorCode, _err } from "@/components/magic/types/werror";
 import { useEffect, useRef, useState } from "react";
 
 export type Transform<T> = (input:any)=>T;

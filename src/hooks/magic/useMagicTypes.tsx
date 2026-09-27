@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import useExternalData, { Transform } from "../useExternalData";
-import { WError } from "@/components/magic/CardDisplay";
+import { WError } from "@/components/magic/types/werror";
 
 const transformMagicType:Transform<string> = (input) => {
   return input;

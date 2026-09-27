@@ -3,7 +3,7 @@
 import { memo, useMemo, useState } from "react";
 import CardPrintSelector from "../CardPrintSelector";
 import { MagicCard } from "../types/default";
-import { Card } from "../Card";
+import { Card } from "../card/Card";
 import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
 
 type Props = {

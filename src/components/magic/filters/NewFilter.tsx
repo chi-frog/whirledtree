@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, PointerEventHandler, useMemo, useRef } from "react";
-import { FilterState } from "../CardDisplay";
+import { FilterState } from "../SearchWindow";
 import { motion } from "framer-motion";
 import FilterButton from "./FilterButton";
 import { Selected, SelectionChangeFunction } from "@/hooks/magic/useSelection";

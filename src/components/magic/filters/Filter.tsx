@@ -2,7 +2,7 @@
 
 import { ChangeEventHandler, Dispatch, memo, PointerEventHandler, SetStateAction, useCallback, useMemo, useState } from "react";
 import { MagicFormat, MagicSet } from "../types/default";
-import { FilterState } from "../CardDisplay";
+import { FilterState } from "../SearchWindow";
 import CardsPerRow from "./CardsPerRow";
 import FilterSet from "./FilterSet";
 import FilterFormat from "./FilterFormat";

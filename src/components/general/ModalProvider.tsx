@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, ReactNode, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from "react";
-import { MagicDatabase } from "@/hooks/magic/useMagicDatabase";
+import { MagicResources } from "@/hooks/magic/useMagicResources";
 import Modal from "../magic/modal/Modal";
 import { SelectionUpdateFunction } from "@/hooks/magic/useSelection";
 import { MagicCard } from "../magic/types/default";
@@ -66,10 +66,10 @@ export const useIsCardInModal = (cardName: string) => {
 };
 
 export const ModalProvider = ({
-  db,
+  resources,
   updateSelected,
   children
-}:{db:MagicDatabase, updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
+}:{resources:MagicResources, updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
   const store = useRef(createModalStore()).current;
 
   const showModal = useCallback(async (card:MagicCard) => {
@@ -89,7 +89,7 @@ export const ModalProvider = ({
       <ModalSubscriber
         store={store}
         hideModal={hideModal}
-        db={db}
+        resources={resources}
         updateSelected={updateSelected}
       />
     </ModalStoreContext.Provider>
@@ -97,10 +97,10 @@ export const ModalProvider = ({
   );
 };
 
-function ModalSubscriber({ store, hideModal, db, updateSelected }: {
+function ModalSubscriber({ store, hideModal, resources, updateSelected }: {
   store: ReturnType<typeof createModalStore>,
   hideModal: () => void,
-  db: MagicDatabase,
+  resources:MagicResources,
   updateSelected: SelectionUpdateFunction,
 }) {
   const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);
@@ -109,8 +109,8 @@ function ModalSubscriber({ store, hideModal, db, updateSelected }: {
     <Modal
       shown={state.shown}
       close={hideModal}
-      symbols={db.symbols}
-      symbolImageMap={db.symbolImageMap}
+      symbols={resources.symbols}
+      symbolImageMap={resources.symbolImageMap}
       updateSelected={updateSelected}
       card={state.card}/>
   );

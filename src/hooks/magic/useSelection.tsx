@@ -49,7 +49,7 @@ export type SelectionUpdate = {
 export type SelectionUpdateFunction = (...updates:SelectionUpdate[])=>void;
 export type SelectionChangeFunction = (section:Partial<SelectedSection>, index:number)=>void;
 
-const useFilters = () => {
+const useSelection = () => {
   const [selected, setSelected] = useState<Selected>(defaultSelected);
 
   const updateSelected:SelectionUpdateFunction = useCallback((...updates) => {
@@ -101,4 +101,4 @@ const useFilters = () => {
   return {selected, updateSelected, handlers};
 };
 
-export default useFilters;
+export default useSelection;

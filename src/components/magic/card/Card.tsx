@@ -1,19 +1,19 @@
 'use client'
 
 import { _wpoint } from "@/helpers/wpoint";
-import { isCardDoublesided, MagicCard, MagicPrint } from "./types/default";
+import { isCardDoublesided, MagicCard, MagicPrint } from "../types/default";
 import { memo, PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
-import { DragStage, useDragContext } from "../general/DragProvider";
+import { DragStage, useDragContext } from "../../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
 import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
 import { motion } from "framer-motion";
-import { useIsCardInModal, useModalContext } from "../general/ModalProvider";
-import CardFace from "./CardFace";
-import DoublesidedOverlay from "./card/DoublesidedOverlay";
+import { useIsCardInModal, useModalContext } from "../../general/ModalProvider";
+import CardFace from "../card/CardFace";
+import DoublesidedOverlay from "./DoublesidedOverlay";
 import useExternalData from "@/hooks/useExternalData";
 import { transformPrint } from "@/helpers/magic/transformMagicCard";
-import { useCardRepositoryContext } from "../general/CardRepoProvider";
+import { useCardRepositoryContext } from "../../general/CardRepoProvider";
 
 export type CardLocation =
   'view' | 'modal';

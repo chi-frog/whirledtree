@@ -5,3 +5,8 @@ export enum GAME_TYPE {
   ASTRAL = "astral",
   SEGA = "sega",
 };
+
+export type MagicSymbol = {
+  imageUri:string,
+  symbol:string,
+}

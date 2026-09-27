@@ -1,8 +1,8 @@
 'use client';
 
-import { memo, useEffect, useRef, useState } from 'react';
-import FadeInImage from '../general/FadeInImage';
+import { memo, } from 'react';
 import { cardBackUri } from '@/app/page';
+import FadeInImage from '@/components/general/FadeInImage';
 
 type Props = {
   loc: string;

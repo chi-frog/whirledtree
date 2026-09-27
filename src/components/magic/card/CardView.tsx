@@ -1,9 +1,9 @@
 'use client'
 
-import { MagicCard } from "./types/default";
-import { Card } from "./Card";
-import { _dragState, DragStage, DragState } from "../general/DragProvider";
+import { DragStage, DragState } from "@/components/general/DragProvider";
 import { memo } from "react";
+import { MagicCard } from "../types/default";
+import { Card } from "./Card";
 
 type Props = {
   paddingTop:string,

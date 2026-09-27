@@ -3,10 +3,10 @@
 import { MagicCard } from "@/components/magic/types/default";
 import useExternalData from "../useExternalData";
 import { useCallback, useMemo } from "react";
-import { WError } from "@/components/magic/CardDisplay";
 import { partition } from "@/helpers/arrays";
 import { useCardRepositoryContext } from "@/components/general/CardRepoProvider";
 import { transformMagicCard, transformPrint } from "@/helpers/magic/transformMagicCard";
+import { WError } from "@/components/magic/types/werror";
 
 export const cardHeightRatio = 938/672;
 export const cardAspectRatio = 672/938;
@@ -18,7 +18,9 @@ export type UseMagicCards = [
   fetchNextData?:()=>void,
   totalCards?:number,
 ]
-const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (url, displayLimit) => {
+const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (
+    url,
+    displayLimit) => {
   const {findCard, addCard, addPrint} = useCardRepositoryContext();
   
   let transformFilter = useCallback((card:any) => {
