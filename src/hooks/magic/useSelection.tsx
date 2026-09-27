@@ -71,7 +71,6 @@ const useSelection = () => {
           };
         }
 
-
         if ((arr.length === 0) ||
             (arr[arr.length - 1].value !== ''))
           arr.push({value:'', polarity:true, connector:AND});

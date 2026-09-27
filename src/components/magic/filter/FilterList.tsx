@@ -22,6 +22,7 @@ type SectionProps = {
   last:boolean,
   visible:boolean,
   datalistId:string,
+  validateChange:(input:string)=>boolean,
   onChange:SelectionChangeFunction,
 };
 const Section:React.FC<SectionProps> = memo(({
@@ -30,6 +31,7 @@ const Section:React.FC<SectionProps> = memo(({
   last,
   visible,
   datalistId,
+  validateChange,
   onChange,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
@@ -101,7 +103,10 @@ const Section:React.FC<SectionProps> = memo(({
   };
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({value:e.target.value}, index);
+    if (validateChange(e.target.value))
+      onChange({value:e.target.value}, index);
+    else
+      console.log('No possible way!');
   };
 
   const onPointerDown: PointerEventHandler = (e) => {
@@ -245,6 +250,12 @@ const FilterList:React.FC<Props> = ({
     setMousedOver(false);
   }
 
+  const validateChange = (input:string) => {
+    const inputToLowerCase = input.toLowerCase();
+
+    return list.some((value) => value.toLowerCase().includes(inputToLowerCase));
+  };
+
   return (
   <div
     style={{
@@ -291,6 +302,7 @@ const FilterList:React.FC<Props> = ({
           last={_index === (sections.length - 1)}
           visible={allVisible}
           datalistId={"dataList" + id}
+          validateChange={validateChange}
           onChange={onChange}/>
       );
     })}
