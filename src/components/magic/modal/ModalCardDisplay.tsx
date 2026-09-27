@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useMemo, useState } from "react";
-import CardPrintSelector from "../CardPrintSelector";
+import CardPrintSelector from "../card/CardPrintSelector";
 import { MagicCard } from "../types/default";
 import { Card } from "../card/Card";
 import { cardAspectRatio } from "@/hooks/magic/useMagicCards";

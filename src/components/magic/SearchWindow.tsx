@@ -1,7 +1,7 @@
 'use client'
 
 import { ChangeEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { _magicCard, MagicCard, MagicFormat } from "./types/default";
+import { _magicCard, MagicCard, } from "./types/default";
 import useSelection from "@/hooks/magic/useSelection";
 import CardView from "./card/CardView";
 import { _wpoint } from "@/helpers/wpoint";
@@ -28,7 +28,7 @@ const SearchWindow:React.FC<Props> = ({
     resources,
   }) => {
   const {selected, updateSelected, handlers} = useSelection();
-  const url = useMemo(() => constructSearchUrl(selected, resources.sets), [selected, resources.sets]);
+  const url = useMemo(() => constructSearchUrl(selected, resources), [selected, resources.sets]);
   const [displayLimit, setDisplayLimit] = useState<number>(50);
   const [error, loaded, allCards, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
@@ -38,7 +38,6 @@ const SearchWindow:React.FC<Props> = ({
   const scrollTrigger = useRef<HTMLDivElement|null>(null);
 
   const [cards, setCards] = useState<MagicCard[]>(allCards);
-  const [formats, setFormats] = useState<MagicFormat[]>([]);
 
   useEffect(() => {
     // Preserve any cards the user changed
@@ -51,11 +50,6 @@ const SearchWindow:React.FC<Props> = ({
 
     setCards(filteredCards);
   }, [allCards]);
-
-  useMemo(() => {
-    if ((cards.length > 0) && (formats.length === 0))
-      setFormats([...Object.getOwnPropertyNames(cards[0].legalities).map((_format) => ({name:capitalize(_format)}))]);
-  }, [cards]);
 
   const dragging = useMemo(() => dragState.stage === DragStage.ACTIVE, [dragState.stage]);
 
@@ -144,7 +138,7 @@ const SearchWindow:React.FC<Props> = ({
         setState={setFilterState}
         selected={selected}
         handlers={handlers}
-        sets={resources.sets}
+        resources={resources}
         />
       {(cards.length > 0) && !hasError && 
       <CardView

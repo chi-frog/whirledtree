@@ -1,7 +1,7 @@
 'use client'
 
+import { useDragContext } from "@/components/general/DragProvider";
 import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDragContext } from "../general/DragProvider";
 
 const widthRatio = 578/669;
 const heightRatio = 550/933;

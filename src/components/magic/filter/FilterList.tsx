@@ -279,7 +279,7 @@ const FilterList:React.FC<Props> = ({
       }}>
       {text}&nbsp;
     </label>
-    <datalist id='dataList'>
+    <datalist id={'dataList' + id}>
       {list.map((_item, _index) => (
         <option key={_index} value={_item}/>
       ))}
@@ -292,7 +292,7 @@ const FilterList:React.FC<Props> = ({
           index={_index}
           last={_index === (sections.length - 1)}
           visible={allVisible}
-          datalistId="dataList"
+          datalistId={"dataList" + id}
           onChange={onChange}/>
       );
     })}

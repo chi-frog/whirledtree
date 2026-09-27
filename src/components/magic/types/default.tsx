@@ -95,11 +95,3 @@ export const _magicSetAny = {
   acronym:'',
   type:'',
 }
-
-export type MagicFormat = {
-  name:string,
-}
-
-export const _magicFormatAny = {
-  name:'',
-}

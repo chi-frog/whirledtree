@@ -2,7 +2,7 @@
 * Functions to construct valid scryfall requests
 */
 
-import { MagicSet } from "@/components/magic/types/default";
+import { MagicResources } from "@/hooks/magic/useMagicResources";
 import { defaultSelected, Selected, SelectedSection, SKey } from "@/hooks/magic/useSelection";
 
 const scryfallUrl = 'https://api.scryfall.com';
@@ -12,14 +12,20 @@ const bitIncludeExtras = 'include_extras=true';
 
 export const constructSearchUrl = (
   selected:Selected=defaultSelected,
-  sets:MagicSet[],
+  resources:MagicResources,
 ) => {
   const createSegment = (key:string, section:SelectedSection) => {
     let value = section.value.trim();
     let translation;
 
     if (key === 'set') {
-      translation = sets.find((_set) => _set.name.toLowerCase() === value.toLowerCase());
+      translation = resources.sets.find((set) => set.name.toLowerCase() === value.toLowerCase());
+      if (!translation)
+        return "";
+    }
+
+    if (key === 'format') {
+      translation = resources.formats.find((format) => format.name.toLowerCase() === value.toLowerCase());
       if (!translation)
         return "";
     }
@@ -36,6 +42,7 @@ export const constructSearchUrl = (
 
     switch(key) {
       case 'set':
+      case 'format':
         result += ':' + translation?.acronym;
         break;
       case 'oracleText':

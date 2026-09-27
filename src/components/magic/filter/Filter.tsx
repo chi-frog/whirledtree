@@ -7,21 +7,21 @@ import FilterButton from "./FilterButton";
 import { Selected, SelectionChangeFunction } from "@/hooks/magic/useSelection";
 import XOut from "./XOut";
 import FilterList from "./FilterList";
-import { MagicSet } from "../types/default";
+import { MagicResources } from "@/hooks/magic/useMagicResources";
 
 type Props = {
   state:FilterState,
   setState:(state:FilterState)=>void,
   selected:Selected,
   handlers:Record<keyof Selected, SelectionChangeFunction>,
-  sets:MagicSet[],
+  resources:MagicResources,
 };
 const Filter:React.FC<Props> = ({
   state,
   setState,
   selected,
   handlers,
-  sets
+  resources
 }) => {
   const mousedOver = useMemo(() => (state === FilterState.MOUSEDOVER), [state]);
   const reduced = useMemo(() => (state === FilterState.REDUCED), [state]);
@@ -164,8 +164,15 @@ const Filter:React.FC<Props> = ({
         id="set"
         text="Sets"
         sections={selected.set}
-        list={(sets) ? sets.map((_set) => _set.name) : []}
+        list={resources.sets.map((set) => set.name)}
         onChange={handlers.set}
+        />
+      <FilterList
+        id="format"
+        text="Formats"
+        sections={selected.format}
+        list={resources.formats.map((format) => format.name)}
+        onChange={handlers.format}
         />
       </div>}
     </motion.div>

@@ -5,13 +5,13 @@
 'use client'
 
 import { useMemo, useState } from "react";
-import { MagicFormat, MagicSet } from "@/components/magic/types/default";
+import { MagicSet } from "@/components/magic/types/default";
 import useMagicSymbols from "./useMagicSymbols";
 import useMagicTypes from "./useMagicTypes";
 import { fetchImage } from "@/components/general/ImageRepoProvider";
 import useMagicSets from "./useMagicSets";
 import { WError } from "@/components/magic/types/werror";
-import { MagicSymbol } from "@/components/magic/types/magic";
+import { MagicFormat, MagicSymbol } from "@/components/magic/types/magic";
 
 /*
 * Everything listed here has both a loaded/unloaded state,
@@ -37,6 +37,7 @@ const _loadMap:LoadMap = new Map([
 export type MagicResources = {
   errorMap:ErrorMap,
   loadMap:LoadMap,
+  formats:MagicFormat[],
   sets:MagicSet[],
   types:string[],
   symbols:MagicSymbol[],
@@ -50,7 +51,31 @@ const useMagicResources:UseMagicData = () => {
   const [typesError, typesLoaded, types] = useMagicTypes();
   const [symbolsError, symbolsLoaded, symbols] = useMagicSymbols();
   const [symbolImageMap, setSymbolImageMap] = useState<Map<string, string>>(new Map<string, string>());
-  const [formats, setFormats] = useState<MagicFormat[]>([]);
+  const [formats, setFormats] = useState<MagicFormat[]>([
+    {name:'Standard', acronym:'standard'},
+    {name:'Future Standard', acronym:'future'},
+    {name:'Historic', acronym:'historic'},
+    {name:'Timeless', acronym:'timeless'},
+    {name:'Gladiator', acronym:'gladiator'},
+    {name:'Pioneer', acronym:'pioneer'},
+    {name:'Modern', acronym:'modern'},
+    {name:'Legacy', acronym:'legacy'},
+    {name:'Pauper', acronym:'pauper'},
+    {name:'Vintage', acronym:'vintage'},
+    {name:'Penny Dreadful', acronym: 'penny'},
+    {name:'Commander', acronym:'commander'},
+    {name:'Oathbreaker', acronym:'oathbreaker'},
+    {name:'Standard Brawl', acronym:'standardbrawl'},
+    {name:'Brawl', acronym:'brawl'},
+    {name:'Competitive Brawl', acronym:'competitivebrawl'},
+    {name:'Alchemy', acronym:'alchemy'},
+    {name:'Pauper Commander', acronym:'paupercommander'},
+    {name:'Duel Commander', acronym:'duel'},
+    {name:'Old School 93/94', acronym:'oldschool'},
+    {name:'Pre-Modern', acronym:'premodern'},
+    {name:'Pre-Edh', acronym:'predh'},
+    {name:'Tiny Leaders: Reborn', acronym:'tlr'},
+  ]);
   const [loadMap, setLoadMap] = useState<LoadMap>(_loadMap)
   const [errorMap, setErrorMap] = useState<ErrorMap>(_errorMap);
 
@@ -72,7 +97,7 @@ const useMagicResources:UseMagicData = () => {
     });
   }, [symbolsLoaded]);
 
-  return {errorMap, loadMap, sets, types, symbols, symbolImageMap };
+  return {errorMap, loadMap, formats, sets, types, symbols, symbolImageMap };
 };
 
 export default useMagicResources;

@@ -6,6 +6,16 @@ export enum GAME_TYPE {
   SEGA = "sega",
 };
 
+export type MagicFormat = {
+  name:string,
+  acronym:string,
+}
+
+export const _magicFormatAny = {
+  name:'',
+  acronym:'',
+}
+
 export type MagicSymbol = {
   imageUri:string,
   symbol:string,

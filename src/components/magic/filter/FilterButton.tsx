@@ -189,7 +189,7 @@ const Section:React.FC<SectionProps> = memo(({
           (isTyping) ?
             'rgba(166, 168, 255, 1) 0px 0px 6px 2px inset' :
             'white 0px 0px 10px 2px inset',
-        outline: '2px solid rgb(146, 148, 248)',
+        outline: (!section.polarity) ? '2px solid rgb(235, 159, 130)' : '2px solid rgb(146, 148, 248)',
         transition: `border-radius 0.2s ease-in-out, background-color 0.2s ease-in-out, width ${isTyping ? 0 : 0.2}s ease-out, height ${isTyping ? 0 : 0.2}s ease-out`,
       }}/>
     <span
