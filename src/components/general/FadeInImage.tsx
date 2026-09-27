@@ -32,7 +32,7 @@ const FadeInImage: React.FC<Props> = ({
     const img = new Image();
     img.src = src;
     img.decode()
-      .catch(() => { /* fall through anyway */ })
+      .catch(() => { /* Add error correction */ })
       .finally(() => {
         if (cancelled || latestSrc.current !== src) return;
 
@@ -54,7 +54,7 @@ const FadeInImage: React.FC<Props> = ({
     const timeout = setTimeout(() => {
       setFrontIndex((prev) => (prev === 0 ? 1 : 0)); // back slot becomes front
       setBackLoaded(false);
-    }, 300);
+    }, 200);
 
     return () => clearTimeout(timeout);
   }, [backLoaded]);

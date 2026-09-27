@@ -8,11 +8,13 @@ import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
 
 type Props = {
   card:MagicCard,
+  expanded:boolean,
   update:(card:MagicCard)=>void,
   updateCardPrintId:(card:MagicCard, id:string)=>void,
 };
 const ModalCardDisplay:React.FC<Props> = ({
   card,
+  expanded,
   update,
   updateCardPrintId,
 }) => {
@@ -46,7 +48,8 @@ const ModalCardDisplay:React.FC<Props> = ({
       location='modal'
       widthString={'fit-content'}
       heightString={'100%'}
-      card={card}/>))
+      card={card}
+      dontAnimate={expanded}/>))
   </div>
   );
 };

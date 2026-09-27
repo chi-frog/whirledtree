@@ -86,6 +86,7 @@ const Modal:React.FC<Props> = ({
         }}>
         <ModalCardDisplay
           card={card}
+          expanded={expanded}
           update={update}
           updateCardPrintId={updateCardPrintId}/>
         <CardInfoDisplay

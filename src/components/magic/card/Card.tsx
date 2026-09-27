@@ -14,6 +14,7 @@ import DoublesidedOverlay from "./DoublesidedOverlay";
 import useExternalData from "@/hooks/useExternalData";
 import { transformPrint } from "@/helpers/magic/transformMagicCard";
 import { useCardRepositoryContext } from "../../general/CardRepoProvider";
+import { cardBackUri } from "@/app/page";
 
 export type CardLocation =
   'view' | 'modal';
@@ -23,6 +24,7 @@ type Props = {
   heightString?:string,
   card:MagicCard,
   visible?:boolean,
+  dontAnimate?:boolean,
 };
 export const Card:React.FC<Props> = memo(function Card({
     location,
@@ -30,6 +32,7 @@ export const Card:React.FC<Props> = memo(function Card({
     heightString,
     card,
     visible=true,
+    dontAnimate=false,
   }:Props) {
   const [reversed, setReversed] = useState<boolean>(false);
   // Consider making this a ref
@@ -234,12 +237,32 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleRotationPointerUp, handleRotationPointerDown]);
 
-  const frontImgSrc = card.prints.get(card.printId)?.imageUris.front.small;
-  const backImgSrc = card.prints.get(card.printId)?.imageUris.back?.small;
+  const frontImgSrc = useMemo(() => {
+    const print = card.prints.get(card.printId);
+    if (!print) return cardBackUri;
+
+    const largeImg = print.imageUris.front.large;
+    if (largeImg !== '') return largeImg;
+
+    return print.imageUris.front.small;
+  }, [card]);
+
+  const backImgSrc = useMemo(() => {
+    if (!card.back) return cardBackUri;
+
+    const print = card.prints.get(card.printId);
+    if (!print) return "";
+
+    const largeImg = print.imageUris.back?.large;
+    if (largeImg && largeImg !== '') return largeImg;
+
+    return print.imageUris.back?.small;
+  }, [card]);
 
   return (<>
     <motion.div
-      layoutId={(location === 'view' && isInModal) ? undefined : card.printId}
+      layoutId={((location === 'view' && isInModal) ||
+                 (dontAnimate)) ? undefined : card.printId}
       layout={!dragging}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
@@ -293,7 +316,7 @@ export const Card:React.FC<Props> = memo(function Card({
             '',
       }}>
       <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
-      <CardFace loc={location} src={backImgSrc} visible={!showFront}/>
+      <CardFace loc={'modal'} src={backImgSrc} visible={!showFront}/>
       { isCardDoublesided(card) &&
         <DoublesidedOverlay 
           cardMousedover={mousedover}
