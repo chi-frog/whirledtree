@@ -3,8 +3,8 @@
 import { memo, useMemo, useRef } from "react";
 import { searchFields } from "../CardTooltip";
 import { MagicCard } from "../types/default";
-import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import OracleText from "../OracleText";
+import { MagicSymbol } from "../types/magic";
 
 type Props = {
   card:MagicCard,

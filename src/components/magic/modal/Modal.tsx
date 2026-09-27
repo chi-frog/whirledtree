@@ -5,26 +5,30 @@ import { MagicCard, } from "../types/default";
 import { _dragState, } from "../../general/DragProvider";
 import { _wpoint, } from "@/helpers/wpoint";
 import { SelectionUpdateFunction } from "@/hooks/magic/useSelection";
-import { MagicSymbol } from "@/hooks/magic/useMagicSymbols";
 import { motion } from "framer-motion";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 import ModalCardDisplay from "./ModalCardDisplay";
 import CardTooltip from "@/components/magic/CardTooltip";
 import CardInfoDisplay from "../card/CardInfoDisplay";
+import { MagicSymbol } from "../types/magic";
 
 type Props = {
   shown:boolean,
   close:()=>void,
+  update:(card:MagicCard)=>void,
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
+  updateCardPrintId:(card:MagicCard, id:string)=>void,
   updateSelected:SelectionUpdateFunction,
   card?:MagicCard,
 }
 const Modal:React.FC<Props> = ({
     shown,
     close,
+    update,
     symbols,
     symbolImageMap,
+    updateCardPrintId,
     updateSelected,
     card,
   }:Props) => {
@@ -81,7 +85,9 @@ const Modal:React.FC<Props> = ({
           border: '2px solid rgba(146, 148, 248, 0.8)',
         }}>
         <ModalCardDisplay
-          card={card}/>
+          card={card}
+          update={update}
+          updateCardPrintId={updateCardPrintId}/>
         <CardInfoDisplay
           card={card}
           expanded={expanded}

@@ -41,7 +41,15 @@ const SearchWindow:React.FC<Props> = ({
   const [formats, setFormats] = useState<MagicFormat[]>([]);
 
   useEffect(() => {
-    setCards(allCards);
+    // Preserve any cards the user changed
+    const filteredCards = allCards.map((allCard) => {
+      let index = cards.findIndex((card) => card.oracleId === allCard.oracleId);
+
+      if (index >= 0) return cards[index];
+      else return allCard;
+    })
+
+    setCards(filteredCards);
   }, [allCards]);
 
   useMemo(() => {
@@ -115,8 +123,20 @@ const SearchWindow:React.FC<Props> = ({
 
   const hasError = useMemo(() => isError(error), [error]);
 
+  const updateCardPrintId = (card:MagicCard, id:string) => {
+    setCards((prev) => {
+      const cards = [...prev];
+      const index = prev.findIndex((_card) => _card.oracleId === card.oracleId);
+      if (index < 0) return prev;
+      
+      cards[index] = {...cards[index], printId:id};
+
+      return cards;
+    });
+  }
+
   return (
-    <ModalProvider resources={resources} updateSelected={updateSelected}>
+    <ModalProvider resources={resources} updateCardPrintId={updateCardPrintId} updateSelected={updateSelected}>
     <div
       onPointerDown={handlePointerDown}>
       <NewFilter

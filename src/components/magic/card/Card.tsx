@@ -237,11 +237,6 @@ export const Card:React.FC<Props> = memo(function Card({
   const frontImgSrc = card.prints.get(card.printId)?.imageUris.front.small;
   const backImgSrc = card.prints.get(card.printId)?.imageUris.back?.small;
 
-  if (location === 'modal') {
-  console.log('frontImgSrc', frontImgSrc);
-  console.log('^^ printId:' + card.printId);
-  }
-
   return (<>
     <motion.div
       layoutId={(location === 'view' && isInModal) ? undefined : card.printId}

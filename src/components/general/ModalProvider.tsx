@@ -9,6 +9,7 @@ import { useSyncExternalStoreWithSelector } from "use-sync-external-store/with-s
 
 type Modal = {
   showModal:(card:MagicCard)=>void,
+  updateModal:(card:MagicCard)=>void,
   hideModal:()=>void,
 }
 const ModalContext = createContext<Modal|undefined>(undefined);
@@ -67,20 +68,25 @@ export const useIsCardInModal = (cardName: string) => {
 
 export const ModalProvider = ({
   resources,
+  updateCardPrintId,
   updateSelected,
   children
-}:{resources:MagicResources, updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
+}:{resources:MagicResources, updateCardPrintId:(card:MagicCard, id:string)=>void, updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
   const store = useRef(createModalStore()).current;
 
-  const showModal = useCallback(async (card:MagicCard) => {
+  const showModal = useCallback((card:MagicCard) => {
     store.setState({ shown: true, card });
+  }, [store]);
+
+  const updateModal = useCallback((card:MagicCard) => {
+    store.setState({ shown:true, card});
   }, [store]);
 
   const hideModal = useCallback(() => {
     store.setState({ shown: false, card: undefined });
   }, [store]);
 
-  const value = useMemo(() => ({ showModal, hideModal }), [showModal, hideModal]);
+  const value = useMemo(() => ({ showModal, updateModal, hideModal }), [showModal, updateModal, hideModal]);
 
   return (
     <ModalContext.Provider value={value}>
@@ -88,8 +94,10 @@ export const ModalProvider = ({
       {children}
       <ModalSubscriber
         store={store}
+        updateModal={updateModal}
         hideModal={hideModal}
         resources={resources}
+        updateCardPrintId={updateCardPrintId}
         updateSelected={updateSelected}
       />
     </ModalStoreContext.Provider>
@@ -97,10 +105,12 @@ export const ModalProvider = ({
   );
 };
 
-function ModalSubscriber({ store, hideModal, resources, updateSelected }: {
+function ModalSubscriber({ store, updateModal, hideModal, resources, updateCardPrintId, updateSelected }: {
   store: ReturnType<typeof createModalStore>,
+  updateModal:(card:MagicCard)=>void,
   hideModal: () => void,
   resources:MagicResources,
+  updateCardPrintId:(card:MagicCard, id:string)=>void,
   updateSelected: SelectionUpdateFunction,
 }) {
   const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);
@@ -108,9 +118,11 @@ function ModalSubscriber({ store, hideModal, resources, updateSelected }: {
   return (
     <Modal
       shown={state.shown}
+      update={updateModal}
       close={hideModal}
       symbols={resources.symbols}
       symbolImageMap={resources.symbolImageMap}
+      updateCardPrintId={updateCardPrintId}
       updateSelected={updateSelected}
       card={state.card}/>
   );

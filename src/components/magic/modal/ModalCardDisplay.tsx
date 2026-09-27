@@ -8,18 +8,31 @@ import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
 
 type Props = {
   card:MagicCard,
+  update:(card:MagicCard)=>void,
+  updateCardPrintId:(card:MagicCard, id:string)=>void,
 };
 const ModalCardDisplay:React.FC<Props> = ({
   card,
+  update,
+  updateCardPrintId,
 }) => {
   const printIds = useMemo(() => Array.from(card.prints.entries()).map(([printId]) => printId), [card.prints]);
-  const [displayedPrintIndex, setDisplayedPrintIndex] =
-    useState<number>(
-      printIds.findIndex((printId) =>
-        (printId === card.printId)));
+  const printIndex = printIds.findIndex((printId) => printId === card.printId);
 
-  const reducePrintId = () => setDisplayedPrintIndex((prev) => (prev-1 < 0 ? printIds.length - 1 : prev-1));
-  const increasePrintId = () => setDisplayedPrintIndex((prev) => (prev+1 >= printIds.length ? 0 : prev+1));
+  const reducePrintId = () => {
+    const index = ((printIndex - 1) < 0) ? printIds.length - 1 : printIndex - 1;
+    const printId = printIds[index];
+
+    update({...card, printId});
+    updateCardPrintId(card, printId);
+  };
+  const increasePrintId = () => {
+    const index = ((printIndex + 1) >= printIds.length) ? 0 : printIndex + 1;
+    const printId = printIds[index];
+
+    update({...card, printId});
+    updateCardPrintId(card, printId);
+  };
 
   return (
   <div style={{
@@ -29,14 +42,11 @@ const ModalCardDisplay:React.FC<Props> = ({
     filter: 'drop-shadow(black 0px 10px 15px)'}}>
     <CardPrintSelector visible={printIds.length > 1} location="right" func={reducePrintId}/>
     <CardPrintSelector visible={printIds.length > 1} location="left" func={increasePrintId}/>
-    {printIds.map((printId, index) => (
-      <Card
-        key={printId}
-        visible={index === displayedPrintIndex}
-        location='modal'
-        widthString={'fit-content'}
-        heightString={'100%'}
-        card={{...card, printId}}/>))}
+    <Card
+      location='modal'
+      widthString={'fit-content'}
+      heightString={'100%'}
+      card={card}/>))
   </div>
   );
 };
