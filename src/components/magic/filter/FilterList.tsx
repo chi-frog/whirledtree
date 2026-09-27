@@ -74,12 +74,10 @@ const Section:React.FC<SectionProps> = memo(({
   }, []);
 
   useLayoutEffect(() => {
-    if (expanded) {
-      if (spanRef.current)
-        setInputWidth(Math.max(spanRef.current.offsetWidth, circleWidth));
-    } else if (circleWidth > 0) {
-      setInputWidth(circleWidth);
-    }
+    setInputWidth(
+      ((expanded) && (spanRef.current)) ?
+        Math.max(spanRef.current.offsetWidth, circleWidth) :
+        circleWidth);
   }, [section.value, expanded, circleWidth]);
 
   const onBlur:FocusEventHandler<HTMLInputElement> = () => {

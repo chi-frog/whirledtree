@@ -17,16 +17,19 @@ export const constructSearchUrl = (
   const createSegment = (key:string, section:SelectedSection) => {
     let value = section.value.trim();
     let translation;
+    let typeTranslation;
 
     if (key === 'set') {
       translation = resources.sets.find((set) => set.name.toLowerCase() === value.toLowerCase());
       if (!translation)
         return "";
-    }
-
-    if (key === 'format') {
+    } else if (key === 'format') {
       translation = resources.formats.find((format) => format.name.toLowerCase() === value.toLowerCase());
       if (!translation)
+        return "";
+    } else if (key === 'type') {
+      typeTranslation = resources.types.find((type) => type.name.toLowerCase() === value.toLowerCase());
+      if (!typeTranslation)
         return "";
     }
 
@@ -41,6 +44,9 @@ export const constructSearchUrl = (
     }
 
     switch(key) {
+      case 'type':
+        result += ':' + typeTranslation?.name;
+        break;
       case 'set':
       case 'format':
         result += ':' + translation?.acronym;

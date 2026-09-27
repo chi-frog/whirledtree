@@ -11,7 +11,7 @@ import useMagicTypes from "./useMagicTypes";
 import { fetchImage } from "@/components/general/ImageRepoProvider";
 import useMagicSets from "./useMagicSets";
 import { WError } from "@/components/magic/types/werror";
-import { MagicFormat, MagicSymbol } from "@/components/magic/types/magic";
+import { MagicFormat, MagicSymbol, MagicType } from "@/components/magic/types/magic";
 
 /*
 * Everything listed here has both a loaded/unloaded state,
@@ -39,7 +39,7 @@ export type MagicResources = {
   loadMap:LoadMap,
   formats:MagicFormat[],
   sets:MagicSet[],
-  types:string[],
+  types:MagicType[],
   symbols:MagicSymbol[],
   symbolImageMap:Map<string, string>,
 }

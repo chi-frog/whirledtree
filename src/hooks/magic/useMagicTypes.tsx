@@ -3,50 +3,51 @@
 import { useMemo } from "react";
 import useExternalData, { Transform } from "../useExternalData";
 import { WError } from "@/components/magic/types/werror";
+import { MagicType } from "@/components/magic/types/magic";
 
-const transformMagicType:Transform<string> = (input) => {
-  return input;
+const transformMagicType:Transform<MagicType> = (input) => {
+  return {name:input};
 };
 
 type Return = [
   error:WError,
   loaded:boolean,
-  types:string[],
+  types:MagicType[],
 ]
 const useMagicTypes:()=>Return = () => {
-  const [errorSuper, loadedSuper, superTypes] = useExternalData<string>(
+  const [errorSuper, loadedSuper, superTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/supertypes',
     transformMagicType);
 
-  const [errorCard, loadedCard, cardTypes] = useExternalData<string>(
+  const [errorCard, loadedCard, cardTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/card-types',
     transformMagicType);
 
-  const [errorArtifact, loadedArtifact, artifactTypes] = useExternalData<string>(
+  const [errorArtifact, loadedArtifact, artifactTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/artifact-types',
     transformMagicType);
 
-  const [errorBattle, loadedBattle, battleTypes] = useExternalData<string>(
+  const [errorBattle, loadedBattle, battleTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/battle-types',
     transformMagicType);
 
-  const [errorCreature, loadedCreature, creatureTypes] = useExternalData<string>(
+  const [errorCreature, loadedCreature, creatureTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/creature-types',
     transformMagicType);
 
-  const [errorEnchantment, loadedEnchantment, enchantmentTypes] = useExternalData<string>(
+  const [errorEnchantment, loadedEnchantment, enchantmentTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/enchantment-types',
     transformMagicType);
 
-  const [errorLand, loadedLand, landTypes] = useExternalData<string>(
+  const [errorLand, loadedLand, landTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/land-types',
     transformMagicType);
 
-  const [errorPlaneswalker, loadedPlaneswalker, planeswalkerTypes] = useExternalData<string>(
+  const [errorPlaneswalker, loadedPlaneswalker, planeswalkerTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/planeswalker-types',
     transformMagicType);
 
-  const [errorSpell, loadedSpell, spellTypes] = useExternalData<string>(
+  const [errorSpell, loadedSpell, spellTypes] = useExternalData<MagicType>(
     'https://api.scryfall.com/catalog/spell-types',
     transformMagicType);
 

@@ -164,7 +164,7 @@ const Filter:React.FC<Props> = ({
         id="set"
         text="Sets"
         sections={selected.set}
-        list={resources.sets.map((set) => set.name)}
+        list={resources.sets.toSorted().map((set) => set.name)}
         onChange={handlers.set}
         />
       <FilterList
@@ -173,6 +173,13 @@ const Filter:React.FC<Props> = ({
         sections={selected.format}
         list={resources.formats.map((format) => format.name)}
         onChange={handlers.format}
+        />
+      <FilterList
+        id="type"
+        text="Types"
+        sections={selected.type}
+        list={resources.types.map((type) => type.name)}
+        onChange={handlers.type}
         />
       </div>}
     </motion.div>

@@ -16,6 +16,10 @@ export const _magicFormatAny = {
   acronym:'',
 }
 
+export type MagicType = {
+  name:string,
+}
+
 export type MagicSymbol = {
   imageUri:string,
   symbol:string,
