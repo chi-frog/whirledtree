@@ -6,7 +6,7 @@ import useSelection from "@/hooks/magic/useSelection";
 import CardView from "./card/CardView";
 import { _wpoint } from "@/helpers/wpoint";
 import { _dragState, DragStage, DragState, useDragContext } from "../general/DragProvider";
-import NewFilter from "./filters/NewFilter";
+import Filter from "./filter/Filter";
 import { MagicResources } from "@/hooks/magic/useMagicResources";
 import useMagicCards from "@/hooks/magic/useMagicCards";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
@@ -139,7 +139,7 @@ const SearchWindow:React.FC<Props> = ({
     <ModalProvider resources={resources} updateCardPrintId={updateCardPrintId} updateSelected={updateSelected}>
     <div
       onPointerDown={handlePointerDown}>
-      <NewFilter
+      <Filter
         state={filterState}
         setState={setFilterState}
         selected={selected}

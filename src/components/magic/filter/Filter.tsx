@@ -16,7 +16,7 @@ type Props = {
   handlers:Record<keyof Selected, SelectionChangeFunction>,
   sets:MagicSet[],
 };
-const NewFilter:React.FC<Props> = ({
+const Filter:React.FC<Props> = ({
   state,
   setState,
   selected,
@@ -145,6 +145,7 @@ const NewFilter:React.FC<Props> = ({
         display:'flex',
         width:'100%',
         height:'100%',
+        alignItems:'center',
         paddingLeft:10,
       }}>
       <FilterButton
@@ -171,4 +172,4 @@ const NewFilter:React.FC<Props> = ({
   </>)
 };
 
-export default memo(NewFilter);
+export default memo(Filter);
