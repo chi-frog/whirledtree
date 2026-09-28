@@ -31,14 +31,14 @@ const Polarity:React.FC<Props> = ({
   const width = (options && options.width) ? options.width : '25px';
   const height = (options && options.height) ? options.height : '25px';
 
-  const onXPointerDown:PointerEventHandler = (e:React.PointerEvent) => {
+  const onPointerDown:PointerEventHandler = (e:React.PointerEvent) => {
     e.stopPropagation();
     e.preventDefault();
 
     pressed.current = true;
   }
 
-  const onXPointerUp:PointerEventHandler = (e:React.PointerEvent) => {
+  const onPointerUp:PointerEventHandler = (e:React.PointerEvent) => {
     e.stopPropagation();
 
     if (pressed.current) {
@@ -48,13 +48,13 @@ const Polarity:React.FC<Props> = ({
     }
   }
 
-  const onXPointerEnter:PointerEventHandler = (e:React.PointerEvent) => {
+  const onPointerEnter:PointerEventHandler = (e:React.PointerEvent) => {
     e.stopPropagation();
     setMousedOver(true);
   }
 
-  const onXPointerLeave:PointerEventHandler = (e:React.PointerEvent) => {
-    e.stopPropagation();
+  const onPointerLeave:PointerEventHandler = (e:React.PointerEvent) => {
+    //e.stopPropagation();
     setMousedOver(false);
     if(options && options.onPointerLeave)
       options.onPointerLeave(e);
@@ -63,10 +63,10 @@ const Polarity:React.FC<Props> = ({
  return (<>
   <div className={`polarity sub${index}`}
     title={(polarity) ? 'Exclude Section' : 'Include Section'}
-    onPointerEnter={onXPointerEnter}
-    onPointerLeave={onXPointerLeave}
-    onPointerDown={onXPointerDown}
-    onPointerUp={onXPointerUp}
+    onPointerEnter={onPointerEnter}
+    onPointerLeave={onPointerLeave}
+    onPointerDown={onPointerDown}
+    onPointerUp={onPointerUp}
     style={{
       position:'absolute',
       left:offsets.left,

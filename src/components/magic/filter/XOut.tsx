@@ -55,7 +55,7 @@ const XOut:React.FC<Props> = ({
   }
 
   const onXPointerLeave:PointerEventHandler = (e:React.PointerEvent) => {
-    e.stopPropagation();
+    //e.stopPropagation();
     setMousedOver(false);
   }
 
@@ -72,7 +72,6 @@ const XOut:React.FC<Props> = ({
       height,
       borderRadius:'50%',
       zIndex:45,
-      outline:'1px solid black',
     }}>
     <div className={`xOut sub${index}`}
       title='Close'

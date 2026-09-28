@@ -1,7 +1,7 @@
 'use client'
 
 import useTabVisibility from "@/hooks/useTabVisibility";
-import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import XOut from "./XOut";
 import { SelectionChangeFunction, SelectedSection } from "@/hooks/magic/useSelection";
 import Polarity from "./Polarity";
@@ -16,8 +16,74 @@ const colorWheel:string[] = [
 
 const defaultCoords = {x:-1, y:-1};
 
+type ConnectorProps = {
+  section:SelectedSection,
+  index:number,
+  onChange:SelectionChangeFunction
+};
+
+const Connector:React.FC<ConnectorProps> = ({
+  section,
+  index,
+  onChange,
+}) => {
+  const [mousedover, setMousedover] = useState<boolean>(false);
+  const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
+
+  const onPointerEnter:PointerEventHandler = () =>
+    setMousedover(true)
+
+  const onPointerLeave:PointerEventHandler = () =>
+    setMousedover(false);
+
+  const and = useMemo(() => (section.connector === 'and'), [section.connector]);
+
+  const onPointerDown: PointerEventHandler = (e) => {
+    mouseCoords.current = {x: e.clientX, y: e.clientY};
+  };
+
+  const onPointerUp: PointerEventHandler = (e) => {
+    const dx = Math.abs(e.clientX - mouseCoords.current.x);
+    const dy = Math.abs(e.clientY - mouseCoords.current.y);
+    if (dx < 5 && dy < 5) 
+      onChange({connector:(and) ? 'or' : 'and'}, index);
+  };
+
+  return (
+    <div
+      key={index + 'connector'}
+      title={(and) ? 'Change to OR' : 'Change to AND'}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      style={{
+        backgroundColor:(and) ? 'aquamarine' : 'rosybrown',
+        borderRadius:'50%',
+        height:(mousedover) ? '30%' : '15%',
+        aspectRatio:1,
+        zIndex:20,
+        cursor:'pointer',
+        boxShadow:(mousedover) ?
+          '0px 0px 5px black inset, white 0px 0px 5px' :
+          '0px 0px 5px black inset',
+        textAlign:'center',
+        transition:'height 0.2s ease-in-out, width 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+      }}>
+      <span
+        style={{
+          opacity:(mousedover) ? '1' : '0',
+          transition:'opacity 0.2s ease-in-out',
+          pointerEvents:'none',
+        }}>
+        {(and) ? '&' : '|'}
+      </span>
+    </div>);
+};
+
 type SectionProps = {
   section:SelectedSection,
+  previousConnector:'and'|'or',
   index:number,
   last:boolean,
   visible:boolean,
@@ -25,6 +91,7 @@ type SectionProps = {
 };
 const Section:React.FC<SectionProps> = memo(({
   section,
+  previousConnector,
   index,
   last,
   visible,
@@ -116,49 +183,49 @@ const Section:React.FC<SectionProps> = memo(({
     }
   };
 
-  return (<div style={{
-    height:'100%',
-    position:'relative',
-    display:'flex',
-    justifyContent:'center',
-    alignItems:'center',
-  }}>
+  return (
+  <div
+    onPointerLeave={onPointerLeave}
+    style={{
+      height:'100%',
+      position:'relative',
+      display:'flex',
+      paddingLeft:(((index === 0) || !expanded) && previousConnector === 'and') ? '0px' : '5px',
+      paddingRight:(expanded || (section.connector === 'or')) ? '5px' : '0px',
+      justifyContent:'center',
+      alignItems:'center',
+      transition:'padding 0.2s ease-in-out',
+    }}>
     {!last && <XOut
       cancel={()=>{
         onChange({value:''}, index);
       }}
       visible={expanded}
-      offsets={{left:'-8px', top:'calc(50% - 22px)'}}
+      offsets={{left:'-2px', top:'calc(50% - 24px)'}}
       index={index}
       options={{
         animated:true,
-        width:'14px',
-        height:'14px',
+        width:'16px',
+        height:'16px',
         padding:'1px',
-        onPointerLeave:() => {
-          setMousedOver(false);
-        }
+
       }}/>}
     {!last && <Polarity
       polarity={section.polarity}
       setPolarity={(polarity:boolean) => onChange({polarity}, index)}
       visible={expanded}
-      offsets={{left:'-7px', top:'calc(50% + 7px)'}}
+      offsets={{left:'-5px', top:'calc(50% + 9px)'}}
       index={index}
       options={{
         animated:true,
         width:'14px',
         height:'14px',
         padding:'1px',
-        onPointerLeave:() => {
-          setMousedOver(false);
-        }
       }}/>}
     <input className={(expanded) ? "fieldSizingContent" : "fieldSizingFixed"}
       title={(section.value !== '') ? 'Edit Section' : 'Add New Section'}
       ref={inputRef}
       onPointerEnter={onPointerEnter}
-      onPointerLeave={onPointerLeave}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onKeyDown={onKeyDown}
@@ -274,16 +341,24 @@ const FilterButton:React.FC<Props> = ({
       }}>
       {text}&nbsp;
     </label>
-    {sections.map((_section, _index) => {
-      return (
+    {sections.map((section, index) => {
+      const last = (index === (sections.length - 1));
+
+      return (<>
         <Section
-          key={_index}
-          section={_section}
-          index={_index}
-          last={_index === (sections.length - 1)}
+          key={index + 'section'}
+          section={section}
+          previousConnector={sections[index-1] ? sections[index-1].connector : 'and'}
+          index={index}
+          last={last}
           visible={allVisible}
           onChange={onChange}/>
-      );
+        {(!last && (index !== (sections.length - 2))) &&
+        <Connector
+          section={section}
+          index={index}
+          onChange={onChange}/>}
+      </>);
     })}
   </div>
 )};

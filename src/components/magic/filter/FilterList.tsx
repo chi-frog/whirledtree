@@ -259,14 +259,14 @@ const FilterList:React.FC<Props> = ({
   return (
   <div
     style={{
-    color:'black',
-    borderRadius: '5px',
-    maxHeight: '100%',
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    padding: '2px 5px 2px 5px',
-    zIndex:1,
+      color:'black',
+      borderRadius: '5px',
+      maxHeight: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      padding: '2px 5px 2px 5px',
+      zIndex:1,
     }}>
     <label
       title='Show All Sections'
@@ -276,15 +276,15 @@ const FilterList:React.FC<Props> = ({
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
       style={{
-      marginRight: 2,
-      padding:5,
-      color:'white',
-      fontWeight: 'bold',
-      textWrap: 'nowrap',
-      cursor:'pointer',
-      borderRadius:5,
-      whiteSpaceCollapse: 'preserve-spaces',
-      boxShadow:(mousedOver) ? '0px 0px 8px white inset, 0px 0px 4px white' : '',
+        marginRight: 2,
+        padding:5,
+        color:'white',
+        fontWeight: 'bold',
+        textWrap: 'nowrap',
+        cursor:'pointer',
+        borderRadius:5,
+        whiteSpaceCollapse: 'preserve-spaces',
+        boxShadow:(mousedOver) ? '0px 0px 8px white inset, 0px 0px 4px white' : '',
       }}>
       {text}&nbsp;
     </label>
