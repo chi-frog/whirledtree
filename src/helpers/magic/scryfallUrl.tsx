@@ -79,7 +79,7 @@ export const constructSearchUrl = (
     if (!section || section[0].value === '') return '';
 
     let segment = section.slice(0, -1).reduce<string>((_segment, _section) => {
-      return _segment + createSegment(key, _section) + '+';
+      return _segment + createSegment(key, _section) + (_section.connector === 'or' ? 'or' : '+');
     }, "");
     
     return (index !== relevantKeys.length - 1) ?

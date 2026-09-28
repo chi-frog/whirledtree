@@ -1,7 +1,7 @@
 'use client'
 
 import useTabVisibility from "@/hooks/useTabVisibility";
-import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { FocusEventHandler, Fragment, memo, PointerEventHandler, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import XOut from "./XOut";
 import { SelectionChangeFunction, SelectedSection } from "@/hooks/magic/useSelection";
 import Polarity from "./Polarity";
@@ -256,7 +256,7 @@ const Section:React.FC<SectionProps> = memo(({
           (isTyping) ?
             'rgba(166, 168, 255, 1) 0px 0px 6px 2px inset' :
             'white 0px 0px 10px 2px inset',
-        outline: (!section.polarity) ? '2px solid rgb(235, 159, 130)' : '2px solid rgb(146, 148, 248)',
+        outline: (!section.polarity) ? '3px solid rgb(235, 103, 130)' : '2px solid rgb(146, 148, 248)',
         transition: `border-radius 0.2s ease-in-out, background-color 0.2s ease-in-out, width ${isTyping ? 0 : 0.2}s ease-out, height ${isTyping ? 0 : 0.2}s ease-out`,
       }}/>
     <span
@@ -341,12 +341,11 @@ const FilterButton:React.FC<Props> = ({
       }}>
       {text}&nbsp;
     </label>
-    {sections.map((section, index) => {
+    {...sections.map((section, index) => {
       const last = (index === (sections.length - 1));
 
-      return (<>
+      return (<Fragment key={index + 'section'}>
         <Section
-          key={index + 'section'}
           section={section}
           previousConnector={sections[index-1] ? sections[index-1].connector : 'and'}
           index={index}
@@ -358,7 +357,7 @@ const FilterButton:React.FC<Props> = ({
           section={section}
           index={index}
           onChange={onChange}/>}
-      </>);
+      </Fragment>);
     })}
   </div>
 )};
