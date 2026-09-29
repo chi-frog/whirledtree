@@ -77,6 +77,7 @@ const Polarity:React.FC<Props> = ({
       cursor:'pointer',
       boxShadow:`0px 0px ${(mousedOver) ? 10 : 5}px white`,
       borderRadius:'50%',
+      zIndex:2,
       opacity:(visible) ? 1 : 0,
       background:(polarity) ? 'rgb(0, 115, 62)' :
                               'rgb(211, 38, 32)',
