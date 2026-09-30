@@ -18,9 +18,6 @@ export type ExternalDataOptions<T> = {
   // A signal to begin searching - when false, search isn't
   // set off.  When true, search is set off *once* per url change.
   signal?:boolean,
-  // A test to determine whether a piece of data should
-  // be transformed or not.
-  transformFilter?:(obj:any)=>boolean,
 };
 
 type ReturnOptions = {
@@ -50,14 +47,11 @@ function useExternalData<T> (
 
       while ((!overflow) && (chunkUrl)) {
         let [chunkData, totalCards, nextUrl] = await chunk(chunkUrl);
-        let filteredChunkData = (options && options.transformFilter) ?
-          chunkData.filter(options.transformFilter) : chunkData;
-        let transformedData = filteredChunkData.map(transform);
+        let transformedData = chunkData.map(transform);
         const {onTransform} = options;
 
-        if (onTransform) {
+        if (onTransform)
           transformedData.forEach((_transformedData) => onTransform(_transformedData));
-        }
 
         if (options.totalCards) {
           setTotalCards(totalCards);
@@ -74,7 +68,7 @@ function useExternalData<T> (
         chunkUrl = nextUrl;
         dataCount += transformedData.length;
         overflow = (options.dataLimit) &&
-                     (options.dataLimit <= dataCount);
+                   (options.dataLimit <= dataCount);
       }
 
       if (overflow) {

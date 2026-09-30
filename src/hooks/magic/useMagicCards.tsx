@@ -56,7 +56,6 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (
       transformMagicCard, {
         dataLimit:displayLimit,
         totalCards:true,
-        transformFilter,
       });
 
   // Filter card data

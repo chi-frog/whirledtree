@@ -179,6 +179,7 @@ const CardPrintSelector:React.FC<Props> = ({
   const [dragging, setDragging] = useState<boolean>(false);
   const lastMousePress = useRef<{x:number, y:number}|undefined>(undefined);
   const {subDrag} = useDragContext();
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onDragStart = () => setDragging(true);
@@ -195,24 +196,8 @@ const CardPrintSelector:React.FC<Props> = ({
       `calc(0% + 43px)`;
   }, [location]);
 
-  const transform = useMemo(() => {
-    const translate = 'translate(-50%, -50%)';
-    const flip = 'rotate(180deg)';
-    
-    let final = (location === 'left') ?
-      translate + ' ' + flip :
-      translate;
-
-    final = (highlighted) ?
-      final + ' ' + 'scale(125%)' :
-      final;
-
-    final = (dragging) ?
-      final + ' ' + 'scale(0%)' :
-      final;
-
-    return final;
-  }, [location, highlighted, dragging]);
+  const transform = `translate(-50%, -50%) ${(location === 'left') ? 'rotate(180deg)' : ''}`;
+  const transformScale = `${(dragging) ? 'scale(0%)' : (highlighted) ? 'scale(125%)' : ''}`; 
 
   const pointerEnter:PointerEventHandler = useCallback(() => {
     setHighlighted(true);
@@ -235,31 +220,40 @@ const CardPrintSelector:React.FC<Props> = ({
 
     if ((lastMousePress.current) &&
         (lastMousePress.current.x === e.clientX) &&
-        (lastMousePress.current.y === e.clientY))
+        (lastMousePress.current.y === e.clientY)) {
       func((location === 'right') ? 1 : -1);
+      ref.current?.animate(
+      [
+        { transform: transform + ' scale(135%)' },
+        { transform: transform + ' scale(150%)' },
+        { transform: transform + ' scale(135%)' },
+      ],
+      { duration: 200, easing: 'ease-in-out' });
+    }
 
   }, [func])
 
   return (
-    <div 
+    <div
+      ref={ref}
       onPointerEnter={pointerEnter}
       onPointerLeave={pointerLeave}
       onPointerDown={pointerDown}
       onPointerUp={pointerUp}
-        style={{
-      width:`${72/669*100}%`,
-      height:`${72/933*100}%`,
-      position:'absolute',
-      zIndex:50,
-      borderRadius:'50%',
-      top:`${heightRatio*100}%`,
-      left:left,
-      cursor:'pointer',
-      opacity:(visible) ? 1 : 0,
-      transform:transform,
-      transition:'transform 0.1s ease-in-out, opacity 0.1s ease-in-out',
-      transformOrigin:'left',
-    }}>
+      style={{
+        width:`${72/669*100}%`,
+        height:`${72/933*100}%`,
+        position:'absolute',
+        zIndex:50,
+        borderRadius:'50%',
+        top:`${heightRatio*100}%`,
+        left:left,
+        cursor:'pointer',
+        opacity:(visible) ? 1 : 0,
+        transform:transform + ' ' + transformScale,
+        transition:'transform 0.1s ease-in-out, opacity 0.1s ease-in-out',
+        transformOrigin:'left',
+      }}>
       {bulbSvg(highlighted)}
     </div>
   )

@@ -146,7 +146,7 @@ const SearchWindow:React.FC<Props> = ({
         dragState={dragState}
         numCardsRow={numCardsRow}
         cards={cards}/>}
-      {(!error) && (loaded) && (totalCards === 0) &&
+      {(loaded) && (totalCards === 0) &&
       <div id="no_cards_screen" style={{
         width:'100vw',
         height: '100vh',
