@@ -3,56 +3,8 @@
 import { SelectionUpdateFunction, Selected } from "@/hooks/magic/useSelection";
 import { memo, PointerEventHandler, useMemo, useRef, useState } from "react";
 import { searchFields } from "../magic/CardTooltip";
-import { renderToStaticMarkup } from "react-dom/server";
 
 export const tooltipMargin = 5;
-
-const tooltipText = (selectionField:string, selection:string) => {
-  const span = (<span style={{fontWeight:'bold', color:'rgba(146, 148, 248, 1)'}}>{selection}</span>);
-  const text =
-    (selectionField === searchFields.oracleText) ?
-      (<h1>Search for cards with {span} in their oracle text.</h1>) :
-      (<h1>Search for cards with {span} in their {selectionField}</h1>);
-
-  return text;
-};
-
-type SearchTooltipProps = {
-  selection:string,
-  selectionPoint:{x:number, y:number},
-  selectionField:string,
-  tooltipMargin:number,
-}
-export function createSearchTooltip({
-  selection,
-  selectionPoint,
-  selectionField,
-  tooltipMargin,
-}:SearchTooltipProps) {
-  // Root
-  const div = document.createElement("div");
-  div.id = "searchTooltip";
-
-  Object.assign(div.style, {
-    position: "absolute",
-    userSelect: "none",
-    top: `${selectionPoint.y - 35 - tooltipMargin}px`,
-    left: `${selectionPoint.x}px`,
-    width: "fit-content",
-    display: "flex",
-    flexDirection: "column",
-    borderRadius: "5px",
-    justifyContent: "center",
-    border: "2px solid rgba(146, 148, 248, 0.8)",
-    padding: "2px 5px 2px 5px",
-    visibility: "hidden",
-    zIndex:500,
-  });
-
-  div.innerHTML = renderToStaticMarkup(tooltipText(selectionField, selection));
-
-  return div;
-}
 
 export function getField(node:Node|null):Element|null {
   if (!node) return null;
@@ -131,11 +83,11 @@ const Tooltip:React.FC<Props> = ({
 
   return (
     <div id="searchTooltip" ref={ref}
-        className="hover:bg-sky-200"
-        onPointerDown={handleTooltipPointerDown}
-        onPointerEnter={handleTooltipPointerEnter}
-        onPointerLeave={handleTooltipPointerLeave}
-        style={{
+      className="hover:bg-sky-200"
+      onPointerDown={handleTooltipPointerDown}
+      onPointerEnter={handleTooltipPointerEnter}
+      onPointerLeave={handleTooltipPointerLeave}
+      style={{
         cursor:'pointer',
         position:'absolute',
         background:(!tooltipHovered) ? 'white' : 'oklch(90.1% .058 230.902)',
@@ -152,10 +104,10 @@ const Tooltip:React.FC<Props> = ({
         border:'2px solid rgba(146, 148, 248, 0.8)',
         padding:'2px 5px 2px 5px',
         visibility:(visible) ? 'visible' : 'hidden',
-        }}>
-        {tooltipText}
-      </div>
-  )
+      }}>
+      {tooltipText}
+    </div>
+  );
 };
 
 export default memo(Tooltip);

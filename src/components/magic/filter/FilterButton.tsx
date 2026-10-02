@@ -339,7 +339,7 @@ const FilterButton:React.FC<Props> = ({
       whiteSpaceCollapse: 'preserve-spaces',
       boxShadow:(mousedOver) ? '0px 0px 8px white inset, 0px 0px 4px white' : '',
       }}>
-      {text}&nbsp;
+      {text}
     </label>
     {...sections.map((section, index) => {
       const last = (index === (sections.length - 1));

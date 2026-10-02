@@ -61,9 +61,6 @@ export const Card:React.FC<Props> = memo(function Card({
           addPrint(card.oracleId, printId, print),
         ...(location === 'view' && {signal:mousedover})
       });
-
-  if (location==='modal')
-    console.log('rawPrints', rawPrints);
   
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);

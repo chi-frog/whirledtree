@@ -5,49 +5,32 @@ import { searchFields } from "../CardTooltip";
 import { MagicCard } from "../types/default";
 import OracleText from "../OracleText";
 import { MagicSymbol } from "../types/magic";
+import CardName from "./CardName";
 
 type Props = {
   card:MagicCard,
   expanded:boolean,
   symbols:MagicSymbol[],
-  symbolImageMap:Map<string, string>
 };
-
-const CardInfoDisplay:React.FC<Props> = ({
+const CardInfo:React.FC<Props> = ({
   card,
   expanded,
   symbols,
-  symbolImageMap,
 }) => {
-  const nameRef = useRef<HTMLDivElement|null>(null);
+  const divRef = useRef<HTMLDivElement|null>(null);
+  const nameRef = useRef<any>(null);
 
   const nameFontSize = useMemo(() => {
+    if (!expanded) return 0;
+
+    console.log('div Ref for modal!', divRef.current);
+    console.log('name Ref for modal!', nameRef.current);
+
+    console.log('width of div:' + divRef.current?.offsetWidth);
+    console.log('width of name:' + nameRef.current?.scrollWidth);
+
     return 30;
-  }, [card.name, card.reversed]);
-
-  const manaCostImages = useMemo(() => {
-    if (!card) return [];
-
-    let face = (card.reversed) ? card.back : card;
-    if ((!face) ||
-        !(face.manaCost)) return [];
-
-    const manaCost = face.manaCost;
-    const manaSymbols = symbols.filter((symbol) => card.manaCost.includes(symbol.symbol));
-    const indices = manaSymbols.reduce<{manaCostIndex:number, symbol:MagicSymbol}[]>((indices, symbol) => {
-      let newIndices = [...indices];
-      let index = -1;
-      while ((index = manaCost.indexOf(symbol.symbol, index + 1)) >= 0)
-        newIndices.push({manaCostIndex:index, symbol});
-
-      return newIndices;
-    }, []);
-
-    const orderedIndices = indices.toSorted((a, b) => a.manaCostIndex - b.manaCostIndex);
-    const orderedSymbols = orderedIndices.map((index) => index.symbol);
-    return orderedSymbols;
-
-  }, [symbols, card.manaCost, card.reversed, symbolImageMap]);
+  }, [card.name, card.reversed, card.manaCost, expanded]);
 
   const types = useMemo(() => {
     const typeLine = (!card?.reversed) ? card?.typeLine :
@@ -77,50 +60,22 @@ const CardInfoDisplay:React.FC<Props> = ({
 
   return (
     <div id="cardInformation"
+      ref={divRef}
       style={{
         flexGrow:1,
         flexDirection:'column',
         overflowX:'hidden',
         overflowY:'scroll',
         textWrap:'wrap',
-        width:(expanded) ? 'auto' : '0px',
+        padding:(expanded) ? '10px' : '0px',
+        minWidth:0,
+        width:(expanded) ? '100%' : '0px',
+        transition:'padding 0.2s ease-in-out',
       }}>
-      <div className="nameDiv" ref={nameRef}
-        style={{
-          display:"flex",
-          flexDirection:'row',
-          marginTop:28,
-          justifyContent:'center',
-          alignItems:'center',
-        }}>
-        <h3 className="selectable name" title="Search By Name"
-          data-field={searchFields.name}
-          style={{
-            fontSize:nameFontSize,
-            fontWeight:'bold',
-            paddingRight:'10px',
-          }}>
-          {(!card?.reversed) ? card?.name :
-                               card?.back?.name}
-        </h3>
-        <div className="selectable mana" title="Search By Mana Cost"
-          data-field={searchFields.manaValue}
-          style={{
-            display:'flex',
-          }}>
-          {...manaCostImages?.map((symbol, index) => (
-            <img key={index} draggable="false" src={symbol.imageUri} alt={symbol.symbol}
-              className="icon"
-              style={{
-                width:'24px',
-                height:'24px',
-                borderRadius:'50%',
-                boxShadow:'-0.8px 1.5px black',
-                margin:'1px',
-              }}/>
-          ))}
-        </div>
-      </div>
+      <CardName
+        name={(!card.reversed) ? card.name : card.back?.name}
+        manaCost={(!card.reversed) ? card.manaCost : card.back?.manaCost}
+        symbols={symbols}/>
       <div className="selectable type" title="Search By Type">
         <h3 className="selectable type"
           data-field={searchFields.type}
@@ -192,4 +147,4 @@ const CardInfoDisplay:React.FC<Props> = ({
       </div>}
     </div>)};
 
-export default memo(CardInfoDisplay);
+export default memo(CardInfo);

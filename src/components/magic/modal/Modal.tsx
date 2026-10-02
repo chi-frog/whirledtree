@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { stopPropagationHandler } from "@/helpers/pointerEvent";
 import ModalCardDisplay from "./ModalCardDisplay";
 import CardTooltip from "@/components/magic/CardTooltip";
-import CardInfoDisplay from "../card/CardInfoDisplay";
+import CardInfo from "../card/CardInfo";
 import { MagicSymbol } from "../types/magic";
 
 type Props = {
@@ -89,11 +89,10 @@ const Modal:React.FC<Props> = ({
           expanded={expanded}
           update={update}
           updateCardPrintId={updateCardPrintId}/>
-        <CardInfoDisplay
+        <CardInfo
           card={card}
           expanded={expanded}
-          symbols={symbols}
-          symbolImageMap={symbolImageMap}/>
+          symbols={symbols}/>
       </motion.div>}
       <CardTooltip
         visible={tooltipVisible}

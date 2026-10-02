@@ -3,7 +3,56 @@
 import { SelectionUpdateFunction, SKey } from "@/hooks/magic/useSelection";
 import { SelectionChangeFunc, useSelectionContext } from "../general/SelectionProvider";
 import { Dispatch, RefObject, SetStateAction, useEffect, useState } from "react";
-import Tooltip, { createSearchTooltip, findNearestField, getField, tooltipMargin, } from "../general/Tooltip";
+import Tooltip, { findNearestField, getField, tooltipMargin, } from "../general/Tooltip";
+import { renderToStaticMarkup } from "react-dom/server";
+
+const tooltipText = (selectionField:string, selection:string) => {
+  const span = (<span style={{fontWeight:'bold', color:'rgba(146, 148, 248, 1)'}}>{selection}</span>);
+  const text =
+    (selectionField === searchFields.oracleText) ?
+      (<h1>Search for cards with {span} in their oracle text.</h1>) :
+      (<h1>Search for cards with {span} in their {selectionField}</h1>);
+
+  return text;
+};
+
+type SearchTooltipProps = {
+  selection:string,
+  selectionPoint:{x:number, y:number},
+  selectionField:string,
+  tooltipMargin:number,
+}
+export function createSearchTooltip({
+  selection,
+  selectionPoint,
+  selectionField,
+  tooltipMargin,
+}:SearchTooltipProps) {
+  // Root
+  const div = document.createElement("div");
+  div.id = "searchTooltip";
+
+  Object.assign(div.style, {
+    position: "absolute",
+    userSelect: "none",
+    top: `${selectionPoint.y - 35 - tooltipMargin}px`,
+    left: `${selectionPoint.x}px`,
+    width: "fit-content",
+    display: "flex",
+    flexDirection: "column",
+    borderRadius: "5px",
+    justifyContent: "center",
+    border: "2px solid rgba(146, 148, 248, 0.8)",
+    padding: "2px 5px 2px 5px",
+    visibility: "hidden",
+    zIndex:500,
+  });
+
+  div.innerHTML = renderToStaticMarkup(tooltipText(selectionField, selection));
+
+  return div;
+}
+
 
 export const searchFields = {
   game: "game",
@@ -62,15 +111,10 @@ const CardTooltip:React.FC<Props> = ({
         (!endField) ||
         (startField !== endField) ||
         (!selectionBox)) {
-      console.warn('startField:', startField);
-      console.warn('endField:', endField);
-      console.warn('selectionBox:', selectionBox);
       e.removeAllRanges();
       clear();
       return;
     }
-
-    console.log('shouldnt be here', selection);
   
     let x = selectionBox.x;
     const y = selectionBox.y;
@@ -78,7 +122,6 @@ const CardTooltip:React.FC<Props> = ({
   
     let property = findNearestField(e.anchorNode);
     if (!property) {
-      console.warn('property', property);
       e.removeAllRanges();
       clear();
       return;

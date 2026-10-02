@@ -10,3 +10,14 @@ export function partition<T>(
     [[], []] as [T[], T[]]
   );
 }
+
+export function findAllIndices(str: string, substr: string): number[] {
+  if (substr.length === 0) return [];
+  const indices: number[] = [];
+  let i = str.indexOf(substr);
+  while (i !== -1) {
+    indices.push(i);
+    i = str.indexOf(substr, i + substr.length);
+  }
+  return indices;
+}
