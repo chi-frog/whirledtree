@@ -40,6 +40,7 @@ const ModalCardDisplay:React.FC<Props> = ({
   <div style={{
     position: 'relative',
     height: '100%',
+    zIndex:5,
     aspectRatio:cardAspectRatio,
     filter: 'drop-shadow(black 0px 10px 15px)'}}>
     <CardPrintSelector visible={printIds.length > 1} location="right" func={reducePrintId}/>
