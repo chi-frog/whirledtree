@@ -26,7 +26,7 @@ const Polarity:React.FC<Props> = ({
   index,
   options,
 }) => {
-  const [mousedOver, setMousedOver] = useState<boolean>(false);
+  const [mousedover, setMousedover] = useState<boolean>(false);
   const pressed = useRef<boolean>(false);
   const width = (options && options.width) ? options.width : '25px';
   const height = (options && options.height) ? options.height : '25px';
@@ -49,13 +49,11 @@ const Polarity:React.FC<Props> = ({
   }
 
   const onPointerEnter:PointerEventHandler = (e:React.PointerEvent) => {
-    e.stopPropagation();
-    setMousedOver(true);
+    setMousedover(true);
   }
 
   const onPointerLeave:PointerEventHandler = (e:React.PointerEvent) => {
-    //e.stopPropagation();
-    setMousedOver(false);
+    setMousedover(false);
     if(options && options.onPointerLeave)
       options.onPointerLeave(e);
   }
@@ -68,23 +66,23 @@ const Polarity:React.FC<Props> = ({
     onPointerDown={onPointerDown}
     onPointerUp={onPointerUp}
     style={{
-      position:'absolute',
+      position:'relative',
       left:offsets.left,
       top:offsets.top,
       width,
       height,
       padding:(options && options.padding) ? options.padding : '3px',
       cursor:'pointer',
-      boxShadow:`0px 0px ${(mousedOver) ? 10 : 5}px white`,
+      boxShadow:`0px 0px ${(mousedover) ? 10 : 5}px white`,
       borderRadius:'50%',
-      zIndex:2,
+      zIndex:20,
       opacity:(visible) ? 1 : 0,
       background:(polarity) ? 'rgb(0, 115, 62)' :
                               'rgb(211, 38, 32)',
       transition:'transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out, opacity 0.3s ease-in-out, left 0.1s ease-in-out, top 0.1s ease-in-out',
       pointerEvents:(!visible) ? 'none' : 'auto',
-      transform:(mousedOver) ? 'scale(130%)' : '',
-      filter:(mousedOver) ? 'brightness(1.6)' : '',
+      transform:(mousedover) ? 'scale(130%)' : '',
+      filter:(mousedover) ? 'brightness(1.6)' : '',
       outline: '1px solid rgb(146, 148, 248)',
     }}>
     {(polarity) &&

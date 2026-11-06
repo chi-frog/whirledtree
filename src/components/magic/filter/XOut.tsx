@@ -64,7 +64,7 @@ const XOut:React.FC<Props> = ({
     onPointerEnter={onXPointerEnter}
     onPointerLeave={onXPointerLeave}
     style={{
-      position:'absolute',
+      position:'relative',
       left:offsets.left,
       top:offsets.top,
       background:'transparent',

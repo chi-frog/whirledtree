@@ -1,10 +1,11 @@
 'use client'
 
 import useTabVisibility from "@/hooks/useTabVisibility";
-import { FocusEventHandler, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FocusEventHandler, Fragment, memo, PointerEventHandler, useEffect, useLayoutEffect, useRef, useState } from "react";
 import XOut from "./XOut";
 import { SelectionChangeFunction, SelectedSection } from "@/hooks/magic/useSelection";
 import Polarity from "./Polarity";
+import Connector from "./FilterConnector";
 
 const colorWheel:string[] = [
   'rgb(248, 231, 185)',
@@ -18,8 +19,10 @@ const defaultCoords = {x:-1, y:-1};
 
 type SectionProps = {
   section:SelectedSection,
+  previousConnector:'and'|'or',
   index:number,
   last:boolean,
+  buttonMousedover:boolean,
   visible:boolean,
   datalistId:string,
   validateChange:(input:string)=>boolean,
@@ -27,14 +30,17 @@ type SectionProps = {
 };
 const Section:React.FC<SectionProps> = memo(({
   section,
+  previousConnector,
   index,
   last,
+  buttonMousedover,
   visible,
   datalistId,
   validateChange,
   onChange,
 }) => {
   const [mousedOver, setMousedOver] = useState<boolean>(false);
+  const [shown, setShown] = useState<boolean>(false);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [circleWidth, setCircleWidth] = useState(10);
@@ -42,14 +48,20 @@ const Section:React.FC<SectionProps> = memo(({
   const inputRef = useRef<HTMLInputElement>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
 
+  useEffect(() => {
+    if (!buttonMousedover)
+      setShown(false)
+  }, [buttonMousedover]);
+
   useTabVisibility({
     onHidden: () => inputRef.current?.blur()
   });
 
-  const expanded = (isTyping || mousedOver) || (visible);
+  const expanded = isTyping || shown || visible;
 
   const onPointerEnter: PointerEventHandler = () => {
     setMousedOver(true);
+    setShown(true);
   };
 
   const onPointerLeave: PointerEventHandler = (e:React.PointerEvent) => {
@@ -57,6 +69,8 @@ const Section:React.FC<SectionProps> = memo(({
         !((e.relatedTarget as HTMLElement).className) ||
         !(e.relatedTarget as HTMLElement).className.includes('sub' + index))
       setMousedOver(false);
+    if (last)
+      setShown(false)
   };
 
   useEffect(() => {
@@ -82,14 +96,11 @@ const Section:React.FC<SectionProps> = memo(({
         circleWidth);
   }, [section.value, expanded, circleWidth]);
 
-  const onBlur:FocusEventHandler<HTMLInputElement> = () => {
+  const onBlur:FocusEventHandler<HTMLInputElement> = () =>
     setIsTyping(false);
-    setMousedOver(false);
-  };
 
-  const onFocus:FocusEventHandler<HTMLInputElement> = () => {
+  const onFocus:FocusEventHandler<HTMLInputElement> = () =>
     setIsTyping(true);
-  }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && (e.target instanceof HTMLInputElement)) {
@@ -134,13 +145,21 @@ const Section:React.FC<SectionProps> = memo(({
     }
   };
 
-  return (<div style={{
-    height:'100%',
-    position:'relative',
-    display:'flex',
-    justifyContent:'center',
-    alignItems:'center',
-  }}>
+  return (<div
+    onPointerEnter={onPointerEnter}
+    onPointerLeave={onPointerLeave}
+    style={{
+      height:'100%',
+      position:'relative',
+      display:'flex',
+      paddingLeft:
+        (last || (previousConnector === 'or')) ? '5px' :
+                                                 '0px',
+      paddingRight:(section.connector === 'and') ? '0px' : '5px',
+      justifyContent:'center',
+      alignItems:'center',
+      transition:'padding-left 0.2s ease-in-out, padding-right 0.2s ease-in-out',
+    }}>
     {!last && <XOut
       cancel={()=>{
         onChange({value:''}, index);
@@ -175,8 +194,6 @@ const Section:React.FC<SectionProps> = memo(({
     <input className={(expanded) ? "fieldSizingContent" : "fieldSizingFixed"}
       title={(section.value !== '') ? 'Edit Section' : 'Add New Section'}
       ref={inputRef}
-      onPointerEnter={onPointerEnter}
-      onPointerLeave={onPointerLeave}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onKeyDown={onKeyDown}
@@ -244,7 +261,8 @@ const FilterList:React.FC<Props> = ({
 }) => {
   const [allVisible, setAllVisible] = useState<boolean>(false);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
-  const [mousedOver, setMousedOver] = useState<boolean>(false);
+  const [mousedover, setMousedover] = useState<boolean>(false);
+  const [labelMousedover, setLabelMousedover] = useState<boolean>(false);
 
   const onPointerDown:PointerEventHandler = (e) => {
     mouseCoords.current = {x:e.clientX, y:e.clientY};
@@ -256,13 +274,10 @@ const FilterList:React.FC<Props> = ({
       setAllVisible((prev) => !prev);
   };
 
-  const onPointerEnter:PointerEventHandler = () => {
-    setMousedOver(true);
-  }
-
-  const onPointerLeave:PointerEventHandler = () => {
-    setMousedOver(false);
-  }
+  const onPointerEnter:PointerEventHandler = () => setMousedover(true);
+  const onPointerLeave:PointerEventHandler = () => setMousedover(false);
+  const onLabelPointerEnter:PointerEventHandler = () => setLabelMousedover(true);
+  const onLabelPointerLeave:PointerEventHandler = () => setLabelMousedover(false);
 
   const validateChange = (input:string) => {
     const inputToLowerCase = input.toLowerCase();
@@ -272,6 +287,8 @@ const FilterList:React.FC<Props> = ({
 
   return (
   <div
+    onPointerEnter={onPointerEnter}
+    onPointerLeave={onPointerLeave}
     style={{
       color:'black',
       borderRadius: '5px',
@@ -287,8 +304,8 @@ const FilterList:React.FC<Props> = ({
       htmlFor={id} 
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
-      onPointerEnter={onPointerEnter}
-      onPointerLeave={onPointerLeave}
+      onPointerEnter={onLabelPointerEnter}
+      onPointerLeave={onLabelPointerLeave}
       style={{
         marginRight: 2,
         padding:5,
@@ -298,7 +315,7 @@ const FilterList:React.FC<Props> = ({
         cursor:'pointer',
         borderRadius:5,
         whiteSpaceCollapse: 'preserve-spaces',
-        boxShadow:(mousedOver) ? '0px 0px 8px white inset, 0px 0px 4px white' : '',
+        boxShadow:(labelMousedover) ? '0px 0px 8px white inset, 0px 0px 4px white' : '',
       }}>
       {text}
     </label>
@@ -307,18 +324,28 @@ const FilterList:React.FC<Props> = ({
         <option key={_index} value={_item}/>
       ))}
     </datalist>
-    {sections.map((_section, _index) => {
-      return (
+    {sections.map((section, index) => {
+      const last = (index === (sections.length - 1));
+
+      return (<Fragment key={index + id}>
         <Section
-          key={_index}
-          section={_section}
-          index={_index}
-          last={_index === (sections.length - 1)}
+          key={index}
+          section={section}
+          previousConnector={sections[index-1] ? sections[index-1].connector : 'and'}
+          index={index}
+          last={last}
+          buttonMousedover={mousedover}
           visible={allVisible}
           datalistId={"dataList" + id}
           validateChange={validateChange}
           onChange={onChange}/>
-      );
+        {(!last && (index !== (sections.length - 2))) &&
+        <Connector
+          section={section}
+          buttonMousedOver={mousedover}
+          index={index}
+          onChange={onChange}/>}
+      </Fragment>);
     })}
   </div>
 )};
