@@ -69,9 +69,13 @@ export const useIsCardInModal = (cardName: string) => {
 export const ModalProvider = ({
   resources,
   updateCardPrintId,
+  updateCardReversed,
   updateSelected,
   children
-}:{resources:MagicResources, updateCardPrintId:(card:MagicCard, id:string)=>void, updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
+}:{resources:MagicResources,
+   updateCardPrintId:(card:MagicCard, id:string)=>void,
+   updateCardReversed:(card:MagicCard, reversed:boolean)=>void,
+   updateSelected:SelectionUpdateFunction, children: ReactNode}) => {
   const store = useRef(createModalStore()).current;
 
   const showModal = useCallback((card:MagicCard) => {
@@ -98,6 +102,7 @@ export const ModalProvider = ({
         hideModal={hideModal}
         resources={resources}
         updateCardPrintId={updateCardPrintId}
+        updateCardReversed={updateCardReversed}
         updateSelected={updateSelected}
       />
     </ModalStoreContext.Provider>
@@ -105,12 +110,13 @@ export const ModalProvider = ({
   );
 };
 
-function ModalSubscriber({ store, updateModal, hideModal, resources, updateCardPrintId, updateSelected }: {
+function ModalSubscriber({ store, updateModal, hideModal, resources, updateCardPrintId, updateCardReversed, updateSelected }: {
   store: ReturnType<typeof createModalStore>,
   updateModal:(card:MagicCard)=>void,
   hideModal: () => void,
   resources:MagicResources,
   updateCardPrintId:(card:MagicCard, id:string)=>void,
+  updateCardReversed:(card:MagicCard, reversed:boolean)=>void,
   updateSelected: SelectionUpdateFunction,
 }) {
   const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);
@@ -121,8 +127,8 @@ function ModalSubscriber({ store, updateModal, hideModal, resources, updateCardP
       update={updateModal}
       close={hideModal}
       symbols={resources.symbols}
-      symbolImageMap={resources.symbolImageMap}
       updateCardPrintId={updateCardPrintId}
+      updateCardReversed={updateCardReversed}
       updateSelected={updateSelected}
       card={state.card}/>
   );

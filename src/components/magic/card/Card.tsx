@@ -23,6 +23,7 @@ type Props = {
   widthString?:string,
   heightString?:string,
   card:MagicCard,
+  updateReversed:(reversed:boolean)=>void,
   visible?:boolean,
   dontAnimate?:boolean,
 };
@@ -31,10 +32,10 @@ export const Card:React.FC<Props> = memo(function Card({
     widthString,
     heightString,
     card,
+    updateReversed,
     visible=true,
     dontAnimate=false,
   }:Props) {
-  const [reversed, setReversed] = useState<boolean>(false);
   // Consider making this a ref
   const [isRaised, setIsRaised] = useState(false);
   const isAnimating = useRef<{s:boolean, img:string|undefined}>({s:false, img:undefined});
@@ -65,6 +66,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
 
+  const reversed = useMemo(() => card.reversed, [card.reversed]);
   const flipping = useMemo(() => (rotateState.angle > 90), [rotateState.angle]);
   const showFront = useMemo(() =>
       ((!reversed && !flipping) ||
@@ -150,9 +152,8 @@ export const Card:React.FC<Props> = memo(function Card({
     if ((lastMousePress.current) &&
         (dragStateRef.current.stage === DragStage.INACTIVE) &&
         !(e.clientX === lastMousePress.current.clientX) &&
-        !(e.clientY === lastMousePress.current.clientY)) {
+        !(e.clientY === lastMousePress.current.clientY))
       startDraggingCard(lastMousePress.current);
-    }
   }, []);
 
   const handleCardPointerDown = useCallback((e:React.PointerEvent) => {
@@ -203,7 +204,8 @@ export const Card:React.FC<Props> = memo(function Card({
     if ((lastMousePress.current) &&
         (e.clientX === lastMousePress.current.clientX) &&
         (e.clientY === lastMousePress.current.clientY)) {
-      setReversed((prev) => !prev);
+      updateReversed(!reversed)
+      console.log('reversed is:' + reversed);
       forceRotate(180);
       lastMousePress.current = undefined;
       return;
@@ -213,10 +215,10 @@ export const Card:React.FC<Props> = memo(function Card({
 
     const angle = rotateStateRef.current.angle;
     if (angle > 90) {
-      setReversed((prev) => !prev);
+      updateReversed(!reversed)
       forceRotate(180 - angle);
     }
-  }, [node]);
+  }, [node, reversed]);
 
   const rotationBar = useCallback((left:string='0', dir:-1|1=1) => {
     return (

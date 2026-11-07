@@ -9,12 +9,14 @@ type Props = {
   paddingTop:string,
   dragState:DragState,
   numCardsRow:number,
+  updateCardReversed:(card:MagicCard, reversed:boolean)=>void
   cards:MagicCard[],
 };
 const CardView:React.FC<Props> = ({
     paddingTop,
     dragState,
     numCardsRow,
+    updateCardReversed,
     cards,
   }:Props) => {
 
@@ -34,12 +36,13 @@ const CardView:React.FC<Props> = ({
       display:'grid',
       gridTemplateColumns:`repeat(${numCardsRow}, 1fr)`,
       }}>
-      {...cards.map((_card, _index)=>
+      {...cards.map((card, index)=>
         <Card
-          key={_card.name}
+          key={card.name}
           location='view'
           heightString={'fit-content'}
-          card={cards[_index]}
+          card={cards[index]}
+          updateReversed={updateCardReversed.bind(null, card)}
           />
       )}
     </div>

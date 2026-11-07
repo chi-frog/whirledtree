@@ -10,7 +10,6 @@ import Filter from "./filter/Filter";
 import { MagicResources } from "@/hooks/magic/useMagicResources";
 import useMagicCards from "@/hooks/magic/useMagicCards";
 import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
-import { capitalize } from "@/helpers/string";
 import { ModalProvider } from "../general/ModalProvider";
 import { isError } from "./types/werror";
 
@@ -50,6 +49,10 @@ const SearchWindow:React.FC<Props> = ({
 
     setCards(filteredCards);
   }, [allCards]);
+
+  useEffect(() => {
+    console.log('cards changed!');
+  }, [cards])
 
   const dragging = useMemo(() => dragState.stage === DragStage.ACTIVE, [dragState.stage]);
 
@@ -129,8 +132,21 @@ const SearchWindow:React.FC<Props> = ({
     });
   }
 
+  const updateCardReversed = (card:MagicCard, reversed:boolean) => {
+    setCards((prev) => {
+      const cards = [...prev];
+      const index = prev.findIndex((_card) => _card.oracleId === card.oracleId);
+      if (index < 0) return prev;
+      
+      cards[index] = {...cards[index], reversed};
+      console.log('updating card:' + card.name + ' to ' + reversed);
+
+      return cards;
+    });
+  }
+
   return (
-    <ModalProvider resources={resources} updateCardPrintId={updateCardPrintId} updateSelected={updateSelected}>
+    <ModalProvider resources={resources} updateCardPrintId={updateCardPrintId} updateCardReversed={updateCardReversed} updateSelected={updateSelected}>
     <div
       onPointerDown={handlePointerDown}>
       <Filter
@@ -145,6 +161,7 @@ const SearchWindow:React.FC<Props> = ({
         paddingTop={(filterState === FilterState.REDUCED) ? '100px' : '10px'}
         dragState={dragState}
         numCardsRow={numCardsRow}
+        updateCardReversed={updateCardReversed}
         cards={cards}/>}
       {(loaded) && (totalCards === 0) &&
       <div id="no_cards_screen" style={{

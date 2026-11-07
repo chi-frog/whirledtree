@@ -17,8 +17,8 @@ type Props = {
   close:()=>void,
   update:(card:MagicCard)=>void,
   symbols:MagicSymbol[],
-  symbolImageMap:Map<string, string>,
   updateCardPrintId:(card:MagicCard, id:string)=>void,
+  updateCardReversed:(card:MagicCard, reversed:boolean)=>void,
   updateSelected:SelectionUpdateFunction,
   card?:MagicCard,
 }
@@ -27,8 +27,8 @@ const Modal:React.FC<Props> = ({
     close,
     update,
     symbols,
-    symbolImageMap,
     updateCardPrintId,
+    updateCardReversed,
     updateSelected,
     card,
   }:Props) => {
@@ -88,7 +88,8 @@ const Modal:React.FC<Props> = ({
           card={card}
           expanded={expanded}
           update={update}
-          updateCardPrintId={updateCardPrintId}/>
+          updateCardPrintId={updateCardPrintId}
+          updateCardReversed={updateCardReversed}/>
         <CardInfo
           card={card}
           expanded={expanded}

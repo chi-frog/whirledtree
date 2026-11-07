@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import CardPrintSelector from "../card/CardPrintSelector";
 import { MagicCard } from "../types/default";
 import { Card } from "../card/Card";
@@ -11,12 +11,14 @@ type Props = {
   expanded:boolean,
   update:(card:MagicCard)=>void,
   updateCardPrintId:(card:MagicCard, id:string)=>void,
+  updateCardReversed:(card:MagicCard, reversed:boolean)=>void,
 };
 const ModalCardDisplay:React.FC<Props> = ({
   card,
   expanded,
   update,
   updateCardPrintId,
+  updateCardReversed,
 }) => {
   const printIds = useMemo(() => Array.from(card.prints.entries()).map(([printId]) => printId), [card.prints]);
   const printIndex = printIds.findIndex((printId) => printId === card.printId);
@@ -36,6 +38,11 @@ const ModalCardDisplay:React.FC<Props> = ({
     updateCardPrintId(card, printId);
   };
 
+  const reverse = (reversed:boolean) => {
+    update({...card, reversed})
+    updateCardReversed(card, reversed)
+  }
+
   return (
   <div style={{
     position: 'relative',
@@ -50,6 +57,7 @@ const ModalCardDisplay:React.FC<Props> = ({
       widthString={'fit-content'}
       heightString={'100%'}
       card={card}
+      updateReversed={reverse}
       dontAnimate={expanded}/>))
   </div>
   );

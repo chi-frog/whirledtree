@@ -17,20 +17,8 @@ const CardInfo:React.FC<Props> = ({
   expanded,
   symbols,
 }) => {
+  const available = !(!card || (card.reversed && !card.back));
   const divRef = useRef<HTMLDivElement|null>(null);
-  const nameRef = useRef<any>(null);
-
-  const nameFontSize = useMemo(() => {
-    if (!expanded) return 0;
-
-    console.log('div Ref for modal!', divRef.current);
-    console.log('name Ref for modal!', nameRef.current);
-
-    console.log('width of div:' + divRef.current?.offsetWidth);
-    console.log('width of name:' + nameRef.current?.scrollWidth);
-
-    return 30;
-  }, [card.name, card.reversed, card.manaCost, expanded]);
 
   const types = useMemo(() => {
     const typeLine = (!card?.reversed) ? card?.typeLine :
@@ -67,9 +55,9 @@ const CardInfo:React.FC<Props> = ({
         overflowX:'hidden',
         overflowY:'scroll',
         textWrap:'wrap',
-        padding:(expanded) ? '10px' : '0px',
+        padding:(expanded && available) ? '10px' : '0px',
         minWidth:0,
-        width:(expanded) ? '100%' : '0px',
+        width:(expanded && available) ? '100%' : '0px',
         transition:'padding 0.2s ease-in-out',
       }}>
       <CardName
