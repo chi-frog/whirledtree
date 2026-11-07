@@ -182,7 +182,7 @@ export const Card:React.FC<Props> = memo(function Card({
     }
 
     lastMousePress.current = undefined;
-  }, [showModal]);
+  }, [showModal, card]);
 
   const handleRotationPointerDown = useCallback((e:React.PointerEvent<Element>, dir:-1|1|undefined=undefined) => {
     e.preventDefault();
@@ -205,7 +205,6 @@ export const Card:React.FC<Props> = memo(function Card({
         (e.clientX === lastMousePress.current.clientX) &&
         (e.clientY === lastMousePress.current.clientY)) {
       updateReversed(!reversed)
-      console.log('reversed is:' + reversed);
       forceRotate(180);
       lastMousePress.current = undefined;
       return;
