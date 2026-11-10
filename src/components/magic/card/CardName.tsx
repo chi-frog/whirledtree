@@ -68,8 +68,7 @@ const CardName:React.FC<Props> = ({
         {manaSymbols.map((symbol, index) => (
         <ManaSymbol
           key={index}
-          symbol={symbol}
-          />
+          symbol={symbol}/>
         ))}
       </div>
     </ResizeContainer>

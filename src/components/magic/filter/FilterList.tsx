@@ -39,7 +39,7 @@ const Section:React.FC<SectionProps> = memo(({
   validateChange,
   onChange,
 }) => {
-  const [mousedOver, setMousedOver] = useState<boolean>(false);
+  const [mousedover, setMousedover] = useState<boolean>(false);
   const [shown, setShown] = useState<boolean>(false);
   const mouseCoords = useRef<{x:number, y:number}>(defaultCoords);
   const [isTyping, setIsTyping] = useState<boolean>(false);
@@ -60,7 +60,7 @@ const Section:React.FC<SectionProps> = memo(({
   const expanded = isTyping || shown || visible;
 
   const onPointerEnter: PointerEventHandler = () => {
-    setMousedOver(true);
+    setMousedover(true);
     setShown(true);
   };
 
@@ -68,7 +68,7 @@ const Section:React.FC<SectionProps> = memo(({
     if (!(e.relatedTarget) ||
         !((e.relatedTarget as HTMLElement).className) ||
         !(e.relatedTarget as HTMLElement).className.includes('sub' + index))
-      setMousedOver(false);
+      setMousedover(false);
     if (last)
       setShown(false)
   };
@@ -160,37 +160,39 @@ const Section:React.FC<SectionProps> = memo(({
       alignItems:'center',
       transition:'padding-left 0.2s ease-in-out, padding-right 0.2s ease-in-out',
     }}>
-    {!last && <XOut
-      cancel={()=>{
-        onChange({value:''}, index);
-      }}
-      visible={expanded}
-      offsets={{left:'-8px', top:'calc(50% - 22px)'}}
-      index={index}
-      options={{
-        animated:true,
-        width:'14px',
-        height:'14px',
-        padding:'1px',
-        onPointerLeave:() => {
-          setMousedOver(false);
-        }
+    <div
+      style={{
+        display:'flex',
+        flexDirection:'column',
+        position:'relative',
+        width:'0px',
+      }}>
+      {!last && <XOut
+        cancel={()=>{
+          onChange({value:''}, index);
+        }}
+        visible={expanded && mousedover}
+        offsets={{left:'-6px', top:'-8px'}}
+        index={index}
+        options={{
+          animated:true,
+          width:'16px',
+          height:'16px',
+          padding:'1px',
       }}/>}
-    {!last && <Polarity
-      polarity={section.polarity}
-      setPolarity={(polarity:boolean) => onChange({polarity}, index)}
-      visible={expanded}
-      offsets={{left:'-7px', top:'calc(50% + 7px)'}}
-      index={index}
-      options={{
-        animated:true,
-        width:'14px',
-        height:'14px',
-        padding:'1px',
-        onPointerLeave:() => {
-          setMousedOver(false);
-        }
-      }}/>}
+      {!last && <Polarity
+        polarity={section.polarity}
+        setPolarity={(polarity:boolean) => onChange({polarity}, index)}
+        visible={expanded && mousedover}
+        offsets={{left:'-7px', top:'8px'}}
+        index={index}
+        options={{
+          animated:true,
+          width:'14px',
+          height:'14px',
+          padding:'1px',
+        }}/>}
+    </div>
     <input className={(expanded) ? "fieldSizingContent" : "fieldSizingFixed"}
       title={(section.value !== '') ? 'Edit Section' : 'Add New Section'}
       ref={inputRef}
@@ -221,7 +223,7 @@ const Section:React.FC<SectionProps> = memo(({
         borderRadius: expanded ? '5px' : '50%',
         zIndex:1,
         boxShadow:
-          (mousedOver && !isTyping) ?
+          (mousedover && !isTyping) ?
             'rgba(146, 148, 248, 0.4) 0px 0px 10px 2px inset' :
           (isTyping) ?
             'rgba(166, 168, 255, 1) 0px 0px 6px 2px inset' :

@@ -57,9 +57,8 @@ const Section:React.FC<SectionProps> = memo(({
   }
 
   useEffect(() => {
-    if (isTyping && inputRef.current && document.activeElement !== inputRef.current) {
+    if (isTyping && inputRef.current && document.activeElement !== inputRef.current)
       inputRef.current.focus();
-    }
   }, [isTyping]);
 
   useEffect(() => {
