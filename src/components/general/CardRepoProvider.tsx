@@ -2,6 +2,7 @@
 
 import { createContext, ReactNode, useContext, useRef } from "react";
 import { MagicCard, MagicPrint } from "../magic/types/default";
+import { DoubleMap } from "@/helpers/doubleMap";
 
 type CardRepository = {
   findCard:(oracleId:string)=>MagicCard|undefined,

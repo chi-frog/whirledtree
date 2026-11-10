@@ -67,7 +67,7 @@ const Modal:React.FC<Props> = ({
       }}>
       {card &&
       <motion.div id="inner"
-        layoutId={`inner-${card.printId}`}
+        layoutId={`inner-${card.oracleId}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onLayoutAnimationComplete={() => {
           setTimeout(()=>{setExpanded(true);}, 100);

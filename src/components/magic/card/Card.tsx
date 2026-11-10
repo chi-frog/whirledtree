@@ -60,7 +60,7 @@ export const Card:React.FC<Props> = memo(function Card({
       transformPrint, {
         onTransform:([printId, print])=>
           addPrint(card.oracleId, printId, print),
-        ...(location === 'view' && {signal:mousedover})
+        signal:(location === 'view') ? (lastMousePress.current !== undefined) : false
       });
   
   const {showModal} = useModalContext();
@@ -238,8 +238,9 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleRotationPointerUp, handleRotationPointerDown]);
 
+  const print = useMemo(() => card.prints.get(card.printId), [card.printId]);
+
   const frontImgSrc = useMemo(() => {
-    const print = card.prints.get(card.printId);
     if (!print) return cardBackUri;
 
     const largeImg = print.imageUris.front.large;
@@ -249,10 +250,7 @@ export const Card:React.FC<Props> = memo(function Card({
   }, [card]);
 
   const backImgSrc = useMemo(() => {
-    if (!card.back) return cardBackUri;
-
-    const print = card.prints.get(card.printId);
-    if (!print) return "";
+    if (!card.back || !print) return cardBackUri;
 
     const largeImg = print.imageUris.back?.large;
     if (largeImg && largeImg !== '') return largeImg;
@@ -263,7 +261,8 @@ export const Card:React.FC<Props> = memo(function Card({
   return (<>
     <motion.div
       layoutId={((location === 'view' && isInModal) ||
-                 (dontAnimate)) ? undefined : card.printId}
+                 (dontAnimate)) ? undefined :
+                                  `outer-${card.oracleId}`}
       layout={!dragging}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onLayoutAnimationComplete={() => {
@@ -333,7 +332,7 @@ export const Card:React.FC<Props> = memo(function Card({
       </div>
       {location === 'view' && (
       <motion.div
-        layoutId={`inner-${card.printId}`}
+        layoutId={`inner-${card.oracleId}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
           position: 'absolute',

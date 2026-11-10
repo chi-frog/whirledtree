@@ -18,33 +18,36 @@ const CardInfo:React.FC<Props> = ({
   symbols,
 }) => {
   const available = !(!card || (card.reversed && !card.back));
+  console.log('card', card)
+  console.log('available', available)
+  console.log('expanded', expanded)
   const divRef = useRef<HTMLDivElement|null>(null);
 
   const types = useMemo(() => {
     const typeLine = (!card?.reversed) ? card?.typeLine :
                                          card?.back?.typeLine;
     return (typeLine) ? typeLine?.split(' ') : [""];
-  }, [card.reversed]);
+  }, [card.typeLine, card.reversed]);
 
   const oracleText:[string, string] = useMemo(() =>
     (!card)      ? ["", ""] :
     (!card.back) ? [card.oracleText, ""] :
                    [card.oracleText, card.back.oracleText]
-  , [card.oracleText]);
+  , [card.oracleText, card.reversed]);
   
   const power = useMemo(() =>
-    (card.reversed) ?
-      (!card.back) ? null :
-                      card.back.power :
-      card.power, [card.power, card.reversed])
+    (!card)          ? null :
+    (!card.reversed) ? card.power :
+    (!card.back)     ? null :
+                       card.back.power,
+    [card.power, card.reversed])
   
-    const toughness = useMemo(() => {
-      if (card?.reversed) {
-        if (!card.back) return null;
-        else return card.back.toughness;
-      } else
-        return card?.toughness;
-    }, [card?.toughness, card?.reversed]);
+  const toughness = useMemo(() =>
+    (!card)          ? null :
+    (!card.reversed) ? card.toughness :
+    (!card.back)     ? null :
+                       card.back.toughness,
+    [card.toughness, card.reversed]);
 
   return (
     <div id="cardInformation"
@@ -58,7 +61,7 @@ const CardInfo:React.FC<Props> = ({
         padding:(expanded && available) ? '10px' : '0px',
         minWidth:0,
         width:(expanded && available) ? '100%' : '0px',
-        transition:'padding 0.2s ease-in-out',
+        transition:'padding 0.2s ease-in-out, width 0.2s ease-in-out',
       }}>
       <CardName
         name={(!card.reversed) ? card.name : card.back?.name}
