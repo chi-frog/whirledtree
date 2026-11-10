@@ -19,7 +19,6 @@ const CardName:React.FC<Props> = ({
   manaCost,
   symbols,
 }) => {
-
   const manaSymbols = useMemo(() => {
     if (!manaCost) return [];
     let leftBrackets:number[] = findAllIndices(manaCost, '{');

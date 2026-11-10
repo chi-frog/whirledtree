@@ -258,7 +258,7 @@ export const Card:React.FC<Props> = memo(function Card({
     return print.imageUris.back?.small;
   }, [card]);
 
-  return (<>
+  return (
     <motion.div
       layoutId={((location === 'view' && isInModal) ||
                  (dontAnimate)) ? undefined :
@@ -296,48 +296,47 @@ export const Card:React.FC<Props> = memo(function Card({
         onPointerUp={handleCardPointerUp}
         onPointerMove={handleCardPointerMove}
         style={{
-        width:'100%',
-        height:'100%',
-        position:'relative',
-        overflow:'hidden',
-        transition:'outline 1s ease-in-out',
-        borderRadius:(location ==='view') ? '12px' : '20px',
-        outline:
-           (location !== "modal") ?
+          width:'100%',
+          height:'100%',
+          position:'relative',
+          overflow:'hidden',
+          transition:'outline 1s ease-in-out',
+          borderRadius:(location ==='view') ? '12px' : '20px',
+          outline: (location !== "modal") ?
             '1px solid rgba(255, 255, 255, 0.7)' :
             'none',
-        transform:
-          (dragState && dragState.stage !== DragStage.INACTIVE) ?
-            `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
-          (rotateState.stage !== DragStage.INACTIVE) ?
-          (!flipping) ?
-            `rotate3d(0, 1, 0, ${rotateState.angle}deg)` :
-            `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
-            '',
-      }}>
-      <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
-      <CardFace loc={'modal'} src={backImgSrc} visible={!showFront}/>
-      { isCardDoublesided(card) &&
-        <DoublesidedOverlay 
-          cardMousedover={mousedover}
-          node={node}
-          set={card.set}
-          showFront={showFront}
-          pointerDown={handleRotationPointerDown}
-          pointerUp={handleRotationPointerUp}
-        />
-      }
-      {rotationBar("", 1)}
-      {rotationBar("calc(100% - 10px)", -1)}
+          transform:
+            (dragState && dragState.stage !== DragStage.INACTIVE) ?
+              `translate3d(${x}px, ${y}px, 0) perspective(1000px) rotate3d(0, 1, 0, ${(angle) ? angle.x : 0}deg) rotate3d(1, 0, 0, ${(angle) ? angle.y*-1 : 0}deg)` :
+            (rotateState.stage !== DragStage.INACTIVE) ?
+              (!flipping) ?
+                `rotate3d(0, 1, 0, ${rotateState.angle}deg)` :
+                `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
+              '',
+        }}>
+        <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
+        <CardFace loc={'modal'} src={backImgSrc} visible={!showFront}/>
+        {isCardDoublesided(card) &&
+          <DoublesidedOverlay 
+            cardMousedover={mousedover}
+            node={node}
+            set={card.set}
+            showFront={showFront}
+            pointerDown={handleRotationPointerDown}
+            pointerUp={handleRotationPointerUp}/>
+        }
+        {rotationBar("", 1)}
+        {rotationBar("calc(100% - 10px)", -1)}
       </div>
       {location === 'view' && (
-      <motion.div
-        layoutId={`inner-${card.oracleId}`}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        style={{
-          position: 'absolute',
-          inset: 0,        // matches the card's own bounds exactly
-          pointerEvents: 'none',
-      }}/>)}
-    </motion.div></>);
+        <motion.div
+          layoutId={`inner-${card.oracleId}`}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          style={{
+            position: 'absolute',
+            inset: 0,        // matches the card's own bounds exactly
+            pointerEvents: 'none',
+          }}/>
+      )}
+    </motion.div>);
 });

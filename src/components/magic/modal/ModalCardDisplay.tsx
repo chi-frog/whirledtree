@@ -43,23 +43,26 @@ const ModalCardDisplay:React.FC<Props> = ({
     updateCardReversed(card, reversed)
   }
 
+  const printSelectorsVisible = useMemo(() =>
+    (printIds.length>1) && (expanded), [printIds, expanded])
+
   return (
-  <div style={{
-    position: 'relative',
-    height: '100%',
-    zIndex:5,
-    aspectRatio:cardAspectRatio,
-    filter: 'drop-shadow(black 0px 10px 15px)'}}>
-    <CardPrintSelector visible={printIds.length > 1} location="right" func={reducePrintId}/>
-    <CardPrintSelector visible={printIds.length > 1} location="left" func={increasePrintId}/>
-    <Card
-      location='modal'
-      widthString={'fit-content'}
-      heightString={'100%'}
-      card={card}
-      updateReversed={reverse}
-      dontAnimate={expanded}/>))
-  </div>
+    <div style={{
+      position: 'relative',
+      height: '100%',
+      zIndex:5,
+      aspectRatio:cardAspectRatio,
+      filter: 'drop-shadow(black 0px 10px 15px)'}}>
+      <CardPrintSelector visible={printSelectorsVisible} location="right" func={reducePrintId}/>
+      <CardPrintSelector visible={printSelectorsVisible} location="left" func={increasePrintId}/>
+      <Card
+        location='modal'
+        widthString={'fit-content'}
+        heightString={'100%'}
+        card={card}
+        updateReversed={reverse}
+        dontAnimate={expanded}/>))
+    </div>
   );
 };
 
