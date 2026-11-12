@@ -8,6 +8,7 @@ import { Selected, SelectionChangeFunction } from "@/hooks/magic/useSelection";
 import XOut from "./XOut";
 import FilterList from "./FilterList";
 import { MagicResources } from "@/hooks/magic/useMagicResources";
+import FilterInequality from "./FilterInequality";
 
 type Props = {
   state:FilterState,
@@ -180,6 +181,12 @@ const Filter:React.FC<Props> = ({
         sections={selected.type}
         list={resources.types.map((type) => type.name)}
         onChange={handlers.type}
+        />
+      <FilterInequality
+        id="power"
+        text="Power"
+        sections={selected.power}
+        onChange={handlers.power}
         />
       </div>}
     </motion.div>

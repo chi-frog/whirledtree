@@ -65,18 +65,14 @@ const Section:React.FC<SectionProps> = memo(({
   };
 
   const onPointerLeave: PointerEventHandler = (e:React.PointerEvent) => {
-    if (!(e.relatedTarget) ||
-        !((e.relatedTarget as HTMLElement).className) ||
-        !(e.relatedTarget as HTMLElement).className.includes('sub' + index))
-      setMousedover(false);
+    setMousedover(false);
     if (last)
       setShown(false)
   };
 
   useEffect(() => {
-    if (isTyping && inputRef.current && document.activeElement !== inputRef.current) {
+    if (isTyping && inputRef.current && document.activeElement !== inputRef.current)
       inputRef.current.focus();
-    }
   }, [isTyping]);
 
   useEffect(() => {

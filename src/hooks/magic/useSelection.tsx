@@ -7,10 +7,24 @@ export const maxSections = 5;
 export const AND = 'and';
 export const OR = 'or';
 
+/*
+* Operator defines a math operation:
+* =, <, <=, >, >=
+*/
+enum OPERATOR {
+  EQUALS='=',
+  GREATER='>',
+  LESSER='<',
+  GREATEREQUALS='>=',
+  LESSEREQUALS='<=',
+};
+type Operator = OPERATOR;
+
 export type SelectedSection = {
   value:string,
   polarity:boolean,
   connector:'and'|'or',
+  operator?:Operator,
 }
 export type Selected = {
   game:SelectedSection[],
@@ -32,8 +46,8 @@ export const defaultSelected:Selected = {
   format:[{value:'', polarity:true, connector:AND}],
   set:[{value:'', polarity:true, connector:AND}],
   type:[{value:'', polarity:true, connector:AND}],
-  power:[{value:'', polarity:true, connector:AND}],
-  toughness:[{value:'', polarity:true, connector:AND}],
+  power:[{value:'', polarity:true, connector:AND, operator:OPERATOR.EQUALS}],
+  toughness:[{value:'', polarity:true, connector:AND, operator:OPERATOR.EQUALS}],
   oracleText:[{value:'', polarity:true, connector:AND}],
   manaValue:[{value:'', polarity:true, connector:AND}],
 };
@@ -43,6 +57,7 @@ export type SelectionUpdate = {
   value?: string,
   polarity?:boolean,
   connector?:'and'|'or',
+  operator?:Operator,
   index?: number, // If there is no index, it's treated as an append
                   // If the value is an empty string, the selection is deleted.
 };
@@ -56,7 +71,7 @@ const useSelection = () => {
     setSelected((prev) => {
       const newSelected = { ...prev };
 
-      updates.forEach(({ property, value, polarity, connector, index }) => {
+      updates.forEach(({ property, value, polarity, connector, operator, index }) => {
         const arr = [...newSelected[property]];
         index = (index) ?? (arr.length - 1);
 
@@ -68,12 +83,13 @@ const useSelection = () => {
             ...(value !== undefined && { value }),
             ...(polarity !== undefined && { polarity }),
             ...(connector !== undefined && { connector }),
+            ...(operator !== undefined && { operator }),
           };
         }
 
         if ((arr.length === 0) ||
             (arr[arr.length - 1].value !== ''))
-          arr.push({value:'', polarity:true, connector:AND});
+          arr.push(defaultSelected[property][0]);
 
         newSelected[property] = arr;
       });

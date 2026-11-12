@@ -10,6 +10,10 @@ const bitCards = 'cards';
 const bitSearch = 'search?q=';
 const bitIncludeExtras = 'include_extras=true';
 
+const createPowerSegment = (section:SelectedSection) => {
+  return '(pow' + section.operator + section.value + ')'
+};
+
 export const constructSearchUrl = (
   selected:Selected=defaultSelected,
   resources:MagicResources,
@@ -18,6 +22,9 @@ export const constructSearchUrl = (
     let value = section.value.trim();
     let translation;
     let typeTranslation;
+
+    if (key === 'power')
+      return createPowerSegment(section)
 
     if (key === 'set') {
       translation = resources.sets.find((set) => set.name.toLowerCase() === value.toLowerCase());
@@ -54,6 +61,9 @@ export const constructSearchUrl = (
       case 'oracleText':
       case 'name':
         result += ':\'' + value + '\'';
+        break;
+      case 'power':
+        result += value;
         break;
       case 'type': 
       case 'format': 
