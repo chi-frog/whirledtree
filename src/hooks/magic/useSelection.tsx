@@ -11,14 +11,16 @@ export const OR = 'or';
 * Operator defines a math operation:
 * =, <, <=, >, >=
 */
-enum OPERATOR {
-  EQUALS='=',
-  GREATER='>',
-  LESSER='<',
+export enum OPERATOR {
   GREATEREQUALS='>=',
   LESSEREQUALS='<=',
+  GREATER='>',
+  LESSER='<',
+  EQUALS='=',
 };
 type Operator = OPERATOR;
+
+export const operators = Object.values(OPERATOR);
 
 export type SelectedSection = {
   value:string,
@@ -99,8 +101,8 @@ const useSelection = () => {
   }, []);
 
   const makeHandler = useCallback((property:SKey):SelectionChangeFunction => {
-    return ({value, polarity, connector}, index) => {
-      updateSelected({ property, value, polarity, connector, index });
+    return ({value, polarity, connector, operator}, index) => {
+      updateSelected({ property, value, polarity, connector, operator, index });
     };
   }, [updateSelected]);
 

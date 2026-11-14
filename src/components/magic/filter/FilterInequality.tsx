@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, memo, PointerEventHandler, useRef, useState } from "react";
-import { SelectionChangeFunction, SelectedSection } from "@/hooks/magic/useSelection";
+import { SelectionChangeFunction, SelectedSection, operators } from "@/hooks/magic/useSelection";
 import Section from "./FilterSection";
 import Connector from "./FilterConnector";
 
@@ -46,32 +46,25 @@ const FilterInequality:React.FC<Props> = ({
   const onLabelPointerEnter:PointerEventHandler = () => setLabelMousedover(true);
   const onLabelPointerLeave:PointerEventHandler = () => setLabelMousedover(false);
 
-  const acceptableBeginnings = [
-    {value:'>=', result:1},
-    {value:'<=', result:2},
-    {value:'>', result:3},
-    {value:'<', result:4},
-    {value:'=', result:5},
-  ]
-
   const validate = (input:string) => {
-    var value = input.trim()
-    var foundBeginning = null
+    var value:string = input.trim()
+    var foundOperator = null
 
-    for (var i = 0; i < acceptableBeginnings.length; i++) {
-      var beginning = acceptableBeginnings[i];
-      if (value.substring(0, beginning.value.length) === beginning.value) {
-        foundBeginning = beginning;
+    for (var i = 0; i < operators.length; i++) {
+      var operator = operators[i];
+      if (value.substring(0, operator.length) === operator) {
+        foundOperator = operator;
         break;
       }
     }
 
-    if (foundBeginning) {
-      value = value.substring(foundBeginning.value.length)
-      console.log("Found Beginning:" + foundBeginning)
-    }
-    
-    return Number.isInteger(Number(value));
+    if (foundOperator)
+      value = value.substring(foundOperator.length)
+    else
+      foundOperator = operators[operators.length-1] /* = */
+
+    return (Number.isInteger(Number(value))) ?
+      {operator:foundOperator, value} : false;
   }
 
   return (

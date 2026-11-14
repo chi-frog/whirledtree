@@ -10,11 +10,18 @@ const bitCards = 'cards';
 const bitSearch = 'search?q=';
 const bitIncludeExtras = 'include_extras=true';
 
-const createPowerSegment = (section:SelectedSection) => {
-  return '(pow' + section.operator + section.value + ')'
+const createSegmentWithOperator = (key:string, section:SelectedSection) => {
+  if (!section.operator)
+    return ""
+
+  const value = section.value.substring(section.operator.length);
+
+  return (value) ?
+    '(' + key + section.operator + value + ')' :
+    '(' + key + section.operator + section.value + ')';
 };
 
-export const constructSearchUrl = (
+export const constructSearchQuery = (
   selected:Selected=defaultSelected,
   resources:MagicResources,
 ) => {
@@ -23,8 +30,9 @@ export const constructSearchUrl = (
     let translation;
     let typeTranslation;
 
-    if (key === 'power')
-      return createPowerSegment(section)
+    if ((key === 'power') ||
+        (key === 'toughness'))
+      return createSegmentWithOperator(key, section)
 
     if (key === 'set') {
       translation = resources.sets.find((set) => set.name.toLowerCase() === value.toLowerCase());
@@ -75,7 +83,7 @@ export const constructSearchUrl = (
     return result + ")";
   };
 
-  let url = scryfallUrl + '/' + bitCards + '/' + bitSearch;
+  let query = ""
 
   const keys = (Object.keys(selected) as SKey[]);
   const relevantKeys = keys.filter(
@@ -83,7 +91,6 @@ export const constructSearchUrl = (
              (selected[key].length > 0) &&
              (selected[key][0].value !== ''));
 
-  let query = "";
   query = relevantKeys.reduce<string>((query, key, index) => {
     const section = selected[key];
     if (!section || section[0].value === '') return '';
@@ -97,9 +104,12 @@ export const constructSearchUrl = (
       query + segment.substring(0, segment.length - 1);
   }, query);
 
-  url += query + '&order=name';
+  query += '&order=name';
 
-  return url;
+  return query;
 };
+
+export const constructScryfallUrl = (query:string) =>
+  `https://api.scryfall.com/cards/search?q=${query}`
 
 // https://scryfall.com/search?q=%28oracle%3A%27gets+%2B2%2F%2B2%27%29+%28game%3Apaper%29+&unique=cards&as=grid&order=name

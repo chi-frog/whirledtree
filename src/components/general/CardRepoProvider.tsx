@@ -36,7 +36,6 @@ export const CardRepoProvider = ({children}:Props) => {
     if (storedCard) return;
 
     cardMap.current.set(card.oracleId, card);
-    console.log('Added card ' + card.name + ' to repository', card);
   };
 
   const addPrint = (oracleId:string, id:string, print:MagicPrint) => {
@@ -47,11 +46,9 @@ export const CardRepoProvider = ({children}:Props) => {
     }
 
     if (storedCard.prints.get(id)) {
-      console.log('Print already exists:' + oracleId + ', ' + id);
       return;
     }
 
-    console.log('Adding print ' + storedCard.name + ' to repository', print);
     storedCard.prints.set(id, print);
   }
 

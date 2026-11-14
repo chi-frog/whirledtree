@@ -188,6 +188,12 @@ const Filter:React.FC<Props> = ({
         sections={selected.power}
         onChange={handlers.power}
         />
+      <FilterInequality
+        id="toughness"
+        text="Toughness"
+        sections={selected.toughness}
+        onChange={handlers.toughness}
+        />
       </div>}
     </motion.div>
   </>)

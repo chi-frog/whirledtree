@@ -9,7 +9,7 @@ import { _dragState, DragStage, DragState, useDragContext } from "../general/Dra
 import Filter from "./filter/Filter";
 import { MagicResources } from "@/hooks/magic/useMagicResources";
 import useMagicCards from "@/hooks/magic/useMagicCards";
-import { constructSearchUrl } from "@/helpers/magic/scryfallUrl";
+import { constructSearchQuery, constructScryfallUrl } from "@/helpers/magic/scryfallUrl";
 import { ModalProvider } from "../general/ModalProvider";
 import { isError } from "./types/werror";
 
@@ -27,7 +27,8 @@ const SearchWindow:React.FC<Props> = ({
     resources,
   }) => {
   const {selected, updateSelected, handlers} = useSelection();
-  const url = useMemo(() => constructSearchUrl(selected, resources), [selected, resources.sets]);
+  const query = useMemo(() => constructSearchQuery(selected, resources), [selected, resources.sets]);
+  const url = useMemo(() => constructScryfallUrl(query), [query]);
   const [displayLimit, setDisplayLimit] = useState<number>(50);
   const [error, loaded, allCards, fetchNextData, totalCards] = useMagicCards(url, displayLimit);
   const [numCardsRow, setNumCardsRow] = useState<number>(5);
@@ -37,6 +38,16 @@ const SearchWindow:React.FC<Props> = ({
   const scrollTrigger = useRef<HTMLDivElement|null>(null);
 
   const [cards, setCards] = useState<MagicCard[]>(allCards);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("q", query);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params}`);
+  }, [query]);
+
+  /*
+  * Add the inverse of this so that ppl can put in a search
+  */
 
   useEffect(() => {
     // Preserve any cards the user changed

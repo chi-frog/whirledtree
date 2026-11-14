@@ -15,7 +15,7 @@ type SectionProps = {
   buttonMousedover:boolean,
   visible:boolean,
   onChange:SelectionChangeFunction,
-  validateChange?:(input:string)=>boolean,
+  validateChange?:(input:string)=>any,
 };
 const Section:React.FC<SectionProps> = memo(({
   section,
@@ -45,7 +45,7 @@ const Section:React.FC<SectionProps> = memo(({
     onHidden: () => inputRef.current?.blur()
   });
 
-  const expanded = isTyping || shown || visible;
+  const expanded = isTyping || shown || (visible && !last);
 
   const onPointerEnter: PointerEventHandler = () => {
     setMousedover(true);
@@ -102,10 +102,16 @@ const Section:React.FC<SectionProps> = memo(({
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (validateChange(value))
-      onChange({value}, index);
-    else if (!prefersReducedMotion())
+    let value = e.target.value;
+    const validationData = validateChange(value);
+
+    if (validationData) {
+      console.log("validationData", validationData)
+      if (validationData.operator)
+        onChange({value, operator:validationData.operator}, index);
+      else
+        onChange({value}, index);
+    } else if (!prefersReducedMotion())
       inputRef.current?.animate(
       [
         { transform: 'translateX(0)', outline:'2px solid rgb(235, 103, 130)' },
