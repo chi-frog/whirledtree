@@ -53,7 +53,7 @@ export const Card:React.FC<Props> = memo(function Card({
   const raf = useRef<number>(-1);
   const lastMousePress = useRef<React.PointerEvent|undefined>(undefined);
 
-  const {addPrint} = useCardRepositoryContext();
+  const {addPrint, findPrint} = useCardRepositoryContext();
   const [printsError, printsLoaded, rawPrints] =
     useExternalData<[string, MagicPrint]>(
       card.printsUri,
@@ -238,7 +238,7 @@ export const Card:React.FC<Props> = memo(function Card({
     )
   }, [handleRotationPointerUp, handleRotationPointerDown]);
 
-  const print = useMemo(() => card.prints.get(card.printId), [card.printId]);
+  const print = findPrint(card.oracleId, card.printId);
 
   const frontImgSrc = useMemo(() => {
     if (!print) return cardBackUri;

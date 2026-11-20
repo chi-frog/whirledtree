@@ -36,30 +36,35 @@ const SearchWindow:React.FC<Props> = ({
   const {subDrag, startDragging, dragStateRef} = useDragContext();
   const [dragState, setDragState] = useState<DragState>(_dragState);
   const scrollTrigger = useRef<HTMLDivElement|null>(null);
+  const [overrides, setOverrides] = useState<Record<string, Partial<MagicCard>>>({});
 
-  const [cards, setCards] = useState<MagicCard[]>(allCards);
+  const cards = useMemo(() => allCards.map(c => overrides[c.oracleId] ? 
+    { ...c, ...overrides[c.oracleId] } : c),
+    [allCards, overrides]);
+
+  useEffect(() => {
+    console.log(overrides)
+  }, [allCards, overrides]);
+
+  const updateCardPrintId = useCallback((card: MagicCard, id: string) => {
+    setOverrides(prev => ({ ...prev, [card.oracleId]: { ...prev[card.oracleId], printId: id } }));
+  }, []);
+
+  const updateCardReversed = useCallback((card: MagicCard, reversed: boolean) => {
+    setOverrides(prev => ({
+      ...prev,
+      [card.oracleId]: { ...prev[card.oracleId], reversed },
+    }));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("q", query);
     window.history.replaceState(null, "", `${window.location.pathname}?${params}`);
   }, [query]);
-
-  /*
+  /* ^^^^^
   * Add the inverse of this so that ppl can put in a search
   */
-
-  useEffect(() => {
-    // Preserve any cards the user changed
-    const filteredCards = allCards.map((allCard) => {
-      let index = cards.findIndex((card) => card.oracleId === allCard.oracleId);
-
-      if (index >= 0) return cards[index];
-      else return allCard;
-    })
-
-    setCards(filteredCards);
-  }, [allCards]);
 
   useEffect(() => {
     console.log('cards changed!');
@@ -131,31 +136,6 @@ const SearchWindow:React.FC<Props> = ({
 
   const hasError = useMemo(() => isError(error), [error]);
 
-  const updateCardPrintId = (card:MagicCard, id:string) => {
-    setCards((prev) => {
-      const cards = [...prev];
-      const index = prev.findIndex((_card) => _card.oracleId === card.oracleId);
-      if (index < 0) return prev;
-      
-      cards[index] = {...cards[index], printId:id};
-
-      return cards;
-    });
-  }
-
-  const updateCardReversed = (card:MagicCard, reversed:boolean) => {
-    setCards((prev) => {
-      const cards = [...prev];
-      const index = prev.findIndex((_card) => _card.oracleId === card.oracleId);
-      if (index < 0) return prev;
-      
-      cards[index] = {...cards[index], reversed};
-      console.log('updating card:' + card.name + ' to ' + reversed);
-
-      return cards;
-    });
-  }
-
   return (
     <ModalProvider resources={resources} updateCardPrintId={updateCardPrintId} updateCardReversed={updateCardReversed} updateSelected={updateSelected}>
     <div
@@ -165,8 +145,7 @@ const SearchWindow:React.FC<Props> = ({
         setState={setFilterState}
         selected={selected}
         handlers={handlers}
-        resources={resources}
-        />
+        resources={resources}/>
       {(cards.length > 0) && !hasError && 
       <CardView
         paddingTop={(filterState === FilterState.REDUCED) ? '100px' : '10px'}
