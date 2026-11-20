@@ -1,17 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 type Props = {
   src: string,
   visible: boolean,
   loading:"eager" | "lazy" | undefined,
+  setLoaded?:Dispatch<SetStateAction<boolean>>
 };
 
 const FadeInImage: React.FC<Props> = ({
     src,
     visible,
     loading,
+    setLoaded,
   }) => {
   // two stable slots — which one is "front" (currently shown) alternates,
   // but neither slot's own <img> ever has its src changed while visible
@@ -69,6 +71,7 @@ const FadeInImage: React.FC<Props> = ({
             src={slots[i]}
             draggable={false}
             loading={loading}
+            onLoad={() => (setLoaded) ? setLoaded(true) : null}
             style={{
               position: 'absolute',
               width: '100%',

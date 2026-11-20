@@ -66,6 +66,8 @@ export const Card:React.FC<Props> = memo(function Card({
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
 
+  const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
+
   const reversed = useMemo(() => card.reversed, [card.reversed]);
   const flipping = useMemo(() => (rotateState.angle > 90), [rotateState.angle]);
   const showFront = useMemo(() =>
@@ -285,8 +287,9 @@ export const Card:React.FC<Props> = memo(function Card({
         aspectRatio:cardAspectRatio,
         position:(location === 'modal') ? 'absolute' : 'relative',
         zIndex: (isRaised) ? 30 : 0,
-        opacity: ((!visible) || (location === 'view' && isInModal)) ? 0 : 1,
+        opacity: ((!visible) || (location === 'view' && isInModal) || !isImageLoaded) ? 0 : 1,
         pointerEvents: ((!visible) || (location === 'view' && isInModal)) ? 'none' : undefined,
+        transition: 'opacity 0.3s ease-in-out',
       }}>
       <div
         ref={ref}
@@ -314,8 +317,8 @@ export const Card:React.FC<Props> = memo(function Card({
                 `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
               '',
         }}>
-        <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
-        <CardFace loc={'modal'} src={backImgSrc} visible={!showFront}/>
+        <CardFace loc={location} src={frontImgSrc} visible={showFront} setLoaded={setIsImageLoaded}/>
+        <CardFace loc={'modal'} src={backImgSrc} visible={!showFront} setLoaded={setIsImageLoaded}/>
         {isCardDoublesided(card) &&
           <DoublesidedOverlay 
             cardMousedover={mousedover}
