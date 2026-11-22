@@ -61,7 +61,7 @@ const ModalCardDisplay:React.FC<Props> = ({
         heightString={'100%'}
         card={card}
         updateReversed={reverse}
-        dontAnimate={expanded}/>))
+        dontAnimate={expanded}/>
     </div>
   );
 };

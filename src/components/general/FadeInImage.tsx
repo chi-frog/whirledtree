@@ -1,6 +1,7 @@
 'use client'
 
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useImageStorageContext } from "./ImageStorageProvider";
 
 type Props = {
   src: string,
@@ -21,6 +22,7 @@ const FadeInImage: React.FC<Props> = ({
   const [frontIndex, setFrontIndex] = useState<0 | 1>(0);
   const [backLoaded, setBackLoaded] = useState(false);
   const latestSrc = useRef(src);
+  const {storeImage} = useImageStorageContext();
 
   useEffect(() => {
     if (src === slots[frontIndex]) return; // already showing this src
@@ -33,6 +35,7 @@ const FadeInImage: React.FC<Props> = ({
 
     const img = new Image();
     img.src = src;
+    console.log(src + " - Starting to decode")
     img.decode()
       .catch(() => { /* Add error correction */ })
       .finally(() => {
@@ -47,7 +50,10 @@ const FadeInImage: React.FC<Props> = ({
         setBackLoaded(true);
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      img.src = '';
+    };
   }, [src]);
 
   useEffect(() => {
@@ -61,6 +67,10 @@ const FadeInImage: React.FC<Props> = ({
     return () => clearTimeout(timeout);
   }, [backLoaded]);
 
+  const onLoad = useCallback((e:SyntheticEvent<HTMLImageElement, Event>) => {
+    storeImage(src, e.currentTarget); 
+  }, []);
+
   return (
     <>
       {(visible) && [0, 1].map((i) => {
@@ -71,14 +81,15 @@ const FadeInImage: React.FC<Props> = ({
             src={slots[i]}
             draggable={false}
             loading={loading}
-            onLoad={() => (setLoaded) ? setLoaded(true) : null}
+            onLoad={onLoad}
             style={{
               position: 'absolute',
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              opacity: isFront ? 1 : backLoaded ? 1 : 0,
-              transition: 'opacity 0.3s ease-in-out',
+              zIndex: isFront ? 1 : 2,
+              opacity: (isFront || backLoaded) ? 1 : 0,
+              transition: 'opacity 0.2s ease-in-out',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               pointerEvents:'none',

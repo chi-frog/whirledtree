@@ -2,7 +2,7 @@
 
 import { _wpoint } from "@/helpers/wpoint";
 import { isCardDoublesided, MagicCard, MagicPrint } from "../types/default";
-import { memo, PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { memo, PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragStage, useDragContext } from "../../general/DragProvider";
 import useCardRotate from "@/hooks/magic/useCardRotate";
 import useCardDrag from "@/hooks/useCardDrag";
@@ -15,6 +15,7 @@ import useExternalData from "@/hooks/useExternalData";
 import { transformPrint } from "@/helpers/magic/transformMagicCard";
 import { useCardRepositoryContext } from "../../general/CardRepoProvider";
 import { cardBackUri } from "@/app/page";
+import { useImageStorageContext } from "@/components/general/ImageStorageProvider";
 
 export type CardLocation =
   'view' | 'modal';
@@ -65,8 +66,6 @@ export const Card:React.FC<Props> = memo(function Card({
   
   const {showModal} = useModalContext();
   const isInModal = useIsCardInModal(card.name);
-
-  const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
 
   const reversed = useMemo(() => card.reversed, [card.reversed]);
   const flipping = useMemo(() => (rotateState.angle > 90), [rotateState.angle]);
@@ -260,6 +259,20 @@ export const Card:React.FC<Props> = memo(function Card({
     return print.imageUris.back?.small;
   }, [card]);
 
+  const {hasImage, addSignal} = useImageStorageContext();
+  const [isFrontImageLoaded, setIsFrontImageLoaded] = useState<boolean>(hasImage(frontImgSrc));
+  const [isBackImageLoaded, setIsBackImageLoaded] = useState<boolean>(hasImage(backImgSrc));
+
+  useEffect(() => {
+    if (showFront && !isFrontImageLoaded && !hasImage(frontImgSrc))
+      addSignal(frontImgSrc, setIsFrontImageLoaded)
+  }, [showFront, isFrontImageLoaded]);
+
+  useEffect(() => {
+    if (!showFront && !isBackImageLoaded && !hasImage(backImgSrc))
+      addSignal(frontImgSrc, setIsFrontImageLoaded)
+  }, [showFront, isBackImageLoaded]);
+
   return (
     <motion.div
       layoutId={((location === 'view' && isInModal) ||
@@ -287,7 +300,10 @@ export const Card:React.FC<Props> = memo(function Card({
         aspectRatio:cardAspectRatio,
         position:(location === 'modal') ? 'absolute' : 'relative',
         zIndex: (isRaised) ? 30 : 0,
-        opacity: ((!visible) || (location === 'view' && isInModal) || !isImageLoaded) ? 0 : 1,
+        opacity: ((!visible) ||
+                  (location === 'view' && isInModal) ||
+                  (showFront && !isFrontImageLoaded) ||
+                  (!showFront && !isBackImageLoaded)) ? 0 : 1,
         pointerEvents: ((!visible) || (location === 'view' && isInModal)) ? 'none' : undefined,
         transition: 'opacity 0.3s ease-in-out',
       }}>
@@ -317,8 +333,8 @@ export const Card:React.FC<Props> = memo(function Card({
                 `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
               '',
         }}>
-        <CardFace loc={location} src={frontImgSrc} visible={showFront} setLoaded={setIsImageLoaded}/>
-        <CardFace loc={'modal'} src={backImgSrc} visible={!showFront} setLoaded={setIsImageLoaded}/>
+        <CardFace loc={location} src={frontImgSrc} visible={showFront} setLoaded={setIsFrontImageLoaded}/>
+        <CardFace loc={location} src={backImgSrc} visible={!showFront} setLoaded={setIsBackImageLoaded}/>
         {isCardDoublesided(card) &&
           <DoublesidedOverlay 
             cardMousedover={mousedover}

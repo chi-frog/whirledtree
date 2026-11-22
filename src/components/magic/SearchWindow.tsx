@@ -43,7 +43,7 @@ const SearchWindow:React.FC<Props> = ({
     [allCards, overrides]);
 
   useEffect(() => {
-    console.log(overrides)
+    console.log("Overrides:", overrides)
   }, [allCards, overrides]);
 
   const updateCardPrintId = useCallback((card: MagicCard, id: string) => {
