@@ -60,7 +60,7 @@ export const Card:React.FC<Props> = memo(function Card({
       card.printsUri,
       transformPrint, {
         onTransform:([printId, print])=>
-          addPrint(card.oracleId, printId, print),
+          addPrint({...card, printId}, print),
         signal:(location === 'view') ? (lastMousePress.current !== undefined) : false
       });
   
@@ -266,12 +266,12 @@ export const Card:React.FC<Props> = memo(function Card({
   useEffect(() => {
     if (showFront && !isFrontImageLoaded && !hasImage(frontImgSrc))
       addSignal(frontImgSrc, setIsFrontImageLoaded)
-  }, [showFront, isFrontImageLoaded]);
+  }, [frontImgSrc, showFront, isFrontImageLoaded]);
 
   useEffect(() => {
     if (!showFront && !isBackImageLoaded && !hasImage(backImgSrc))
       addSignal(frontImgSrc, setIsFrontImageLoaded)
-  }, [showFront, isBackImageLoaded]);
+  }, [backImgSrc, showFront, isBackImageLoaded]);
 
   return (
     <motion.div
@@ -305,7 +305,7 @@ export const Card:React.FC<Props> = memo(function Card({
                   (showFront && !isFrontImageLoaded) ||
                   (!showFront && !isBackImageLoaded)) ? 0 : 1,
         pointerEvents: ((!visible) || (location === 'view' && isInModal)) ? 'none' : undefined,
-        transition: 'opacity 0.3s ease-in-out',
+        transition: 'opacity 0.2s ease-in-out',
       }}>
       <div
         ref={ref}
@@ -333,8 +333,8 @@ export const Card:React.FC<Props> = memo(function Card({
                 `rotate3d(0, 1, 0, ${180 - rotateState.angle}deg)` :
               '',
         }}>
-        <CardFace loc={location} src={frontImgSrc} visible={showFront} setLoaded={setIsFrontImageLoaded}/>
-        <CardFace loc={location} src={backImgSrc} visible={!showFront} setLoaded={setIsBackImageLoaded}/>
+        <CardFace loc={location} src={frontImgSrc} visible={showFront}/>
+        <CardFace loc={location} src={backImgSrc} visible={!showFront}/>
         {isCardDoublesided(card) &&
           <DoublesidedOverlay 
             cardMousedover={mousedover}

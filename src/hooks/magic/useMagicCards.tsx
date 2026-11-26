@@ -43,7 +43,7 @@ const useMagicCards:(url:string, displayLimit:number)=>UseMagicCards = (
     // we need to add the print to the card's print map.
     const [printId, print] = transformPrint(card);
 
-    addPrint(repoCard.oracleId, printId, print);
+    addPrint({...repoCard, printId}, print);
 
     // But the card has already been transformed before, 
     // so exit.

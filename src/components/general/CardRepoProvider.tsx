@@ -2,13 +2,12 @@
 
 import { createContext, ReactNode, useContext, useRef } from "react";
 import { MagicCard, MagicPrint } from "../magic/types/default";
-import { DoubleMap } from "@/helpers/doubleMap";
 
 type CardRepository = {
   findCard:(oracleId:string)=>MagicCard|undefined,
   findPrint:(oracleId:string, id:string)=>MagicPrint|undefined,
   addCard:(card:MagicCard)=>void,
-  addPrint:(oracleId:string, id:string, print:MagicPrint)=>void,
+  addPrint:(card:MagicCard, print:MagicPrint)=>void,
 }
 const CardRepositoryContext = createContext<CardRepository|undefined>(undefined);
 
@@ -38,18 +37,20 @@ export const CardRepoProvider = ({children}:Props) => {
     cardMap.current.set(card.oracleId, card);
   };
 
-  const addPrint = (oracleId:string, id:string, print:MagicPrint) => {
-    let storedCard = cardMap.current.get(oracleId);
+  const addPrint = (card:MagicCard, print:MagicPrint) => {
+    let storedCard = cardMap.current.get(card.oracleId);
     if (!storedCard) {
-      console.error("Shouldn't use addPrint if the card isn't already stored:" + oracleId);
+      addCard(card);
+      console.log('card didnt exist - added');
       return;
     }
 
-    if (storedCard.prints.get(id)) {
+    if (storedCard.prints.get(card.printId)) {
       return;
     }
 
-    storedCard.prints.set(id, print);
+    console.log('stored print');
+    storedCard.prints.set(card.printId, print);
   }
 
   return (

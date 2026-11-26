@@ -1,20 +1,17 @@
 'use client'
 
-import { Dispatch, SetStateAction, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
+import { SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useImageStorageContext } from "./ImageStorageProvider";
 
 type Props = {
   src: string,
   visible: boolean,
   loading:"eager" | "lazy" | undefined,
-  setLoaded?:Dispatch<SetStateAction<boolean>>
 };
-
 const FadeInImage: React.FC<Props> = ({
     src,
     visible,
     loading,
-    setLoaded,
   }) => {
   // two stable slots — which one is "front" (currently shown) alternates,
   // but neither slot's own <img> ever has its src changed while visible
@@ -24,18 +21,21 @@ const FadeInImage: React.FC<Props> = ({
   const latestSrc = useRef(src);
   const {storeImage} = useImageStorageContext();
 
+  console.log('FrontIndex:' + frontIndex + ' BackLoaded:' + backLoaded);
+
   useEffect(() => {
     if (src === slots[frontIndex]) return; // already showing this src
 
     latestSrc.current = src;
     const backIndex = (frontIndex === 0) ? 1 : 0;
 
+    console.log('We are in here');
+
     let cancelled = false;
     setBackLoaded(false);
 
     const img = new Image();
     img.src = src;
-    console.log(src + " - Starting to decode")
     img.decode()
       .catch(() => { /* Add error correction */ })
       .finally(() => {
@@ -58,7 +58,7 @@ const FadeInImage: React.FC<Props> = ({
 
   useEffect(() => {
     if (!backLoaded) return;
-
+    console.log('is this happening?');
     const timeout = setTimeout(() => {
       setFrontIndex((prev) => (prev === 0 ? 1 : 0)); // back slot becomes front
       setBackLoaded(false);
@@ -71,9 +71,11 @@ const FadeInImage: React.FC<Props> = ({
     storeImage(src, e.currentTarget); 
   }, []);
 
+  if (!visible) return null
+
   return (
     <>
-      {(visible) && [0, 1].map((i) => {
+      {[0, 1].map((i) => {
         const isFront = i === frontIndex;
         return (
           <img

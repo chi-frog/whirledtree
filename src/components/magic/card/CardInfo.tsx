@@ -18,9 +18,6 @@ const CardInfo:React.FC<Props> = ({
   symbols,
 }) => {
   const available = !(!card || (card.reversed && !card.back));
-  console.log('card', card)
-  console.log('available', available)
-  console.log('expanded', expanded)
   const divRef = useRef<HTMLDivElement|null>(null);
 
   const types = useMemo(() => {
