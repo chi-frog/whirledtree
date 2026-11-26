@@ -5,6 +5,8 @@ import CardPrintSelector from "../card/CardPrintSelector";
 import { MagicCard } from "../types/default";
 import { Card } from "../card/Card";
 import { cardAspectRatio } from "@/hooks/magic/useMagicCards";
+import { useCardRepositoryContext } from "@/components/general/CardRepoProvider";
+import { defaultCard } from "../types/magic";
 
 type Props = {
   card:MagicCard,
@@ -20,7 +22,17 @@ const ModalCardDisplay:React.FC<Props> = ({
   updateCardPrintId,
   updateCardReversed,
 }) => {
-  const printIds = useMemo(() => Array.from(card.prints.entries()).map(([printId]) => printId), [card.prints]);
+  /*
+  * Use the version of the card stored in the repository
+  * for any information, like the number of prints, that
+  * is individual card independent.
+  */
+  const {findCard} = useCardRepositoryContext();
+  const repoCard = useMemo(() => {
+    const repoCard = findCard(card.oracleId);
+    return (!repoCard) ? defaultCard : repoCard;
+  }, [card]);
+  const printIds = useMemo(() => Array.from(repoCard.prints.entries()).map(([printId]) => printId), [card.prints]);
   const printIndex = printIds.findIndex((printId) => printId === card.printId);
 
   const reducePrintId = () => {
