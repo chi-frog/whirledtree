@@ -1,6 +1,6 @@
 'use client'
 
-import { SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
+import { SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useImageStorageContext } from "./ImageStorageProvider";
 
 type Props = {
@@ -19,9 +19,7 @@ const FadeInImage: React.FC<Props> = ({
   const [frontIndex, setFrontIndex] = useState<0 | 1>(0);
   const [backLoaded, setBackLoaded] = useState(false);
   const latestSrc = useRef(src);
-  const {storeImage} = useImageStorageContext();
-
-  console.log('FrontIndex:' + frontIndex + ' BackLoaded:' + backLoaded);
+  const {storeImage, getImage} = useImageStorageContext();
 
   useEffect(() => {
     if (src === slots[frontIndex]) return; // already showing this src
@@ -29,26 +27,31 @@ const FadeInImage: React.FC<Props> = ({
     latestSrc.current = src;
     const backIndex = (frontIndex === 0) ? 1 : 0;
 
-    console.log('We are in here');
-
+    console.log('We are in FadeInImage');
+    const image = getImage(src);
     let cancelled = false;
+
+    function swap() {
+      if (cancelled || latestSrc.current !== src) return;
+
+      // put the now-decoded src into the back slot, THEN mark loaded
+      setSlots((prev) => {
+        const next:[string, string] = [...prev];
+        next[backIndex] = src;
+        return next;
+      });
+      setBackLoaded(true);
+    }
+
+    if (image) return swap()
+
     setBackLoaded(false);
 
     const img = new Image();
     img.src = src;
     img.decode()
       .catch(() => { /* Add error correction */ })
-      .finally(() => {
-        if (cancelled || latestSrc.current !== src) return;
-
-        // put the now-decoded src into the back slot, THEN mark loaded
-        setSlots((prev) => {
-          const next:[string, string] = [...prev];
-          next[backIndex] = src;
-          return next;
-        });
-        setBackLoaded(true);
-      });
+      .finally(() => swap());
 
     return () => {
       cancelled = true;
@@ -68,10 +71,10 @@ const FadeInImage: React.FC<Props> = ({
   }, [backLoaded]);
 
   const onLoad = useCallback((e:SyntheticEvent<HTMLImageElement, Event>) => {
-    storeImage(src, e.currentTarget); 
+    storeImage(e.currentTarget.src, e.currentTarget); 
   }, []);
 
-  if (!visible) return null
+  if (!visible) return null;
 
   return (
     <>
@@ -89,7 +92,6 @@ const FadeInImage: React.FC<Props> = ({
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              zIndex: isFront ? 1 : 2,
               opacity: (isFront || backLoaded) ? 1 : 0,
               transition: 'opacity 0.2s ease-in-out',
               userSelect: 'none',

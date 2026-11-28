@@ -248,7 +248,7 @@ export const Card:React.FC<Props> = memo(function Card({
     if (largeImg !== '') return largeImg;
 
     return print.imageUris.front.small;
-  }, [card]);
+  }, [card, print]);
 
   const backImgSrc = useMemo(() => {
     if (!card.back || !print) return cardBackUri;
@@ -257,21 +257,24 @@ export const Card:React.FC<Props> = memo(function Card({
     if (largeImg && largeImg !== '') return largeImg;
 
     return print.imageUris.back?.small;
-  }, [card]);
+  }, [card, print]);
 
-  const {hasImage, addSignal} = useImageStorageContext();
-  const [isFrontImageLoaded, setIsFrontImageLoaded] = useState<boolean>(hasImage(frontImgSrc));
-  const [isBackImageLoaded, setIsBackImageLoaded] = useState<boolean>(hasImage(backImgSrc));
+  const { hasImage, addSignal } = useImageStorageContext();
 
-  useEffect(() => {
-    if (showFront && !isFrontImageLoaded && !hasImage(frontImgSrc))
-      addSignal(frontImgSrc, setIsFrontImageLoaded)
-  }, [frontImgSrc, showFront, isFrontImageLoaded]);
+  const currentSrc = showFront ? frontImgSrc : backImgSrc;
+
+  // true once this card has shown a real image; never resets
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => !!currentSrc && hasImage(currentSrc));
 
   useEffect(() => {
-    if (!showFront && !isBackImageLoaded && !hasImage(backImgSrc))
-      addSignal(frontImgSrc, setIsFrontImageLoaded)
-  }, [backImgSrc, showFront, isBackImageLoaded]);
+    if (hasLoadedOnce || !currentSrc) return;
+
+    if (hasImage(currentSrc)) {
+      setHasLoadedOnce(true);
+      return;
+    }
+    addSignal(currentSrc, setHasLoadedOnce);
+  }, [currentSrc, hasLoadedOnce]);
 
   return (
     <motion.div
@@ -302,10 +305,8 @@ export const Card:React.FC<Props> = memo(function Card({
         zIndex: (isRaised) ? 30 : 0,
         opacity: ((!visible) ||
                   (location === 'view' && isInModal) ||
-                  (showFront && !isFrontImageLoaded) ||
-                  (!showFront && !isBackImageLoaded)) ? 0 : 1,
+                  (!hasLoadedOnce)) ? 0 : 1,
         pointerEvents: ((!visible) || (location === 'view' && isInModal)) ? 'none' : undefined,
-        transition: 'opacity 0.2s ease-in-out',
       }}>
       <div
         ref={ref}

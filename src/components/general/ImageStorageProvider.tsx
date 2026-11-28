@@ -5,6 +5,7 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useCon
 type ImageStorageMap = Map<string, HTMLImageElement>
 type ImageSignalMap = Map<string, Dispatch<SetStateAction<boolean>>>
 type ImageStorage = {
+  getImage:(src:string)=>HTMLImageElement|undefined,
   storeImage:(src:string, img:HTMLImageElement)=>void,
   hasImage:(src?:string)=>boolean,
   addSignal:(src?:string, signal?:Dispatch<SetStateAction<boolean>>)=>void,
@@ -27,15 +28,19 @@ export const ImageStorageProvider = ({children}:Props) => {
   const map = useRef<ImageStorageMap>(new Map<string, HTMLImageElement>());
   const signalMap = useRef<ImageSignalMap>(new Map<string, Dispatch<SetStateAction<boolean>>>())
 
+  const getImage = useCallback((src:string) => {
+    return map.current.get(src);
+  }, []);
+
   const storeImage = useCallback((src:string, img:HTMLImageElement) => {
+    console.log('Src:' + src + 'Storing:', img);
+    console.log("MAP", map.current)
     if (!img) return;
 
     map.current.set(src, img)
     if (signalMap.current.has(src)) {
-      console.log(src + " - Calling the signal!")
       signalMap.current.get(src)?.(true);
-    } else {
-      console.log(src + " - Didn't find the signal");
+      console.log('signal');
     }
   }, []);
 
@@ -45,14 +50,14 @@ export const ImageStorageProvider = ({children}:Props) => {
     if (!src || !signal) return;
 
     signalMap.current.set(src, signal);
-    console.log(src + " - Added the signal")
   }, []);
 
   return (
     <ImageStorageContext.Provider value={{
-      storeImage,
-      hasImage,
-      addSignal,
+        getImage,
+        storeImage,
+        hasImage,
+        addSignal,
       }}>
       {children}
     </ImageStorageContext.Provider>
