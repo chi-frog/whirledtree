@@ -32,7 +32,7 @@ const ModalCardDisplay:React.FC<Props> = ({
     const repoCard = findCard(card.oracleId);
     return (!repoCard) ? defaultCard : repoCard;
   }, [card]);
-  const printIds = useMemo(() => Array.from(repoCard.prints.entries()).map(([printId]) => printId), [card.prints]);
+  const printIds = useMemo(() => Array.from(repoCard.prints.entries()).map(([printId]) => printId), [repoCard.prints]);
   const printIndex = printIds.findIndex((printId) => printId === card.printId);
 
   const reducePrintId = () => {

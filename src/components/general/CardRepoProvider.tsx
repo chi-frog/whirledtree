@@ -38,6 +38,7 @@ export const CardRepoProvider = ({children}:Props) => {
   };
 
   const addPrint = (card:MagicCard, print:MagicPrint) => {
+    console.log('adding print to card ' + card.name);
     let storedCard = cardMap.current.get(card.oracleId);
     if (!storedCard) {
       addCard(card);

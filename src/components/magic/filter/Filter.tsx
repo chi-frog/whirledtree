@@ -194,6 +194,12 @@ const Filter:React.FC<Props> = ({
         sections={selected.toughness}
         onChange={handlers.toughness}
         />
+      <FilterInequality
+        id="mana_value"
+        text="Mana Value"
+        sections={selected.manaValue}
+        onChange={handlers.manaValue}
+        />
       </div>}
     </motion.div>
   </>)

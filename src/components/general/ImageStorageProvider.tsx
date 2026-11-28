@@ -33,15 +33,11 @@ export const ImageStorageProvider = ({children}:Props) => {
   }, []);
 
   const storeImage = useCallback((src:string, img:HTMLImageElement) => {
-    console.log('Src:' + src + 'Storing:', img);
-    console.log("MAP", map.current)
     if (!img) return;
 
     map.current.set(src, img)
-    if (signalMap.current.has(src)) {
+    if (signalMap.current.has(src))
       signalMap.current.get(src)?.(true);
-      console.log('signal');
-    }
   }, []);
 
   const hasImage = useCallback((src:string='') => map.current.get(src) !== undefined, []);

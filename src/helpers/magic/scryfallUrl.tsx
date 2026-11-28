@@ -31,7 +31,8 @@ export const constructSearchQuery = (
     let typeTranslation;
 
     if ((key === 'power') ||
-        (key === 'toughness'))
+        (key === 'toughness') ||
+        (key === 'manaValue'))
       return createSegmentWithOperator(key, section)
 
     if (key === 'set') {
@@ -71,7 +72,9 @@ export const constructSearchQuery = (
         result += ':\'' + value + '\'';
         break;
       case 'power':
-        result += value;
+      case 'toughness':
+      case 'manaValue':
+        throw Error('nope');
         break;
       case 'type': 
       case 'format': 

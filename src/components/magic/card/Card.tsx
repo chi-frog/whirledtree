@@ -61,7 +61,7 @@ export const Card:React.FC<Props> = memo(function Card({
       transformPrint, {
         onTransform:([printId, print])=>
           addPrint({...card, printId}, print),
-        signal:(location === 'view') ? (lastMousePress.current !== undefined) : false
+        signal:(location === 'view') ? isRaised : true
       });
   
   const {showModal} = useModalContext();
